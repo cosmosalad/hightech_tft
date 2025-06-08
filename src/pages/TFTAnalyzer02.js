@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Upload, FileText, BarChart3, Calculator, Info, Play, Home, ArrowLeft, Table, Star } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -18,6 +18,11 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   });
   const [showParamInput, setShowParamInput] = useState(false);
   const [showFormulaInfo, setShowFormulaInfo] = useState('');
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [currentPage]);
+
 
   const handleGoBack = () => {
     if (currentPage === 'analyzer') {
@@ -81,7 +86,11 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       alert('먼저 엑셀 파일을 업로드해주세요.');
       return;
     }
-
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'instant'
+    });
     setIsAnalyzing(true);
     try {
       const results = await analyzeFiles(uploadedFiles);
