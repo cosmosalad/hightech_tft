@@ -46,7 +46,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       name: file.name,
       type: detectFileType(file.name),
       id: Date.now() + Math.random(),
-      alias: '' // 사용자 정의 별명
+      alias: '' // 사용자 정의 샘플명
     }));
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
@@ -66,7 +66,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  // 파일 별명 업데이트
+  // 파일 샘플명 업데이트
   const updateFileAlias = (id, alias) => {
     setUploadedFiles(prev => 
       prev.map(file => 
@@ -132,9 +132,9 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     return results;
   };
 
-  // 🎯 완벽한 통합 분석 함수 - 별명별로 데이터 묶어서 정확한 계산
+  // 🎯 완벽한 통합 분석 함수 - 샘플명별로 데이터 묶어서 정확한 계산
   const performCompleteAnalysis = (analysisResults) => {
-    // 1. 별명별로 데이터 그룹화
+    // 1. 샘플명별로 데이터 그룹화
     const sampleGroups = {};
     
     Object.entries(analysisResults).forEach(([type, resultArray]) => {
@@ -884,14 +884,14 @@ if (mu0 > 0 && vth_sat !== 0) {
       </div>
       <div className="text-center mb-12">
          <h1 className="text-5xl font-bold text-gray-800 mb-4">
-           TFT 전기적 특성 분석기
+           TFT Electrical Characterization Analyzer
          </h1>
          <p className="text-xl text-gray-600 mb-8">
            Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
          </p>
          <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
            <p className="text-lg font-semibold text-purple-800">🎯 완벽한 통합 분석</p>
-           <p className="text-sm text-purple-600">별명별로 데이터를 묶어서 정확한 TFT 특성을 계산합니다</p>
+           <p className="text-sm text-purple-600">샘플명별로 데이터를 묶어서 정확한 TFT 특성을 계산합니다</p>
          </div>
        </div>
 
@@ -942,12 +942,12 @@ if (mu0 > 0 && vth_sat !== 0) {
                        </button>
                      </div>
                      <div className="flex items-center space-x-2">
-                       <label className="text-sm text-gray-600 whitespace-nowrap">별명:</label>
+                       <label className="text-sm text-gray-600 whitespace-nowrap">샘플명:</label>
                        <input
                          type="text"
                          value={file.alias}
                          onChange={(e) => updateFileAlias(file.id, e.target.value)}
-                         placeholder="샘플명 (예: 20nm, Sample A) - 같은 별명끼리 묶여서 분석됩니다"
+                         placeholder="샘플명 (예: 20nm, Sample A) - 같은 샘플명끼리 묶여서 분석됩니다"
                          className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
                        />
                      </div>
@@ -966,7 +966,7 @@ if (mu0 > 0 && vth_sat !== 0) {
            <div className="space-y-4 text-gray-600">
              <div className="flex items-start">
                <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">1</span>
-               <p><strong>별명으로 그룹화:</strong> 같은 별명의 파일들을 하나의 샘플로 인식</p>
+               <p><strong>샘플명으로 그룹화:</strong> 같은 샘플명의 파일들을 하나의 샘플로 인식</p>
              </div>
              <div className="flex items-start">
                <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">2</span>
@@ -989,7 +989,7 @@ if (mu0 > 0 && vth_sat !== 0) {
                <p>• Sample A_Saturation.xlsx</p>
                <p>• Sample A_IDVD.xlsx</p>
                <p>• Sample A_Hysteresis.xlsx</p>
-               <p className="text-xs text-green-600 mt-2">→ "Sample A" 별명으로 통합 분석</p>
+               <p className="text-xs text-green-600 mt-2">→ "Sample A" 샘플명으로 통합 분석</p>
              </div>
            </div>
            

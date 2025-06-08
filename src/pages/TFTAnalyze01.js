@@ -45,7 +45,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       name: file.name,
       type: detectFileType(file.name),
       id: Date.now() + Math.random(),
-      alias: '' // 사용자 정의 별명
+      alias: '' // 사용자 정의 샘플명
     }));
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
@@ -65,7 +65,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  // 파일 별명 업데이트
+  // 파일 샘플명 업데이트
   const updateFileAlias = (id, alias) => {
     setUploadedFiles(prev => 
       prev.map(file => 
@@ -114,7 +114,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
         results[fileInfo.type].push({
           ...analysisResult,
           filename: fileInfo.name,
-          alias: fileInfo.alias || fileInfo.name, // 별명이 있으면 별명, 없으면 파일명
+          alias: fileInfo.alias || fileInfo.name, // 샘플명이 있으면 샘플명, 없으면 파일명
           displayName: fileInfo.alias || fileInfo.name.replace(/\.[^/.]+$/, ""), // 확장자 제거
           rawData: jsonData
         });
@@ -625,7 +625,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       </div>
       <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
-            TFT 전기적 특성 분석기
+            TFT Electrical Characterization Analyzer
           </h1>
           <p className="text-xl text-gray-600 mb-8">
             Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
@@ -679,7 +679,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                         </button>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <label className="text-sm text-gray-600 whitespace-nowrap">별명:</label>
+                        <label className="text-sm text-gray-600 whitespace-nowrap">샘플명:</label>
                         <input
                           type="text"
                           value={file.alias}
@@ -707,7 +707,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
               </div>
               <div className="flex items-start">
                 <span className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">2</span>
-                <p>각 파일에 별명을 입력하여 그래프에서 쉽게 구분하세요</p>
+                <p>각 파일에 샘플명을 입력하여 그래프에서 쉽게 구분하세요</p>
               </div>
               <div className="flex items-start">
                 <span className="bg-blue-100 text-blue-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">3</span>
