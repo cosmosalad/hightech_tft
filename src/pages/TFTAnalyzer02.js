@@ -501,7 +501,7 @@ if (mu0 > 0 && vth_sat !== 0) {
 
   // IDVG Linear 분석 (gm 데이터 포함)
   const analyzeIDVGLinear = (headers, dataRows, filename) => {
-    let vgIndex = -1, idIndex = -1, vdIndex = -1;
+  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
 
     headers.forEach((header, idx) => {
       if (header && typeof header === 'string') {
@@ -514,6 +514,9 @@ if (mu0 > 0 && vth_sat !== 0) {
         }
         if (headerLower.includes('drainv') || headerLower.includes('vd')) {
           vdIndex = idx;
+        }
+        if (headerLower.includes('gm') || headerLower.includes('transconductance')) {
+          gmIndex = idx;
         }
       }
     });
@@ -530,35 +533,56 @@ if (mu0 > 0 && vth_sat !== 0) {
       const row = dataRows[rowIdx];
       const vg = row[vgIndex] || 0;
       const id = Math.abs(row[idIndex]) || 1e-12;
+      const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
       
       if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
         uniqueVGPoints.set(vg, {
-          VG: vg,
-          ID: id,
-          VD: Math.abs(row[vdIndex]) || 0,
-          logID: Math.log10(id)
-        });
+        VG: vg,
+        ID: id,
+        VD: Math.abs(row[vdIndex]) || 0,
+        sqrtID: Math.sqrt(id),    // 👈 이 줄이 빠져있음!
+        logID: Math.log10(id),
+        gm_measured: gm_measured
+      });
       }
     }
     
     const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-    // gm 계산
+    // gm 계산 - 엑셀에 있으면 사용, 없으면 계산
     let gmData = [];
     let maxGm = 0;
     let maxGmIndex = 0;
-    
-    for (let i = 1; i < chartData.length - 1; i++) {
-      const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
-      const deltaID = chartData[i+1].ID - chartData[i-1].ID;
-      
-      if (deltaVG !== 0) {
-        const gm = Math.abs(deltaID / deltaVG);
-        const roundedVG = Math.round(chartData[i].VG * 10) / 10;
-        gmData.push({ VG: roundedVG, gm: gm });
-        if (gm > maxGm) {
-          maxGm = gm;
-          maxGmIndex = i;
+    let useExcelGm = false;
+
+    // 엑셀에 gm 데이터가 있는지 확인
+    if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
+      // 엑셀의 gm 값 사용
+      useExcelGm = true;
+      chartData.forEach((point, i) => {
+        if (point.gm_measured && point.gm_measured > 0) {
+          const roundedVG = Math.round(point.VG * 10) / 10;
+          gmData.push({ VG: roundedVG, gm: point.gm_measured });
+          if (point.gm_measured > maxGm) {
+            maxGm = point.gm_measured;
+            maxGmIndex = i;
+          }
+        }
+      });
+    } else {
+      // 엑셀에 gm이 없으면 수치 미분으로 계산
+      for (let i = 1; i < chartData.length - 1; i++) {
+        const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
+        const deltaID = chartData[i+1].ID - chartData[i-1].ID;
+        
+        if (deltaVG !== 0) {
+          const gm = Math.abs(deltaID / deltaVG);
+          const roundedVG = Math.round(chartData[i].VG * 10) / 10;
+          gmData.push({ VG: roundedVG, gm: gm });
+          if (gm > maxGm) {
+            maxGm = gm;
+            maxGmIndex = i;
+          }
         }
       }
     }
@@ -586,6 +610,7 @@ if (mu0 > 0 && vth_sat !== 0) {
         Ioff: ioff.toExponential(2) + ' A',
         'Ion/Ioff': ionIoffRatio.toExponential(2),
         'gm_max': maxGm.toExponential(2) + ' S',
+        'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산',
         μFE: muFE > 0 ? muFE.toExponential(2) + ' cm²/V·s' : 'N/A (파라미터 입력 필요)'
       }
     };
@@ -593,7 +618,7 @@ if (mu0 > 0 && vth_sat !== 0) {
 
   // IDVG Saturation 분석 (기존 코드 유지)
   const analyzeIDVGSaturation = (headers, dataRows, filename) => {
-    let vgIndex = -1, idIndex = -1, vdIndex = -1;
+    let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
     
     headers.forEach((header, idx) => {
       if (header && typeof header === 'string') {
@@ -606,6 +631,9 @@ if (mu0 > 0 && vth_sat !== 0) {
         }
         if (headerLower.includes('drainv') || headerLower.includes('vd')) {
           vdIndex = idx;
+        }
+        if (headerLower.includes('gm') || headerLower.includes('transconductance')) {
+          gmIndex = idx;
         }
       }
     });
@@ -622,36 +650,56 @@ if (mu0 > 0 && vth_sat !== 0) {
       const row = dataRows[rowIdx];
       const vg = row[vgIndex] || 0;
       const id = Math.abs(row[idIndex]) || 1e-12;
+      const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
       
       if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
         uniqueVGPoints.set(vg, {
-          VG: vg,
-          ID: id,
-          VD: Math.abs(row[vdIndex]) || 0,
-          sqrtID: Math.sqrt(id),
-          logID: Math.log10(id)
-        });
+        VG: vg,
+        ID: id,
+        VD: Math.abs(row[vdIndex]) || 0,
+        sqrtID: Math.sqrt(id),    // 👈 이 줄이 빠져있음!
+        logID: Math.log10(id),
+        gm_measured: gm_measured
+      });
       }
     }
     
     const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-    // gm 계산
+    // gm 계산 - 엑셀에 있으면 사용, 없으면 계산
     let gmData = [];
     let maxGm = 0;
     let maxGmIndex = 0;
-    
-    for (let i = 1; i < chartData.length - 1; i++) {
-      const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
-      const deltaID = chartData[i+1].ID - chartData[i-1].ID;
-      
-      if (deltaVG !== 0) {
-        const gm = Math.abs(deltaID / deltaVG);
-        const roundedVG = Math.round(chartData[i].VG * 10) / 10;
-        gmData.push({ VG: roundedVG, gm: gm });
-        if (gm > maxGm) {
-          maxGm = gm;
-          maxGmIndex = i;
+    let useExcelGm = false;
+
+    // 엑셀에 gm 데이터가 있는지 확인
+    if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
+      // 엑셀의 gm 값 사용
+      useExcelGm = true;
+      chartData.forEach((point, i) => {
+        if (point.gm_measured && point.gm_measured > 0) {
+          const roundedVG = Math.round(point.VG * 10) / 10;
+          gmData.push({ VG: roundedVG, gm: point.gm_measured });
+          if (point.gm_measured > maxGm) {
+            maxGm = point.gm_measured;
+            maxGmIndex = i;
+          }
+        }
+      });
+    } else {
+      // 엑셀에 gm이 없으면 수치 미분으로 계산
+      for (let i = 1; i < chartData.length - 1; i++) {
+        const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
+        const deltaID = chartData[i+1].ID - chartData[i-1].ID;
+        
+        if (deltaVG !== 0) {
+          const gm = Math.abs(deltaID / deltaVG);
+          const roundedVG = Math.round(chartData[i].VG * 10) / 10;
+          gmData.push({ VG: roundedVG, gm: gm });
+          if (gm > maxGm) {
+            maxGm = gm;
+            maxGmIndex = i;
+          }
         }
       }
     }
@@ -696,14 +744,15 @@ if (mu0 > 0 && vth_sat !== 0) {
      chartData,
      gmData,
      measuredVDS: vdsSat,
-     parameters: {
-       'VDS (측정값)': vdsSat.toFixed(1) + ' V',
-       Vth: vth.toFixed(2) + ' V',
-       SS: ss.toFixed(3) + ' V/decade',
-       Dit: dit > 0 ? dit.toExponential(2) + ' cm⁻²eV⁻¹' : 'N/A (파라미터 입력 필요)',
-       ID_sat: idSat.toExponential(2) + ' A',
-       gm_max: Math.round(maxGm * 1e6) + ' µS'
-     }
+    parameters: {
+      'VDS (측정값)': vdsSat.toFixed(1) + ' V',
+      Vth: vth.toFixed(2) + ' V',
+      SS: ss.toFixed(3) + ' V/decade',
+      Dit: dit > 0 ? dit.toExponential(2) + ' cm⁻²eV⁻¹' : 'N/A (파라미터 입력 필요)',
+      ID_sat: idSat.toExponential(2) + ' A',
+      gm_max: Math.round(maxGm * 1e6) + ' µS',
+      'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산'  // 👈 이 줄 추가
+    }
    };
  };
 
