@@ -1046,16 +1046,16 @@ if (mu0 > 0 && vth_sat !== 0) {
              </div>
            </div>
            
-           <div className="mt-6 p-4 bg-green-50 rounded-lg">
-             <h4 className="font-semibold text-green-800 mb-2">권장 파일 구성:</h4>
-             <div className="text-sm text-green-700 space-y-1">
-               <p>• Sample A_Linear.xlsx</p>
-               <p>• Sample A_Saturation.xlsx</p>
-               <p>• Sample A_IDVD.xlsx</p>
-               <p>• Sample A_Hysteresis.xlsx</p>
-               <p className="text-xs text-green-600 mt-2">→ "Sample A" 샘플명으로 통합 분석</p>
-             </div>
-           </div>
+           <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
+            <h4 className="font-semibold text-yellow-800 mb-2">📁 파일명 규칙</h4>
+            <div className="text-sm text-yellow-700 space-y-1">
+              <p><strong>• IDVD 측정:</strong> 파일명에 "IDVD" 포함 (예: T1_IDVD.xlsx)</p>
+              <p><strong>• Linear 측정:</strong> "IDVG"와 "Linear" 또는 "Lin" 포함 (예: T1_IDVG_Linear.xlsx)</p>
+              <p><strong>• Saturation 측정:</strong> "IDVG"와 "Sat" 포함 (예: T1_IDVG_Sat.xlsx)</p>
+              <p><strong>• Hysteresis 측정:</strong> "IDVG", "Linear", "Hys" 모두 포함 (예: T1_IDVG_Linear_Hys.xlsx)</p>
+              <p className="text-xs text-yellow-600 mt-2">💡 같은 샘플명의 파일들이 하나로 통합 분석됩니다</p>
+            </div>
+          </div>
            
            <button
              onClick={() => setShowParamInput(!showParamInput)}
