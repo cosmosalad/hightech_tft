@@ -830,33 +830,37 @@ if (mu0 > 0 && vth_sat !== 0) {
          <label className="block text-sm font-medium text-gray-700 mb-1">채널 폭 (W) [μm]</label>
          <input
            type="number"
-           value={deviceParams.W * 1e6}
+           value={Math.round(deviceParams.W * 1e6 * 10) / 10}
            onChange={(e) => {
              const newW = parseFloat(e.target.value) * 1e-6;
              setDeviceParams({...deviceParams, W: newW});
            }}
            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
            placeholder="예: 100"
+           max="10000"
+           step="0.1"
          />
        </div>
        <div>
          <label className="block text-sm font-medium text-gray-700 mb-1">채널 길이 (L) [μm]</label>
          <input
            type="number"
-           value={deviceParams.L * 1e6}
+           value={Math.round(deviceParams.L * 1e6 * 10) / 10}
            onChange={(e) => {
              const newL = parseFloat(e.target.value) * 1e-6;
              setDeviceParams({...deviceParams, L: newL});
            }}
            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-           placeholder="예: 50"
+          placeholder="예: 50, 4200"
+          max="10000"
+          step="0.1"
          />
        </div>
        <div>
          <label className="block text-sm font-medium text-gray-700 mb-1">산화막 두께 (tox) [nm]</label>
          <input
            type="number"
-           value={deviceParams.tox * 1e9}
+           value={Math.round(deviceParams.tox * 1e9 * 10) / 10}
            onChange={(e) => {
              const newTox = parseFloat(e.target.value) * 1e-9;
              const newCox = calculateCox(newTox) * 1e-4;
@@ -864,6 +868,8 @@ if (mu0 > 0 && vth_sat !== 0) {
            }}
            className="w-full p-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent"
            placeholder="예: 20, 60, 100"
+           max="10000"
+            step="0.1"
          />
        </div>
      </div>
@@ -1097,7 +1103,12 @@ if (mu0 > 0 && vth_sat !== 0) {
              {Object.entries(completeAnalysisResults).map(([sampleName, result]) => (
                <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
                  <div className="flex items-center justify-between mb-4">
-                   <h3 className="text-xl font-bold text-gray-800">{sampleName}</h3>
+                   <h3 className="text-xl font-bold text-gray-800">
+                    {sampleName}
+                    <span className="text-sm font-normal text-gray-600 ml-3">
+                      (W={(deviceParams.W * 1e6).toFixed(1)}μm, L={(deviceParams.L * 1e6).toFixed(1)}μm, tox={(deviceParams.tox * 1e9).toFixed(1)}nm)
+                    </span>
+                  </h3>
                    <div className="flex items-center space-x-4">
                      <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                        result.quality.grade === 'A' ? 'bg-green-100 text-green-800' :
