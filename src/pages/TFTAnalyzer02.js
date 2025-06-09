@@ -323,12 +323,17 @@ const calculateMu0UsingYFunction = (linearData, deviceParams, vth) => {
       const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat; // Linear 우선, 없으면 Saturation
       
       if (finalGmMax > 0 && deviceParams.W > 0 && deviceParams.L > 0 && vds_linear > 0) {
-        const cox = calculateCox(deviceParams.tox);
-        const coxCm2 = cox * 1e-4; // F/cm²
-        const WCm = deviceParams.W * 100; // cm
-        const LCm = deviceParams.L * 100; // cm
+        const cox_F_per_m2 = calculateCox(deviceParams.tox); // F/m² 단위 
+        // F/m²를 F/cm²로 변환 (1 m² = 1e4 cm²) 
+        const cox_F_per_cm2 = cox_F_per_m2 * 1e-4; 
         
-        muFE = (LCm / (WCm * coxCm2 * vds_linear)) * finalGmMax;
+        // 채널 폭(W)과 길이(L)를 m에서 cm로 변환 
+        const W_cm = deviceParams.W * 100; // cm 
+        const L_cm = deviceParams.L * 100; // cm 
+        
+        // µFE = gm_max * L / (Cox * W * VDS) 공식 적용 
+        // 모든 단위를 cm 기반으로 통일했으므로 최종 결과는 cm²/V·s 단위 
+        muFE = (L_cm / (W_cm * cox_F_per_cm2 * vds_linear)) * finalGmMax; 
       } else {
         results.warnings.push('μFE 계산 불가 - 파라미터 또는 gm 데이터 부족');
       }
@@ -724,8 +729,18 @@ if (mu0 > 0 && vth_sat !== 0) {
 
     let muFE = 0;
     if (maxGm > 0 && deviceParams.W > 0 && deviceParams.L > 0 && cox > 0 && vdsLinear > 0) {
-      muFE = (deviceParams.L / (deviceParams.W * cox * vdsLinear)) * maxGm;
-      muFE = muFE * 1e4; 
+      const cox_F_per_m2 = calculateCox(deviceParams.tox); // F/m² 단위 
+      // F/m²를 F/cm²로 변환 
+      const cox_F_per_cm2 = cox_F_per_m2 * 1e-4; 
+
+      // 채널 폭(W)과 길이(L)를 m에서 cm로 변환 
+      const W_cm = deviceParams.W * 100; // cm 
+      const L_cm = deviceParams.L * 100; // cm 
+      
+      // µFE = gm_max * L / (Cox * W * VDS) 공식 적용 
+      // 모든 단위를 cm 기반으로 통일했으므로 최종 결과는 cm²/V·s 단위 
+      muFE = (L_cm / (W_cm * cox_F_per_cm2 * vdsLinear)) * maxGm;
+      // muFE = muFE * 1e4; // 이 줄은 제거합니다. 
     }
 
     return {
