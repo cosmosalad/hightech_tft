@@ -165,7 +165,110 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
 
     return completeResults;
   };
+// Y-function method로 정확한 μ0 계산
+const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
+  if (!saturationData || !saturationData.chartData || !saturationData.gmData) {
+    return {
+      mu0: 0,
+      error: 'Saturation 데이터 또는 gm 데이터 없음',
+      yFunctionData: []
+    };
+  }
 
+  const { chartData, gmData } = saturationData;
+  const { W, L, tox } = deviceParams;
+  
+  // Cox 계산
+  const cox = calculateCox(tox) * 1e-4; // F/cm²
+  
+  // Vth는 이미 saturation에서 정확히 계산됨
+  const vthString = saturationData.parameters?.Vth;
+  if (!vthString) {
+    return {
+      mu0: 0,
+      error: 'Vth 값 없음',
+      yFunctionData: []
+    };
+  }
+  const vth = parseFloat(vthString.split(' ')[0]);
+  
+  // Y-function 데이터 계산
+  const yFunctionData = [];
+  
+  for (let i = 0; i < chartData.length; i++) {
+    const vgs = chartData[i].VG;
+    const id = chartData[i].ID;
+    
+    // 해당 VGS에서의 gm 찾기
+    const gmPoint = gmData.find(g => Math.abs(g.VG - vgs) < 0.05);
+    
+    // 조건 체크: gm > 0, VGS > Vth, ID > 0
+    if (gmPoint && gmPoint.gm > 1e-12 && vgs > vth && id > 1e-12) {
+      const y = id / Math.sqrt(gmPoint.gm);
+      const vgs_minus_vth = vgs - vth;
+      
+      yFunctionData.push({ 
+        x: vgs_minus_vth, 
+        y: y,
+        vgs: vgs,
+        id: id,
+        gm: gmPoint.gm
+      });
+    }
+  }
+  
+  if (yFunctionData.length < 5) {
+    return {
+      mu0: 0,
+      error: 'Y-function 계산을 위한 충분한 데이터 부족',
+      yFunctionData: yFunctionData
+    };
+  }
+  
+  // 선형 구간 선택 (전체 데이터의 20-80% 구간)
+  const startIdx = Math.floor(yFunctionData.length * 0.2);
+  const endIdx = Math.floor(yFunctionData.length * 0.8);
+  const linearRegion = yFunctionData.slice(startIdx, endIdx);
+  
+  if (linearRegion.length < 3) {
+    return {
+      mu0: 0,
+      error: '선형 구간 데이터 부족',
+      yFunctionData: yFunctionData
+    };
+  }
+  
+  // 선형 회귀로 기울기 계산
+  const x_values = linearRegion.map(d => d.x);
+  const y_values = linearRegion.map(d => d.y);
+  const regression = calculateLinearRegression(x_values, y_values);
+  
+  // μ0 = slope² / (Cox × W/L)
+  const WCm = W * 100; // m to cm
+  const LCm = L * 100; // m to cm
+  const mu0 = (regression.slope * regression.slope) / (cox * WCm / LCm);
+  
+  // R² 계산으로 선형성 확인
+  const y_predicted = x_values.map(x => regression.slope * x + regression.intercept);
+  const ss_res = y_values.reduce((sum, y, i) => sum + Math.pow(y - y_predicted[i], 2), 0);
+  const y_mean = y_values.reduce((sum, y) => sum + y, 0) / y_values.length;
+  const ss_tot = y_values.reduce((sum, y) => sum + Math.pow(y - y_mean, 2), 0);
+  const r_squared = ss_tot > 0 ? 1 - (ss_res / ss_tot) : 0;
+  
+  return {
+    mu0: mu0,
+    slope: regression.slope,
+    intercept: regression.intercept,
+    r_squared: r_squared,
+    dataPoints: yFunctionData.length,
+    linearRegionPoints: linearRegion.length,
+    yFunctionData: yFunctionData,
+    linearRegion: linearRegion,
+    quality: r_squared > 0.95 ? 'Excellent' : 
+             r_squared > 0.9 ? 'Good' : 
+             r_squared > 0.8 ? 'Fair' : 'Poor'
+  };
+};
   // 🔬 샘플별 완벽한 분석
   const performSampleCompleteAnalysis = (sampleName, sampleData) => {
     const results = {
@@ -244,12 +347,40 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
         results.warnings.push('μFE 계산 불가 - 파라미터 또는 gm 데이터 부족');
       }
 
-      // 6. 🎯 개선된 μ0 계산 (경험적 보정)
-      let mu0 = 0;
-      if (muFE > 0) {
-        // 실제 측정 조건을 고려한 보정 계수
-        const correctionFactor = vds_linear < 0.2 ? 1.3 : 1.2; // 낮은 VDS에서 더 큰 보정
-        mu0 = muFE * correctionFactor;
+      // 6. 🎯 Y-function method로 정확한 μ0 계산
+      let mu0 = 0, mu0CalculationInfo = '', yFunctionQuality = 'N/A';
+
+      if (sampleData['IDVG-Saturation']) {
+        const yFunctionResult = calculateMu0UsingYFunction(sampleData['IDVG-Saturation'], deviceParams);
+        
+        if (yFunctionResult.mu0 > 0 && yFunctionResult.quality !== 'Poor') {
+          mu0 = yFunctionResult.mu0;
+          mu0CalculationInfo = `Y-function method (R²=${yFunctionResult.r_squared.toFixed(3)})`;
+          yFunctionQuality = yFunctionResult.quality;
+        } else {
+          // Y-function 실패시 fallback
+          if (muFE > 0) {
+            const correctionFactor = vds_linear < 0.2 ? 1.3 : 1.2;
+            mu0 = muFE * correctionFactor;
+            mu0CalculationInfo = 'Fallback method (Y-function 실패)';
+            yFunctionQuality = 'Failed';
+            results.warnings.push(`Y-function 계산 실패: ${yFunctionResult.error || '품질 불량'}`);
+          } else {
+            mu0CalculationInfo = 'N/A (데이터 부족)';
+            results.warnings.push('μ0 계산 불가 - Saturation 또는 μFE 데이터 부족');
+          }
+        }
+      } else {
+        // Saturation 데이터가 없는 경우 기존 방식
+        if (muFE > 0) {
+          const correctionFactor = vds_linear < 0.2 ? 1.3 : 1.2;
+          mu0 = muFE * correctionFactor;
+          mu0CalculationInfo = 'Fallback method (Saturation 데이터 없음)';
+          results.warnings.push('Saturation 데이터 없음 - Y-function 계산 불가');
+        } else {
+          mu0CalculationInfo = 'N/A (데이터 부족)';
+          results.warnings.push('μ0 계산 불가 - 모든 데이터 부족');
+        }
       }
 
       // 7. 🎯 정확한 μeff 계산 (실제 gm_max 지점 사용)
@@ -311,6 +442,15 @@ if (mu0 > 0 && vth_sat !== 0) {
   
     // μeff 계산 - 실제 사용된 VG 지점에서
     muEff = mu0 / (1 + theta * Math.max(0, vg_for_theta - vth_sat));
+
+    // μeff와 μFE의 상대 오차가 1% 이내면 측정불가 처리
+    if (muFE > 0 && muEff > 0) {
+      const relativeDiff = Math.abs(muEff - muFE) / muFE;
+      if (relativeDiff < 0.01) { // 1% 이내면 측정불가
+        muEff = 0;
+        results.warnings.push('μeff ≈ μFE: 이동도 감소 효과가 미미하여 측정불가');
+      }
+    }
       
     } else {
       results.warnings.push('μ0 또는 Vth 없음 - μeff 계산 불가');
@@ -331,8 +471,10 @@ if (mu0 > 0 && vth_sat !== 0) {
         'Vth (Saturation)': vth_sat !== 0 ? `${vth_sat.toFixed(2)} V` : 'N/A',
         'gm_max (Linear 기준)': finalGmMax > 0 ? `${finalGmMax.toExponential(2)} S` : 'N/A',
         'μFE (통합 계산)': muFE > 0 ? `${muFE.toExponential(2)} cm²/V·s` : 'N/A',
-        'μ0 (보정 계산)': mu0 > 0 ? `${mu0.toExponential(2)} cm²/V·s` : 'N/A',
-        'μeff (정확 계산)': muEff > 0 ? `${muEff.toExponential(2)} cm²/V·s` : 'N/A',
+        'μ0 (Y-function)': mu0 > 0 ? `${mu0.toExponential(2)} cm²/V·s` : 'N/A',
+        'μ0 계산 방법': mu0CalculationInfo,
+        'Y-function 품질': yFunctionQuality,
+        'μeff (정확 계산)': muEff > 0 ? `${muEff.toExponential(2)} cm²/V·s` : '측정불가',
         'θ (계산값)': theta > 0 ? `${theta.toExponential(2)} V⁻¹` : 'N/A',
         'θ 계산 방법': thetaCalculationInfo,
         'VG@gm_max': vg_for_theta > 0 ? `${vg_for_theta.toFixed(1)} V` : 'N/A',
@@ -1195,7 +1337,7 @@ if (mu0 > 0 && vth_sat !== 0) {
                        </div>
                        <div className="flex justify-between">
                          <span className="text-gray-600">μeff:</span>
-                         <span className="font-mono font-bold text-blue-700">{result.parameters['μeff (정확 계산)']}</span>
+                         <span className="font-mono">{result.parameters['μeff (정확 계산)']}</span>
                        </div>
                      </div>
                    </div>
@@ -1229,7 +1371,7 @@ if (mu0 > 0 && vth_sat !== 0) {
                      <div className="space-y-2 text-sm">
                        <div className="flex justify-between">
                          <span className="text-gray-600">μ0:</span>
-                         <span className="font-mono">{result.parameters['μ0 (보정 계산)']}</span>
+                         <span className="font-mono">{result.parameters['μ0 (Y-function)']}</span>
                        </div>
                        <div className="flex justify-between">
                          <span className="text-gray-600">θ:</span>
@@ -1246,18 +1388,6 @@ if (mu0 > 0 && vth_sat !== 0) {
                      </div>
                    </div>
                  </div>
-
-                 {/* 경고 메시지 */}
-                 {result.warnings.length > 0 && (
-                   <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                     <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>
-                     <ul className="text-sm text-yellow-700 space-y-1">
-                       {result.warnings.map((warning, index) => (
-                         <li key={index}>• {warning}</li>
-                       ))}
-                     </ul>
-                   </div>
-                 )}
 
                  {/* 품질 문제 */}
                  {result.quality.issues.length > 0 && (
@@ -1625,13 +1755,13 @@ if (mu0 > 0 && vth_sat !== 0) {
                      <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
                        {result.parameters['gm_max (Linear 기준)']}
                      </td>
-                     <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs font-bold text-blue-700">
-                       {result.parameters['μFE (통합 계산)']}
-                     </td>
+                      <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs font-bold text-blue-700">
+                        {result.parameters['μFE (통합 계산)']}
+                      </td>
+                      <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
+                        {result.parameters['μ0 (Y-function)']}
+                      </td>
                      <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
-                       {result.parameters['μ0 (보정 계산)']}
-                     </td>
-                     <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs font-bold text-purple-700">
                        {result.parameters['μeff (정확 계산)']}
                      </td>
                      <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
@@ -1673,7 +1803,7 @@ if (mu0 > 0 && vth_sat !== 0) {
                  <p><strong>• Vth:</strong> Saturation 데이터의 √ID vs VG 선형회귀</p>
                  <p><strong>• gm_max:</strong> Linear 데이터의 dID/dVG 최대값</p>
                  <p><strong>• μFE:</strong> Linear gm_max + 디바이스 파라미터 통합</p>
-                 <p><strong>• μ0:</strong> μFE × 보정계수 (측정 조건 반영)</p>
+                 <p><strong>• μ0:</strong> Y-function method (물리적으로 정확)</p>
                </div>
                <div>
                  <p><strong>• μeff:</strong> μ0 / (1 + θ(VG - Vth)) 실제 계산</p>
