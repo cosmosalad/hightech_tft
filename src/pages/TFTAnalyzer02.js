@@ -166,31 +166,21 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     return completeResults;
   };
 // Y-function method로 정확한 μ0 계산
-const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
-  if (!saturationData || !saturationData.chartData || !saturationData.gmData) {
+const calculateMu0UsingYFunction = (linearData, deviceParams, vth) => {
+  if (!linearData || !linearData.chartData || !linearData.gmData || !vth) {
     return {
       mu0: 0,
-      error: 'Saturation 데이터 또는 gm 데이터 없음',
+      error: 'Linear 데이터, gm 데이터 또는 Vth 값 없음',
       yFunctionData: []
     };
   }
 
-  const { chartData, gmData } = saturationData;
+  const { chartData, gmData } = linearData;
+  const vd = linearData.measuredVDS || 0.1;
   const { W, L, tox } = deviceParams;
   
-  // Cox 계산
-  const cox = calculateCox(tox) * 1e-4; // F/cm²
-  
-  // Vth는 이미 saturation에서 정확히 계산됨
-  const vthString = saturationData.parameters?.Vth;
-  if (!vthString) {
-    return {
-      mu0: 0,
-      error: 'Vth 값 없음',
-      yFunctionData: []
-    };
-  }
-  const vth = parseFloat(vthString.split(' ')[0]);
+  // Cox 계산 (F/cm²)
+  const cox = calculateCox(tox);
   
   // Y-function 데이터 계산
   const yFunctionData = [];
@@ -199,17 +189,15 @@ const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
     const vgs = chartData[i].VG;
     const id = chartData[i].ID;
     
-    // 해당 VGS에서의 gm 찾기
     const gmPoint = gmData.find(g => Math.abs(g.VG - vgs) < 0.05);
     
-    // 조건 체크: gm > 0, VGS > Vth, ID > 0
     if (gmPoint && gmPoint.gm > 1e-12 && vgs > vth && id > 1e-12) {
-      const y = id / Math.sqrt(gmPoint.gm);
-      const vgs_minus_vth = vgs - vth;
+      const y = id / Math.sqrt(gmPoint.gm);  // ✅ 올바른 Y
+      const x = vgs - vth;  // 🔥 수정: (VG - Vth)가 맞음!
       
       yFunctionData.push({ 
-        x: vgs_minus_vth, 
-        y: y,
+        x: x,  // (VG - Vth)
+        y: y,  // ID / √gm
         vgs: vgs,
         id: id,
         gm: gmPoint.gm
@@ -243,10 +231,8 @@ const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
   const y_values = linearRegion.map(d => d.y);
   const regression = calculateLinearRegression(x_values, y_values);
   
-  // μ0 = slope² / (Cox × W/L)
-  const WCm = W * 100; // m to cm
-  const LCm = L * 100; // m to cm
-  const mu0 = (regression.slope * regression.slope) / (cox * WCm / LCm);
+  // μ0 = slope² / (Cox × W/L × VDS)
+  const mu0 = (regression.slope * regression.slope * L) / (cox * vd * W) * 1e4;
   
   // R² 계산으로 선형성 확인
   const y_predicted = x_values.map(x => regression.slope * x + regression.intercept);
@@ -350,8 +336,8 @@ const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
       // 6. 🎯 Y-function method로 정확한 μ0 계산
       let mu0 = 0, mu0CalculationInfo = '', yFunctionQuality = 'N/A';
 
-      if (sampleData['IDVG-Saturation']) {
-        const yFunctionResult = calculateMu0UsingYFunction(sampleData['IDVG-Saturation'], deviceParams);
+      if (sampleData['IDVG-Linear']) {
+        const yFunctionResult = calculateMu0UsingYFunction(sampleData['IDVG-Linear'], deviceParams, vth_sat);
         
         if (yFunctionResult.mu0 > 0 && yFunctionResult.quality !== 'Poor') {
           mu0 = yFunctionResult.mu0;
@@ -376,7 +362,7 @@ const calculateMu0UsingYFunction = (saturationData, deviceParams) => {
           const correctionFactor = vds_linear < 0.2 ? 1.3 : 1.2;
           mu0 = muFE * correctionFactor;
           mu0CalculationInfo = 'Fallback method (Saturation 데이터 없음)';
-          results.warnings.push('Saturation 데이터 없음 - Y-function 계산 불가');
+          results.warnings.push('Linear 데이터 없음 - Y-function 계산 불가');
         } else {
           mu0CalculationInfo = 'N/A (데이터 부족)';
           results.warnings.push('μ0 계산 불가 - 모든 데이터 부족');
