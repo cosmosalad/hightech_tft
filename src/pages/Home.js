@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play } from 'lucide-react';
-import TFTProcessAnimation from './TFTProcessAnimation';
+
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
-  const [showProcessModal, setShowProcessModal] = useState(false);
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -14,11 +13,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
   };
 
   const openProcessModal = () => {
-    setShowProcessModal(true);
-  };
-
-  const closeProcessModal = () => {
-    setShowProcessModal(false);
+    onNavigate('simulator');
   };
 
   // 테이블 데이터를 useMemo로 최적화
@@ -312,11 +307,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </p>
         </footer>
       </div>
-
-      {/* TFT 공정 모달 */}
-      {showProcessModal && (
-        <TFTProcessAnimation onClose={closeProcessModal} />
-      )}
     </div>
   );
 };
