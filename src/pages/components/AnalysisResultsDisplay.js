@@ -605,24 +605,6 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
         </tbody>
       </table>
     </div>
-    
-    <div className="mt-6 p-4 bg-gradient-to-r from-green-50 to-blue-50 rounded-lg">
-      <h3 className="font-semibold text-gray-800 mb-2">📊 분석 방법 설명</h3>
-      <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">
-        <div>
-          <p><strong>• Vth:</strong> Saturation 데이터의 √ID vs VG 선형회귀</p>
-          <p><strong>• gm_max:</strong> Linear 데이터의 dID/dVG 최대값</p>
-          <p><strong>• μFE:</strong> Linear gm_max + 디바이스 파라미터 통합</p>
-          <p><strong>• μ0:</strong> Y-function method (물리적으로 정확)</p>
-        </div>
-        <div>
-          <p><strong>• μeff:</strong> μ0 / (1 + θ(VG - Vth)) 실제 계산</p>
-          <p><strong>• θ:</strong> 실측 데이터로부터 mobility degradation 추출</p>
-          <p><strong>• Dit:</strong> Saturation SS + Cox를 통한 정확 계산</p>
-          <p><strong>• 품질:</strong> 데이터 완성도 + 계산 신뢰도 종합</p>
-        </div>
-      </div>
-    </div>
   </div>
 );
 

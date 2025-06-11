@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ArrowRight, Star, Calculator, Play, Home } from 'lucide-react';
 import FileUploadSection from './FileUploadSection';
 import ParameterInputSection from './ParameterInputSection';
+import FormulaCodeInspector from './FormulaCodeInspector';
 
 const HomePage = ({
   uploadedFiles,
@@ -16,6 +17,8 @@ const HomePage = ({
   startAnalysis,
   handleGoToMainHome
 }) => {
+  const [showFormulaInspector, setShowFormulaInspector] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
       <div className="max-w-4xl mx-auto">
@@ -100,6 +103,13 @@ const HomePage = ({
           setDeviceParams={setDeviceParams}
           showParamInput={showParamInput}
         />
+
+        {/* 수식 및 코드 점검 컴포넌트 */}
+        {showFormulaInspector && (
+          <div className="mb-8">
+            <FormulaCodeInspector />
+          </div>
+        )}
 
         <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">🔬 통합 분석의 장점</h2>
