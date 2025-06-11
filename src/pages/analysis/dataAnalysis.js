@@ -5,14 +5,20 @@ import {
   calculateSubthresholdSwing,
   calculateThresholdVoltage,
   calculateDit,
-  calculateGm
+  calculateGm,
+  calculateTheta,
+  calculateMuEff
 } from './calculationUtils';
 
-// IDVD 분석
+// 🔥 중앙화된 상수 import
+import { PHYSICAL_CONSTANTS } from '../utils/constants';
+
+// IDVD 분석 (PDF 기준)
 export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
   const chartData = [];
   const gateVoltages = [];
   
+  // 헤더에서 Gate Voltage 추출
   for (let i = 0; i < headers.length; i += 5) {
     if (headers[i] && headers[i].includes('DrainI')) {
       const gateVIndex = i + 3;
@@ -22,6 +28,7 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
     }
   }
 
+  // 차트 데이터 생성
   const uniqueVDPoints = new Map();
   
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
@@ -43,14 +50,26 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
   
   const chartData_fixed = Array.from(uniqueVDPoints.values()).sort((a, b) => a.VD - b.VD);
 
-  // Ron 계산
+  // 🔥 PDF 기준 Ron 계산: Ron = (dVD/dID)^(-1)
   let ron = 0;
-  if (chartData_fixed.length > 2) {
-    const lowVDPoint = chartData_fixed[1];
-    const vd = lowVDPoint.VD;
-    const id = lowVDPoint[`VG_${gateVoltages[gateVoltages.length-1]}V`] || 1e-12;
-    if (id > 0) {
-      ron = vd / id;
+  if (chartData_fixed.length > 2 && gateVoltages.length > 0) {
+    // 가장 높은 VG에서 초반 선형 영역의 기울기
+    const highestVG = gateVoltages[gateVoltages.length - 1];
+    const dataKey = `VG_${highestVG}V`;
+    
+    // 초반 3-5개 점에서 선형 회귀
+    const linearPoints = chartData_fixed.slice(1, 6); // 0V 제외하고 처음 5개점
+    
+    if (linearPoints.length >= 3) {
+      const vd_values = linearPoints.map(p => p.VD);
+      const id_values = linearPoints.map(p => p[dataKey] || 1e-12);
+      
+      const regression = calculateLinearRegression(vd_values, id_values);
+      
+      // Ron = 1/slope (기울기의 역수)
+      if (regression.slope > 0) {
+        ron = 1 / regression.slope;
+      }
     }
   }
 
@@ -58,12 +77,12 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
     chartData: chartData_fixed,
     gateVoltages,
     parameters: {
-      Ron: ron.toExponential(2) + ' Ω'
+      Ron: ron > 0 ? ron.toExponential(2) + ' Ω' : 'N/A'
     }
   };
 };
 
-// IDVG Linear 분석
+// IDVG Linear 분석 (PDF 기준)
 export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
 
@@ -116,12 +135,11 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
   
   const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-  // gm 계산 - 엑셀에 있으면 사용, 없으면 계산
+  // gm 계산 - 엑셀에 있으면 사용, 없으면 수치 미분
   let gmData = [];
   let maxGm = 0;
   let useExcelGm = false;
 
-  // 엑셀에 gm 데이터가 있는지 확인
   if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
     // 엑셀의 gm 값 사용
     useExcelGm = true;
@@ -135,18 +153,21 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
       }
     });
   } else {
-    // 수치 미분으로 gm 계산
+    // 수치 미분으로 gm 계산: gm = ΔID / ΔVG
     gmData = calculateGm(chartData);
     maxGm = gmData.length > 0 ? Math.max(...gmData.map(d => d.gm)) : 0;
   }
 
-  // Ion, Ioff 계산
+  // 🔥 PDF 기준 Ion, Ioff 계산
+  // Ion: 최대 ID값 (가장 높은 VG에서)
   const ion = Math.max(...chartData.map(d => d.ID));
+  
+  // Ioff: 최소 ID값 (가장 낮은 VG에서)
   const minCurrents = chartData.filter(d => d.ID > 0).map(d => d.ID);
   const ioff = minCurrents.length > 0 ? Math.min(...minCurrents) : 1e-12;
   const ionIoffRatio = ion / (ioff || 1e-12);
 
-  // μFE 계산
+  // 🔥 PDF 기준 μFE 계산
   const muFE = calculateMuFE(maxGm, deviceParams, vdsLinear);
 
   return {
@@ -165,7 +186,7 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
   };
 };
 
-// IDVG Saturation 분석
+// IDVG Saturation 분석 (PDF 기준)
 export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
   
@@ -241,15 +262,16 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
     maxGm = gmData.length > 0 ? Math.max(...gmData.map(d => d.gm)) : 0;
   }
 
-  // Threshold voltage 계산
+  // 🔥 PDF 기준 Threshold voltage 계산 (gm_max 기준 선형 외삽법)
   const vth = calculateThresholdVoltage(chartData, gmData);
 
-  // Subthreshold Swing 계산
+  // 🔥 PDF 기준 Subthreshold Swing 계산
   const ss = calculateSubthresholdSwing(chartData);
 
-  // Interface trap density 계산
+  // 🔥 PDF 기준 Interface trap density 계산
   const dit = calculateDit(ss, deviceParams);
 
+  // ID_sat: 포화 영역의 최대 전류
   const idSat = Math.max(...chartData.map(d => d.ID));
 
   return {
@@ -268,7 +290,7 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
   };
 };
 
-// IDVG Hysteresis 분석
+// IDVG Hysteresis 분석 (PDF 기준)
 export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1;
   
@@ -301,7 +323,7 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
     }
   }
   
-  // Forward sweep
+  // Forward sweep (음에서 양으로)
   const forwardVGMap = new Map();
   for (let i = 0; i <= maxVgIndex; i++) {
     const vg = dataRows[i][vgIndex] || 0;
@@ -310,13 +332,14 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
       forwardVGMap.set(vg, {
         VG: vg,
         ID: id,
+        sqrtID: Math.sqrt(id),
         logID: Math.log10(id)
       });
     }
   }
   forwardData = Array.from(forwardVGMap.values()).sort((a, b) => a.VG - b.VG);
   
-  // Backward sweep
+  // Backward sweep (양에서 음으로)
   const backwardVGMap = new Map();
   for (let i = maxVgIndex; i < dataRows.length; i++) {
     const vg = dataRows[i][vgIndex] || 0;
@@ -325,38 +348,43 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
       backwardVGMap.set(vg, {
         VG: vg,
         ID: id,
+        sqrtID: Math.sqrt(id),
         logID: Math.log10(id)
       });
     }
   }
   backwardData = Array.from(backwardVGMap.values()).sort((a, b) => b.VG - a.VG);
 
-  // Forward Vth 계산
+  // 🔥 PDF 기준 Forward Vth 계산 (선형 외삽법)
   let vthForward = 0;
   if (forwardData.length > 10) {
+    // 중간 영역에서 √ID vs VG 선형 회귀
     const midStart = Math.floor(forwardData.length * 0.3);
     const midEnd = Math.floor(forwardData.length * 0.7);
     const x = forwardData.slice(midStart, midEnd).map(d => d.VG);
-    const y = forwardData.slice(midStart, midEnd).map(d => Math.sqrt(d.ID));
+    const y = forwardData.slice(midStart, midEnd).map(d => d.sqrtID);
     const regression = calculateLinearRegression(x, y);
     if (regression.slope !== 0) {
+      // √ID = 0일 때의 VG 값이 Vth
       vthForward = -regression.intercept / regression.slope;
     }
   }
 
-  // Backward Vth 계산
+  // 🔥 PDF 기준 Backward Vth 계산 (선형 외삽법)
   let vthBackward = 0;
   if (backwardData.length > 10) {
+    // 중간 영역에서 √ID vs VG 선형 회귀
     const midStart = Math.floor(backwardData.length * 0.3);
     const midEnd = Math.floor(backwardData.length * 0.7);
     const x = backwardData.slice(midStart, midEnd).map(d => d.VG);
-    const y = backwardData.slice(midStart, midEnd).map(d => Math.sqrt(d.ID));
+    const y = backwardData.slice(midStart, midEnd).map(d => d.sqrtID);
     const regression = calculateLinearRegression(x, y);
     if (regression.slope !== 0) {
       vthBackward = -regression.intercept / regression.slope;
     }
   }
 
+  // 🔥 PDF 수식: ΔVth = |Vth_forward - Vth_backward|
   const deltaVth = Math.abs(vthForward - vthBackward);
 
   // 안정성 평가

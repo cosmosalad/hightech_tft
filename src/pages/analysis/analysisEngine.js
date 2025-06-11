@@ -8,8 +8,13 @@ import {
 import { 
   calculateMu0UsingYFunction,
   calculateLinearRegression,
-  calculateCox
+  calculateCox,
+  calculateTheta,
+  calculateMuEff
 } from './calculationUtils';
+
+// 🔥 중앙화된 상수 import
+import { PHYSICAL_CONSTANTS, TFT_CONSTANTS } from '../utils/constants';
 
 // 파일 분석 함수
 export const analyzeFiles = async (files, deviceParams) => {
@@ -62,7 +67,7 @@ const performAnalysis = (data, type, filename, deviceParams) => {
   }
 };
 
-// 🎯 완벽한 통합 분석 함수 - 샘플명별로 데이터 묶어서 정확한 계산
+// 🎯 PDF 기준 완벽한 통합 분석 함수
 export const performCompleteAnalysis = (analysisResults, deviceParams) => {
   // 1. 샘플명별로 데이터 그룹화
   const sampleGroups = {};
@@ -87,47 +92,7 @@ export const performCompleteAnalysis = (analysisResults, deviceParams) => {
   return completeResults;
 };
 
-// 🟢 헬퍼 함수들 추가
-const calculateFallbackTheta = (deviceParams, vg_diff) => {
-  const tox = deviceParams.tox || 5e-9;
-  
-  if (tox < 3e-9) return 0.3;      // 얇은 산화막 - 높은 field effect
-  else if (tox < 10e-9) return 0.1; // 중간 두께
-  else return 0.05;                 // 두꺼운 산화막 - 낮은 field effect
-};
-
-const calculateAlternativeTheta = (mu0, muFE, vg_diff, deviceParams) => {
-  // VG 차이가 작을 때 대안 계산법
-  const mobility_ratio = mu0 / muFE;
-  const base_theta = (mobility_ratio - 1) / vg_diff;
-  
-  // VG 차이에 대한 보정 인수 적용
-  const correction_factor = Math.min(2.0, vg_diff / 1.0);
-  
-  return Math.max(0.01, Math.min(1.5, base_theta * correction_factor));
-};
-
-const estimateThetaFromDevice = (deviceParams) => {
-  const W = deviceParams.W || 10e-6;
-  const L = deviceParams.L || 1e-6;
-  const tox = deviceParams.tox || 5e-9;
-  
-  // Aspect ratio와 oxide thickness 기반 추정
-  const aspect_ratio = W / L;
-  const thickness_factor = tox / 5e-9; // 5nm 기준 정규화
-  
-  return 0.05 + (0.05 * Math.log10(aspect_ratio)) + (0.02 * thickness_factor);
-};
-
-const estimateThetaFromSaturation = (mu0, muFE, deviceParams) => {
-  if (muFE > 0) {
-    const mobility_ratio = mu0 / muFE;
-    return Math.max(0.02, Math.min(0.5, (mobility_ratio - 1) / 10.0));
-  }
-  return 0.1;
-};
-
-// 🔬 샘플별 완벽한 분석 (수정된 버전)
+// 🔬 PDF 기준 샘플별 완벽한 분석
 const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => {
   const results = {
     sampleName,
@@ -140,7 +105,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
   };
 
   try {
-    // 1. Saturation에서 정확한 Vth, SS, Dit 추출
+    // 1. 🔥 Saturation에서 정확한 Vth, SS, Dit 추출 (PDF 방식)
     let vth_sat = 0, ss = 0, dit = 0, gm_max_sat = 0;
     if (sampleData['IDVG-Saturation']) {
       const satParams = sampleData['IDVG-Saturation'].parameters;
@@ -155,7 +120,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       results.warnings.push('Saturation 데이터 없음 - Vth, SS, Dit 계산 불가');
     }
 
-    // 2. Linear에서 정확한 gm_max, VDS, Ion/Ioff 추출
+    // 2. 🔥 Linear에서 정확한 gm_max, VDS, Ion/Ioff 추출 (PDF 방식)
     let gm_max_lin = 0, vds_linear = 0, ion = 0, ioff = 0, ion_ioff_ratio = 0;
     if (sampleData['IDVG-Linear']) {
       const linParams = sampleData['IDVG-Linear'].parameters;
@@ -164,14 +129,14 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       ioff = parseFloat(linParams.Ioff?.split(' ')[0]) || 0;
       ion_ioff_ratio = parseFloat(linParams['Ion/Ioff']?.split(' ')[0]) || 0;
       
-      // Linear 데이터에서 gm_max 재계산 (더 정확)
+      // Linear 데이터에서 gm_max 재계산
       const linData = sampleData['IDVG-Linear'];
       gm_max_lin = calculateGmMaxFromLinear(linData);
     } else {
       results.warnings.push('Linear 데이터 없음 - gm_max, Ion/Ioff 계산 불가');
     }
 
-    // 3. IDVD에서 Ron 추출
+    // 3. 🔥 IDVD에서 Ron 추출 (PDF 방식)
     let ron = 0;
     if (sampleData['IDVD']) {
       const idvdParams = sampleData['IDVD'].parameters;
@@ -180,7 +145,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       results.warnings.push('IDVD 데이터 없음 - Ron 계산 불가');
     }
 
-    // 4. Hysteresis에서 ΔVth 추출
+    // 4. 🔥 Hysteresis에서 ΔVth 추출 (PDF 방식)
     let delta_vth = 0, stability = 'N/A';
     if (sampleData['IDVG-Hysteresis']) {
       const hysParams = sampleData['IDVG-Hysteresis'].parameters;
@@ -190,21 +155,20 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       results.warnings.push('Hysteresis 데이터 없음 - 안정성 평가 불가');
     }
 
-    // 5. 🎯 μFE 계산 (개선된 버전 - SI 단위 일관성)
+    // 5. 🔥 PDF 기준 μFE 계산 (정확한 수식)
     let muFE = 0;
-    const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat; // Linear 우선, 없으면 Saturation
+    const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat; // Linear 우선
     
     if (finalGmMax > 0 && deviceParams.W > 0 && deviceParams.L > 0 && vds_linear > 0) {
-      const cox = calculateCox(deviceParams.tox); // F/m² 단위
-      
-      // SI 단위로 일관성 있게 계산
-      muFE = (finalGmMax * deviceParams.L) / (cox * deviceParams.W * vds_linear); // m²/V·s
+      // PDF 수식: μFE = L/(W×Cox×VDS) × gm,max
+      const cox = calculateCox(deviceParams.tox); // F/m²
+      muFE = (deviceParams.L / (deviceParams.W * cox * vds_linear)) * finalGmMax;
       muFE = muFE * 1e4; // cm²/V·s로 변환
     } else {
       results.warnings.push('μFE 계산 불가 - 파라미터 또는 gm 데이터 부족');
     }
 
-    // 6. 🎯 Y-function method로 정확한 μ0 계산
+    // 6. 🔥 PDF 기준 Y-function method로 정확한 μ0 계산
     let mu0 = 0, mu0CalculationInfo = '', yFunctionQuality = 'N/A';
 
     if (sampleData['IDVG-Linear']) {
@@ -228,7 +192,6 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
         }
       }
     } else {
-      // Linear 데이터가 없는 경우 기존 방식
       if (muFE > 0) {
         const correctionFactor = vds_linear < 0.2 ? 1.3 : 1.2;
         mu0 = muFE * correctionFactor;
@@ -240,114 +203,83 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       }
     }
 
-    // 7. 🟢 정확한 μeff 계산 (개선된 θ 계산 로직)
+    // 7. 🔥 PDF 기준 정확한 θ (theta) 계산
     let muEff = 0, theta = 0, vg_for_theta = 0, thetaCalculationInfo = '';
 
-    if (mu0 > 0 && vth_sat !== 0) {
-      // Linear 데이터에서 실제 gm_max 지점 찾기
-      if (sampleData['IDVG-Linear'] && sampleData['IDVG-Linear'].gmData) {
-        const gmData = sampleData['IDVG-Linear'].gmData;
-        
-        if (gmData.length > 0) {
-          // gm_max가 발생한 실제 VG 지점 찾기
-          const maxGmPoint = gmData.reduce((max, current) => 
-            current.gm > max.gm ? current : max
-          );
-          vg_for_theta = maxGmPoint.VG;
-          
-          // 🟢 개선: 물리적 타당성 검증 강화
-          const vg_diff = vg_for_theta - vth_sat;
-          
-          // 🟢 개선 1: 더 엄격한 조건 + μ0 > μFE 확인
-          if (vg_diff > 2.0 && muFE > 0 && mu0 > muFE) {
-            const theta_raw = (mu0 / muFE - 1) / vg_diff;
-            
-            // 🟢 개선 2: θ 범위 엄격 검증
-            if (theta_raw >= 0.001 && theta_raw <= 2.0) {
-              theta = theta_raw;
-              thetaCalculationInfo = `실측값 (VG=${vg_for_theta.toFixed(1)}V, ΔVG=${vg_diff.toFixed(1)}V)`;
-            } else {
-              // 🟢 개선 3: 물리적 근거 있는 기본값
-              theta = calculateFallbackTheta(deviceParams, vg_diff);
-              thetaCalculationInfo = `보정값 (계산값 ${theta_raw.toFixed(4)} 범위초과)`;
-              results.warnings.push(`θ 계산값 범위초과 (${theta_raw.toFixed(4)} V⁻¹), 보정값 사용`);
-            }
-          } else if (vg_diff > 0.5 && vg_diff <= 2.0 && muFE > 0 && mu0 > muFE) {
-            // 🟢 개선 4: VG 차이 작을 때 대안 계산
-            theta = calculateAlternativeTheta(mu0, muFE, vg_diff, deviceParams);
-            thetaCalculationInfo = `대안계산 (VG차이=${vg_diff.toFixed(1)}V 부족)`;
-            results.warnings.push('VG 차이가 작아 대안 θ 계산법 사용');
-          } else {
-            // 🟢 개선 5: 조건별 세분화된 처리
-            if (vg_diff <= 0.5) {
-              theta = 0.05;
-              thetaCalculationInfo = `보수적값 (VG차이=${vg_diff.toFixed(1)}V 과소)`;
-              results.warnings.push('VG 차이가 너무 작아 보수적 θ 값 사용');
-            } else if (mu0 <= muFE) {
-              theta = 0.01;
-              thetaCalculationInfo = `최소값 (μ0≤μFE: ${mu0.toFixed(0)}≤${muFE.toFixed(0)})`;
-              results.warnings.push('μ0 ≤ μFE로 인해 최소 θ 값 사용');
-            } else {
-              theta = 0.1;
-              thetaCalculationInfo = `표준값 (조건불만족)`;
-              results.warnings.push(`θ 계산 조건 불만족: VG차이=${vg_diff.toFixed(1)}V, μ0=${mu0.toFixed(0)}, μFE=${muFE.toFixed(0)}`);
-            }
-          }
-        } else {
-          // 🟢 개선 6: gm 데이터 없을 때 디바이스 파라미터 기반 추정
-          theta = estimateThetaFromDevice(deviceParams);
-          vg_for_theta = vth_sat + 5; // 임시값
-          thetaCalculationInfo = `추정값 (gm데이터없음)`;
-          results.warnings.push('gm 데이터 없음 - 디바이스 파라미터 기반 θ 추정');
-        }
-      } else {
-        // 🟢 개선 7: Linear 데이터 없을 때 Saturation 데이터 활용
-        if (sampleData['IDVG-Saturation'] && gm_max_sat > 0) {
-          theta = estimateThetaFromSaturation(mu0, muFE, deviceParams);
-          vg_for_theta = vth_sat + 8; // Saturation 영역 추정값
-          thetaCalculationInfo = `Saturation기반 (Linear데이터없음)`;
-          results.warnings.push('Linear 데이터 없음 - Saturation 데이터로 θ 추정');
-        } else {
-          theta = 0.1;
-          vg_for_theta = vth_sat + 10;
-          thetaCalculationInfo = `기본값 (모든데이터없음)`;
-          results.warnings.push('측정 데이터 부족으로 기본 θ 값 사용');
-        }
+    if (mu0 > 0 && vth_sat !== 0 && sampleData['IDVG-Linear']) {
+      const linearData = sampleData['IDVG-Linear'];
+      
+      // PDF 기준 θ 계산
+      const thetaResult = calculateTheta(
+        mu0, 
+        deviceParams, 
+        linearData.chartData, 
+        linearData.gmData, 
+        vth_sat, 
+        vds_linear
+      );
+      
+      theta = thetaResult.theta;
+      thetaCalculationInfo = thetaResult.method;
+      
+      if (thetaResult.dataPoints) {
+        thetaCalculationInfo += ` (${thetaResult.dataPoints}개 점)`;
       }
       
-      // 🟢 개선 8: μeff 계산 시 추가 검증
-      const vg_effective = Math.max(0, vg_for_theta - vth_sat);
-      muEff = mu0 / (1 + theta * vg_effective);
+      // gm_max가 발생한 VG 지점 찾기
+      if (linearData.gmData && linearData.gmData.length > 0) {
+        const maxGmPoint = linearData.gmData.reduce((max, current) => 
+          current.gm > max.gm ? current : max
+        );
+        vg_for_theta = maxGmPoint.VG;
+      } else {
+        vg_for_theta = vth_sat + 5; // 추정값
+      }
       
-      // 🟢 개선 9: μeff와 μFE의 물리적 관계 검증
+      // 🔥 PDF 수식: μeff = μ0 / (1 + θ(VG - Vth))
+      muEff = calculateMuEff(mu0, theta, vg_for_theta, vth_sat);
+      
+      // μeff와 μFE의 물리적 관계 검증
       if (muFE > 0 && muEff > 0) {
         const relativeDiff = Math.abs(muEff - muFE) / muFE;
-        if (relativeDiff < 0.005) { // 0.5%로 더 엄격하게
+        if (relativeDiff < 0.01) { // 1%
           muEff = 0;
           thetaCalculationInfo += ' (μeff≈μFE)';
-          results.warnings.push('μeff ≈ μFE: 이동도 감소 효과 미미하여 측정불가');
-        } else if (muEff > muFE * 1.1) { // μeff > μFE 검증
-          muEff = muFE * 0.9; // 물리적으로 합리적인 범위로 제한
-          thetaCalculationInfo += ' (μeff>μFE보정)';
+          results.warnings.push('μeff ≈ μFE: 이동도 감소 효과 미미');
+        } else if (muEff > muFE * 1.05) { // μeff > μFE 검증
+          muEff = muFE * 0.95;
+          thetaCalculationInfo += ' (물리적 보정)';
           results.warnings.push('μeff > μFE 발생, 물리적 범위로 보정');
         }
       }
     } else {
-      results.warnings.push('μ0 또는 Vth 없음 - μeff 계산 불가');
+      theta = 0.1; // 기본값
+      thetaCalculationInfo = '기본값 (데이터 부족)';
+      results.warnings.push('θ 계산 불가 - 데이터 부족으로 기본값 사용');
     }
 
-    // 8. 🎯 정확한 Dit 계산 (Saturation SS + 디바이스 파라미터)
+    // 8. 🔥 PDF 기준 정확한 Dit 계산
     let dit_calculated = 0;
     if (ss > 0) {
-      const kT_q = 0.0259; // V at room temperature
+      // PDF 수식: Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)
+      const kT_q = PHYSICAL_CONSTANTS.THERMAL_VOLTAGE_300K; // V at 300K
       const cox = calculateCox(deviceParams.tox) * 1e-4; // F/cm²
-      const q = 1.602e-19; // C
+      const q = PHYSICAL_CONSTANTS.ELEMENTARY_CHARGE; // C
       dit_calculated = (cox / q) * (ss / (2.3 * kT_q) - 1);
+    }
+
+    // 9. 🔥 PDF 기준 ID_sat 계산 (A/mm)
+    let id_sat_normalized = 0;
+    if (sampleData['IDVG-Saturation'] && deviceParams.W) {
+      const satParams = sampleData['IDVG-Saturation'].parameters;
+      const id_sat_raw = parseFloat(satParams.ID_sat?.split(' ')[0]) || 0;
+      const W_mm = deviceParams.W * 1000; // m를 mm로 변환
+      id_sat_normalized = id_sat_raw / W_mm; // A/mm
     }
 
     // 최종 결과 정리
     results.parameters = {
-      // 🔥 핵심 파라미터 (여러 데이터 조합)
+      // 🔥 핵심 파라미터 (PDF 기준)
       'Vth (Saturation)': vth_sat !== 0 ? `${vth_sat.toFixed(2)} V` : 'N/A',
       'gm_max (Linear 기준)': finalGmMax > 0 ? `${finalGmMax.toExponential(2)} S` : 'N/A',
       'μFE (통합 계산)': muFE > 0 ? `${muFE.toExponential(2)} cm²/V·s` : 'N/A',
@@ -368,6 +300,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       'Ion/Ioff': ion_ioff_ratio > 0 ? `${ion_ioff_ratio.toExponential(2)}` : 'N/A',
       'ΔVth (Hysteresis)': delta_vth > 0 ? `${delta_vth.toFixed(3)} V` : 'N/A',
       'Stability': stability,
+      'ID_sat (A/mm)': id_sat_normalized > 0 ? `${id_sat_normalized.toExponential(2)} A/mm` : 'N/A',
       
       // 측정 조건
       'VDS (Linear)': vds_linear > 0 ? `${vds_linear.toFixed(2)} V` : 'N/A',
@@ -418,8 +351,14 @@ const evaluateDataQuality = (params, warnings) => {
     issues.push('μFE 계산 불가');
   }
 
+  // Y-function 품질 평가
+  if (params['Y-function 품질'] === 'Poor' || params['Y-function 품질'] === 'Failed') {
+    score -= 10;
+    issues.push('Y-function 품질 불량');
+  }
+
   // 경고 개수에 따른 점수 차감
-  score -= warnings.length * 5;
+  score -= warnings.length * 3;
 
   let grade = 'A';
   if (score < 90) grade = 'B';
