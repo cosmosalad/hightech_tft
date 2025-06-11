@@ -280,7 +280,7 @@ export const calculateSubthresholdSwing = (chartData) => {
 export const calculateDit = (ss, deviceParams) => {
   if (!ss || ss <= 0) return 0;
   
-  // PDF 수식: Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)
+  // PDF 수식: Dit = (Cox/q) × (SS/(2.3 * kT/q) - 1)
   const kT_q = PHYSICAL_CONSTANTS.THERMAL_VOLTAGE_300K; // V at 300K
   const cox = calculateCox(deviceParams.tox) * 1e-4; // F/cm²로 변환
   const q = PHYSICAL_CONSTANTS.ELEMENTARY_CHARGE; // C
@@ -495,9 +495,9 @@ const evaluateDataQuality = (params, warnings) => {
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-      <div className="flex items-center mb-6">
-        <Code className="w-8 h-8 text-blue-600 mr-3" />
-        <div>
+      <div className="flex flex-col items-center mb-6"> {/* flex-col과 items-center 추가 */}
+        <Code className="w-8 h-8 text-blue-600 mb-3" /> {/* mb-3 추가 */}
+        <div className="text-center"> {/* text-center 추가 */}
           <h2 className="text-2xl font-bold text-gray-800">수식 및 코드 점검</h2>
           <p className="text-gray-600">실제 코드에서 사용되는 TFT 분석 수식들을 확인하고 검증하세요</p>
         </div>
@@ -612,7 +612,7 @@ const evaluateDataQuality = (params, warnings) => {
       {/* GitHub 링크 */}
       <div className="mt-6 text-center">
         <a
-          href="https://github.com/yourusername/tft-analyzer"
+          href="https://github.com/cosmosalad/hightech_tft"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"

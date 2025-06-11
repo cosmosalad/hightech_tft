@@ -1,207 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator } from 'lucide-react';
-
-// 수식 점검 컴포넌트를 인라인으로 정의 (import 오류 방지)
-const FormulaCodeInspector = () => {
-  const [activeSection, setActiveSection] = useState('');
-  const [showImplementation, setShowImplementation] = useState({});
-
-  const toggleSection = (section) => {
-    setActiveSection(activeSection === section ? '' : section);
-  };
-
-  const toggleImplementation = (formula) => {
-    setShowImplementation(prev => ({
-      ...prev,
-      [formula]: !prev[formula]
-    }));
-  };
-
-  const formulaCategories = [
-    {
-      id: 'basic',
-      title: '📊 기본 TFT 파라미터',
-      formulas: [
-        {
-          name: 'Cox (산화막 정전용량)',
-          formula: 'Cox = (ε₀ × εᵣ) / tox',
-          unit: 'F/cm²',
-          description: '산화막 두께로부터 단위면적당 정전용량 계산',
-          implementation: `export const calculateCox = (tox) => {
-  return (PHYSICAL_CONSTANTS.EPSILON_0 * PHYSICAL_CONSTANTS.EPSILON_R.SiO2) / tox;
-};`
-        },
-        {
-          name: 'gm (Transconductance)',
-          formula: 'gm = ΔID / ΔVG',
-          unit: 'S (지멘스)',
-          description: '게이트 전압 변화에 대한 드레인 전류 변화율',
-          implementation: `export const calculateGm = (chartData) => {
-  const gmData = [];
-  for (let i = 1; i < chartData.length - 1; i++) {
-    const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
-    const deltaID = chartData[i+1].ID - chartData[i-1].ID;
-    if (deltaVG !== 0) {
-      const gm = Math.abs(deltaID / deltaVG);
-      gmData.push({ VG: chartData[i].VG, gm: gm });
-    }
-  }
-  return gmData;
-};`
-        }
-      ]
-    },
-    {
-      id: 'mobility',
-      title: '🔬 이동도 (Mobility) 계산',
-      formulas: [
-        {
-          name: 'μFE (Field-Effect Mobility)',
-          formula: 'μFE = L/(W×Cox×VDS) × gm,max',
-          unit: 'cm²/V·s',
-          description: 'Linear 측정에서 얻은 gm_max를 이용한 기본 이동도',
-          implementation: `export const calculateMuFE = (gm_max, deviceParams, vds) => {
-  const cox = calculateCox(deviceParams.tox);
-  const { W, L } = deviceParams;
-  const muFE_SI = (L / (W * cox * vds)) * gm_max;
-  return muFE_SI * 1e4; // cm²/V·s로 변환
-};`
-        },
-        {
-          name: 'μeff (Effective Mobility)',
-          formula: 'μeff = μ0 / (1 + θ(VG - Vth))',
-          unit: 'cm²/V·s',
-          description: '실제 동작 조건에서의 유효 이동도',
-          implementation: `export const calculateMuEff = (mu0, theta, vg, vth) => {
-  if (!mu0 || !theta || vg <= vth) return 0;
-  return mu0 / (1 + theta * (vg - vth));
-};`
-        }
-      ]
-    },
-    {
-      id: 'threshold',
-      title: '⚡ 문턱전압 및 스위칭 특성',
-      formulas: [
-        {
-          name: 'Vth (Threshold Voltage)',
-          formula: 'Vth = VG_max - log(ID_max) / slope',
-          unit: 'V',
-          description: 'gm_max 기준 선형 외삽법으로 계산',
-          implementation: `export const calculateThresholdVoltage = (chartData, gmData) => {
-  const maxGmPoint = gmData.reduce((max, current) => 
-    current.gm > max.gm ? current : max
-  );
-  const vg_max = maxGmPoint.VG;
-  const currentPoint = chartData.find(d => Math.abs(d.VG - vg_max) < 0.1);
-  const slope = maxGmPoint.gm / currentPoint.ID;
-  return vg_max - (Math.log10(Math.abs(currentPoint.ID)) / slope);
-};`
-        },
-        {
-          name: 'SS (Subthreshold Swing)',
-          formula: 'SS = dVG/d(log ID) = 1/slope',
-          unit: 'V/decade',
-          description: '전류 10배 변화에 필요한 게이트 전압',
-          implementation: `export const calculateSubthresholdSwing = (chartData) => {
-  const subthresholdData = chartData.filter(d => {
-    const logID = Math.log10(Math.abs(d.ID));
-    return logID > -10 && logID < -6;
-  });
-  const x = subthresholdData.map(d => d.VG);
-  const y = subthresholdData.map(d => Math.log10(Math.abs(d.ID)));
-  const regression = calculateLinearRegression(x, y);
-  return Math.abs(1 / regression.slope);
-};`
-        }
-      ]
-    }
-  ];
-
-  return (
-    <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-      <div className="flex items-center mb-6">
-        <Calculator className="w-8 h-8 text-blue-600 mr-3" />
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">수식 및 코드 점검</h2>
-          <p className="text-gray-600">실제 코드에서 사용되는 TFT 분석 수식들을 확인하고 검증하세요</p>
-        </div>
-      </div>
-
-      <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-        <div className="flex items-center">
-          <span className="text-yellow-600 mr-2">⚠️</span>
-          <h3 className="font-semibold text-yellow-800">수식 검증 요청</h3>
-        </div>
-        <p className="text-yellow-700 text-sm mt-1">
-          아래 수식들이 올바른지 확인해 주세요. 잘못된 수식이나 개선점이 있다면 GitHub Issues에 리포트해 주시기 바랍니다.
-        </p>
-      </div>
-
-      <div className="space-y-4">
-        {formulaCategories.map((category) => (
-          <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
-            <button
-              onClick={() => toggleSection(category.id)}
-              className="w-full px-6 py-4 bg-gray-50 hover:bg-gray-100 transition-colors text-left flex items-center justify-between"
-            >
-              <h3 className="text-lg font-semibold text-gray-800">{category.title}</h3>
-              <span className="text-gray-500">{activeSection === category.id ? '▼' : '▶'}</span>
-            </button>
-
-            {activeSection === category.id && (
-              <div className="p-6 bg-white">
-                <div className="space-y-6">
-                  {category.formulas.map((formula, index) => (
-                    <div key={index} className="border border-gray-100 rounded-lg p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-2">{formula.name}</h4>
-                          <div className="bg-blue-50 p-3 rounded-lg mb-3">
-                            <div className="font-mono text-lg text-blue-800 mb-1">{formula.formula}</div>
-                            <div className="text-sm text-blue-600">단위: {formula.unit}</div>
-                          </div>
-                          <p className="text-gray-600 text-sm mb-3">{formula.description}</p>
-                        </div>
-                        
-                        <button
-                          onClick={() => toggleImplementation(formula.name)}
-                          className="ml-4 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
-                        >
-                          {showImplementation[formula.name] ? '코드 숨기기' : '코드 보기'}
-                        </button>
-                      </div>
-
-                      {showImplementation[formula.name] && (
-                        <div className="mt-4">
-                          <h5 className="font-semibold text-gray-700 mb-2">실제 구현 코드</h5>
-                          <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                            <code>{formula.implementation}</code>
-                          </pre>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 text-center">
-        <a
-          href="https://github.com/yourusername/tft-analyzer"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
-        >
-          GitHub에서 전체 코드 확인
-        </a>
-      </div>
-    </div>
-  );
-};
+import FormulaCodeInspector from './components/FormulaCodeInspector'; // Corrected import path
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
@@ -281,14 +80,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </button>
           </div>
         </header>
-
-        {/* 수식 및 코드 점검 컴포넌트 */}
-        {showFormulaInspector && (
-          <div className="mb-12">
-            <FormulaCodeInspector />
-          </div>
-        )}
-
         {/* 버전 선택 카드 */}
         <section className="grid md:grid-cols-2 gap-8 mb-12">
           {/* 기본 분석 버전 */}
@@ -517,6 +308,13 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </div>
           </div>
         </section>
+
+        {/* 수식 및 코드 점검 컴포넌트 */}
+        {showFormulaInspector && (
+          <div className="mb-12">
+            <FormulaCodeInspector />
+          </div>
+        )}        
 
         {/* 푸터 */}
         <footer className="text-center mt-16 pt-8 border-t border-gray-200/50">
