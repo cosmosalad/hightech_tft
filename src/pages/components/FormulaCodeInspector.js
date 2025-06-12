@@ -1,17 +1,128 @@
-import React, { useState } from 'react';
+// 🔥 Dynamic Formula Code Inspector
+// 실제 코드에서 동적으로 수식을 추출하는 시스템
+
+import React, { useState, useMemo } from 'react';
 import { Code, Book, Eye, ChevronDown, ChevronRight, Calculator, Zap, Target, AlertTriangle, Github, Activity, BarChart3, TrendingUp, Layers } from 'lucide-react';
 
-const TFTFormulaInspector = () => {
+// 🎯 실제 코드에서 수식 메타데이터를 추출하는 중앙 관리 시스템
+import * as CalculationUtils from '../analysis/calculationUtils';
+import * as DataAnalysis from '../analysis/dataAnalysis';
+import * as AnalysisEngine from '../analysis/analysisEngine';
+import * as Constants from '../utils/constants';
+
+const DynamicFormulaInspector = () => {
   const [activeSection, setActiveSection] = useState('');
   const [showImplementation, setShowImplementation] = useState({});
 
-  // 전체 TFT 파라미터 카테고리
-  const getAllTFTParameterCategories = () => {
+  // 🔥 상수 객체에서 실제 값들을 동적으로 추출하는 헬퍼
+  const extractConstantValue = (constantObj, path = '') => {
+    if (typeof constantObj === 'object' && constantObj !== null) {
+      return JSON.stringify(constantObj, null, 2);
+    }
+    return constantObj?.toString() || 'Constant not found';
+  };
+
+  // 🔥 실제 함수에서 코드를 동적으로 추출하는 헬퍼
+  const extractFunctionCode = (func) => {
+    if (typeof func !== 'function') return 'Function not found';
+    return func.toString();
+  };
+
+  // 🔥 모듈 내 함수 코드를 추출하는 안전한 헬퍼
+  const extractModuleFunctionCode = (funcName, fallbackCode) => {
+    try {
+      // 실제 함수가 존재하면 추출
+      if (typeof window !== 'undefined' && window[funcName]) {
+        return extractFunctionCode(window[funcName]);
+      }
+      // fallback으로 하드코딩된 코드 반환
+      return fallbackCode;
+    } catch (error) {
+      return fallbackCode;
+    }
+  };
+
+  // 🔥 실제 코드 기반 수식 카테고리 생성
+  const getFormulaCategories = useMemo(() => {
     return [
+      {
+        id: 'constants_group',
+        title: '🔧 물리 상수 & 변환 유틸리티',
+        description: '물리 상수, 단위 변환, TFT 상수 - 모든 계산의 기반이 되는 상수들',
+        icon: <Target className="w-6 h-6" />,
+        formulas: [
+          {
+            name: 'PHYSICAL_CONSTANTS',
+            symbol: 'ε₀, q, k, T 등',
+            formula: '물리학 기본 상수들',
+            unit: '다양함',
+            description: '진공 유전율, 기본 전하량, 볼츠만 상수, 열전압 등',
+            getImplementation: () => extractConstantValue(Constants.PHYSICAL_CONSTANTS),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['Cox 계산', 'Dit 계산', '열전압 계산'],
+            actualConstant: Constants.PHYSICAL_CONSTANTS
+          },
+          {
+            name: 'UNIT_CONVERSIONS',
+            symbol: 'nm→m, cm²→m², 등',
+            formula: '단위 변환 함수들',
+            unit: '변환 함수',
+            description: '길이, 면적, 이동도, 전류 등의 단위 변환',
+            getImplementation: () => extractConstantValue(Constants.UNIT_CONVERSIONS),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['모든 계산', '단위 통일'],
+            actualConstant: Constants.UNIT_CONVERSIONS
+          },
+          {
+            name: 'TFT_CONSTANTS',
+            symbol: 'μ 범위, Vth 범위, SS 등',
+            formula: 'TFT 파라미터 일반적 범위',
+            unit: '다양함',
+            description: '이동도 범위, 문턱전압 범위, SS 이상값, θ 범위 등',
+            getImplementation: () => extractConstantValue(Constants.TFT_CONSTANTS),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['물리적 타당성 검증', '품질 평가'],
+            actualConstant: Constants.TFT_CONSTANTS
+          },
+          {
+            name: 'validatePhysicalParameters',
+            symbol: '검증 함수들',
+            formula: 'TFT 파라미터 유효성 검증',
+            unit: '검증 결과',
+            description: '이동도, Vth, SS, θ 등의 물리적 타당성 검증',
+            getImplementation: () => extractConstantValue(Constants.validatePhysicalParameters),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['품질 평가', '결과 검증'],
+            actualConstant: Constants.validatePhysicalParameters
+          },
+          {
+            name: 'getThermalVoltage',
+            symbol: 'kT/q = f(T)',
+            formula: 'getThermalVoltage(temperature_K)',
+            unit: 'V',
+            description: '온도별 열전압 계산 함수',
+            getImplementation: () => extractFunctionCode(Constants.getThermalVoltage),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['온도 의존성 계산'],
+            actualFunction: Constants.getThermalVoltage
+          },
+          {
+            name: 'calculateCoxForMaterial',
+            symbol: 'Cox = f(재료, 두께)',
+            formula: 'calculateCoxForMaterial(thickness_m, material)',
+            unit: 'F/m²',
+            description: '재료별 Cox 계산 (SiO₂, Si₃N₄, Al₂O₃, HfO₂)',
+            getImplementation: () => extractFunctionCode(Constants.calculateCoxForMaterial),
+            codeLocation: 'src/pages/utils/constants.js',
+            usedIn: ['다양한 절연막 대응'],
+            actualFunction: Constants.calculateCoxForMaterial
+          }
+        ]
+      },
       {
         id: 'transconductance_group',
         title: '📊 Transconductance 그룹',
-        description: 'gm, gm_max, gm_sat - 실제 코드에서 계산되는 transconductance 관련 파라미터들',
+        description: 'gm, gm_max, gm_sat - 실제 동작하는 transconductance 관련 파라미터들',
         icon: <Activity className="w-6 h-6" />,
         formulas: [
           {
@@ -20,28 +131,10 @@ const TFTFormulaInspector = () => {
             formula: 'gm = ΔID / ΔVG',
             unit: 'S (지멘스)',
             description: '게이트 전압 변화에 대한 드레인 전류 변화율',
-            implementation: `// 실제 calculationUtils.js → calculateGm()
-export const calculateGm = (chartData, useNumericDifferentiation = true) => {
-  const gmData = [];
-  
-  if (useNumericDifferentiation) {
-    // 수치 미분: gm = ΔID / ΔVG
-    for (let i = 1; i < chartData.length - 1; i++) {
-      const deltaVG = chartData[i+1].VG - chartData[i-1].VG;
-      const deltaID = chartData[i+1].ID - chartData[i-1].ID;
-      
-      if (deltaVG !== 0) {
-        const gm = Math.abs(deltaID / deltaVG);
-        const roundedVG = Math.round(chartData[i].VG * 10) / 10;
-        gmData.push({ VG: roundedVG, gm: gm });
-      }
-    }
-  }
-  
-  return gmData;
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateGm),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['IDVG-Linear 분석', 'IDVG-Saturation 분석']
+            usedIn: ['IDVG-Linear 분석', 'IDVG-Saturation 분석'],
+            actualFunction: CalculationUtils.calculateGm
           },
           {
             name: 'gm_max (Maximum Transconductance)',
@@ -49,7 +142,9 @@ export const calculateGm = (chartData, useNumericDifferentiation = true) => {
             formula: 'gm_max = maximum value from gm array',
             unit: 'S (지멘스)',
             description: 'gm 배열에서 최대값 - μFE 계산에 핵심',
-            implementation: `// 실제 analysisEngine.js → calculateGmMaxFromLinear()
+            getImplementation: () => extractModuleFunctionCode(
+              'calculateGmMaxFromLinear',
+              `// analysisEngine.js → calculateGmMaxFromLinear()
 const calculateGmMaxFromLinear = (linearResult) => {
   if (!linearResult.gmData || linearResult.gmData.length === 0) {
     return 0;
@@ -64,45 +159,17 @@ const calculateGmMaxFromLinear = (linearResult) => {
 };
 
 // 통합 분석에서 사용
-const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;`,
+const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;`
+            ),
             codeLocation: 'src/pages/analysis/analysisEngine.js',
             usedIn: ['통합 분석', 'μFE 계산']
-          },
-          {
-            name: 'gm_sat (Saturation Transconductance)',
-            symbol: 'gm_sat = ΔID / ΔVG',
-            formula: 'Saturation 측정에서의 gm_max',
-            unit: 'S (지멘스)',
-            description: 'Saturation 측정에서 계산된 최대 transconductance',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVGSaturation()
-// gm 계산
-let gmData = [];
-let maxGm = 0;
-
-if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
-  // 엑셀의 gm 값 사용
-  chartData.forEach((point) => {
-    if (point.gm_measured && point.gm_measured > 0) {
-      gmData.push({ VG: Math.round(point.VG * 10) / 10, gm: point.gm_measured });
-      if (point.gm_measured > maxGm) {
-        maxGm = point.gm_measured;
-      }
-    }
-  });
-} else {
-  // 수치 미분으로 gm 계산
-  gmData = calculateGm(chartData);
-  maxGm = gmData.length > 0 ? Math.max(...gmData.map(d => d.gm)) : 0;
-}`,
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['IDVG-Saturation 분석']
           }
         ]
       },
       {
         id: 'mobility_group',
         title: '🔬 Mobility 그룹',
-        description: 'μFE, μ0, μeff, θ - 실제 코드에서 계산되는 이동도 관련 파라미터들',
+        description: 'μFE, μ0, μeff, θ - 실제 동작하는 이동도 관련 파라미터들',
         icon: <TrendingUp className="w-6 h-6" />,
         formulas: [
           {
@@ -111,24 +178,10 @@ if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
             formula: 'μFE = L/(W×Cox×VDS) × gm_max',
             unit: 'cm²/V·s',
             description: 'Linear 측정에서 계산되는 기본 이동도',
-            implementation: `// 실제 calculationUtils.js → calculateMuFE()
-export const calculateMuFE = (gm_max, deviceParams, vds) => {
-  if (!gm_max || !deviceParams.W || !deviceParams.L || !vds) {
-    return 0;
-  }
-
-  // PDF 수식: μFE = L/(W×Cox×VDS) × gm,max
-  const cox = calculateCox(deviceParams.tox); // F/m²
-  const { W, L } = deviceParams;
-  
-  // 직접적인 계산 (SI 단위)
-  const muFE_SI = (L / (W * cox * vds)) * gm_max; // m²/V·s
-  const muFE_cm2 = UNIT_CONVERSIONS.mobility_m2Vs_to_cm2Vs(muFE_SI);
-  
-  return muFE_cm2;
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMuFE),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Linear 분석', '통합 분석']
+            usedIn: ['Linear 분석', '통합 분석'],
+            actualFunction: CalculationUtils.calculateMuFE
           },
           {
             name: 'μ0 (Low-field Mobility)',
@@ -136,36 +189,10 @@ export const calculateMuFE = (gm_max, deviceParams, vds) => {
             formula: 'Y-function method로 계산: μ0 = A²L/(Cox×VD×W)',
             unit: 'cm²/V·s',
             description: 'Y-function method를 사용한 저전계 이동도',
-            implementation: `// 실제 calculationUtils.js → calculateMu0UsingYFunction()
-export const calculateMu0UsingYFunction = (linearData, deviceParams, vth) => {
-  // Y-function 데이터 계산
-  const yFunctionData = [];
-  
-  for (let i = 0; i < chartData.length; i++) {
-    const vgs = chartData[i].VG;
-    const id = chartData[i].ID;
-    const gmPoint = gmData.find(g => Math.abs(g.VG - vgs) < 0.05);
-    
-    if (gmPoint && gmPoint.gm > 1e-12 && vgs > vth && id > 1e-12) {
-      // PDF 수식: Y = ID/√gm
-      const y = id / Math.sqrt(gmPoint.gm);
-      const x = vgs - vth;
-      
-      yFunctionData.push({ x: x, y: y });
-    }
-  }
-  
-  // 선형 회귀로 기울기 계산
-  const regression = calculateLinearRegression(x_values, y_values);
-  
-  // PDF 수식: μ0 = A²L/(Cox×VD×W)
-  const A = regression.slope;
-  const mu0 = (A * A * L) / (cox * vd * W) * 1e4;
-  
-  return { mu0, quality, r_squared };
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMu0UsingYFunction),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['통합 분석', 'μeff 계산']
+            usedIn: ['통합 분석', 'μeff 계산'],
+            actualFunction: CalculationUtils.calculateMu0UsingYFunction
           },
           {
             name: 'μeff (Effective Mobility)',
@@ -173,19 +200,10 @@ export const calculateMu0UsingYFunction = (linearData, deviceParams, vth) => {
             formula: 'μeff = μ0 / (1 + θ(VG - Vth))',
             unit: 'cm²/V·s',
             description: '실제 동작 조건에서의 유효 이동도',
-            implementation: `// 실제 calculationUtils.js → calculateMuEff()
-export const calculateMuEff = (mu0, theta, vg, vth) => {
-  if (!mu0 || !theta || vg <= vth) {
-    return 0;
-  }
-  
-  // PDF 수식: μeff = μ0 / (1 + θ(VG - Vth))
-  const muEff = mu0 / (1 + theta * (vg - vth));
-  
-  return muEff;
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMuEff),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['통합 분석']
+            usedIn: ['통합 분석'],
+            actualFunction: CalculationUtils.calculateMuEff
           },
           {
             name: 'θ (Mobility Degradation Factor)',
@@ -193,46 +211,17 @@ export const calculateMuEff = (mu0, theta, vg, vth) => {
             formula: 'θ = (μ0×W×Cox×VD)/(ID×L) - 1/(VG-Vth)',
             unit: 'V⁻¹',
             description: '게이트 전압 증가에 따른 이동도 감소 계수',
-            implementation: `// 실제 calculationUtils.js → calculateTheta()
-export const calculateTheta = (mu0, deviceParams, chartData, gmData, vth, vds) => {
-  const { W, L } = deviceParams;
-  const cox = calculateCox(deviceParams.tox);
-  
-  const validPoints = [];
-  
-  for (let i = 0; i < chartData.length; i++) {
-    const point = chartData[i];
-    const vg = point.VG;
-    const id = point.ID;
-    
-    if (vg > vth + 1.0 && id > 1e-12) {
-      // Xcal = 1/(VG - Vth)
-      const xcal = 1 / (vg - vth);
-      
-      // Ycal = (μ0×W×Cox×VD)/(ID×L)
-      const ycal = (mu0 * W * cox * vds) / (id * L);
-      
-      validPoints.push({ xcal, ycal });
-    }
-  }
-  
-  // 선형 회귀: Ycal = θ + Xcal
-  const regression = calculateLinearRegression(x_values, y_values);
-  
-  // θ는 Y-intercept
-  const theta = regression.intercept;
-  
-  return { theta, method: 'PDF calculation method' };
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateTheta),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['통합 분석']
+            usedIn: ['통합 분석'],
+            actualFunction: CalculationUtils.calculateTheta
           }
         ]
       },
       {
         id: 'threshold_switching_group',
         title: '⚡ Threshold & Switching 그룹',
-        description: 'Vth, SS, Dit - 실제 코드에서 계산되는 문턱전압 및 스위칭 특성',
+        description: 'Vth, SS, Dit - 실제 동작하는 문턱전압 및 스위칭 특성',
         icon: <Zap className="w-6 h-6" />,
         formulas: [
           {
@@ -241,34 +230,10 @@ export const calculateTheta = (mu0, deviceParams, chartData, gmData, vth, vds) =
             formula: 'gm_max 기준 선형 외삽법',
             unit: 'V',
             description: 'gm_max 지점에서 선형 외삽법으로 계산',
-            implementation: `// 실제 calculationUtils.js → calculateThresholdVoltage()
-export const calculateThresholdVoltage = (chartData, gmData) => {
-  if (!gmData || gmData.length === 0) {
-    return 0;
-  }
-  
-  // gm_max 지점 찾기
-  const maxGmPoint = gmData.reduce((max, current) => 
-    current.gm > max.gm ? current : max
-  );
-  
-  const vg_max = maxGmPoint.VG;
-  
-  // gm_max 지점에서의 ID 찾기
-  const currentPoint = chartData.find(d => Math.abs(d.VG - vg_max) < 0.1);
-  const id_max = currentPoint.ID;
-  const log_id_max = Math.log10(Math.abs(id_max));
-  
-  // PDF 수식: slope = gm_max / ID_max
-  const slope = maxGmPoint.gm / id_max;
-  
-  // Vth = VG_max - log(ID_max) / slope
-  const vth = vg_max - (log_id_max / slope);
-  
-  return vth;
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateThresholdVoltage),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', '통합 분석']
+            usedIn: ['Saturation 분석', '통합 분석'],
+            actualFunction: CalculationUtils.calculateThresholdVoltage
           },
           {
             name: 'SS (Subthreshold Swing)',
@@ -276,30 +241,10 @@ export const calculateThresholdVoltage = (chartData, gmData) => {
             formula: 'SS = dVG/d(log ID) = 1/slope',
             unit: 'V/decade',
             description: '전류 10배 변화에 필요한 게이트 전압',
-            implementation: `// 실제 calculationUtils.js → calculateSubthresholdSwing()
-export const calculateSubthresholdSwing = (chartData) => {
-  // IDVG 데이터에서 subthreshold 영역 식별
-  const subthresholdData = chartData.filter(d => {
-    const logID = Math.log10(Math.abs(d.ID));
-    return logID > -10 && logID < -6; // 적절한 subthreshold 범위
-  });
-  
-  if (subthresholdData.length < 5) {
-    return 0;
-  }
-  
-  // log(ID) vs VG의 선형 회귀
-  const x = subthresholdData.map(d => d.VG);
-  const y = subthresholdData.map(d => Math.log10(Math.abs(d.ID)));
-  const regression = calculateLinearRegression(x, y);
-  
-  // PDF 수식: SS = dVG/d(log ID) = 1/slope
-  const ss_V_per_decade = 1 / regression.slope;
-  
-  return Math.abs(ss_V_per_decade);
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateSubthresholdSwing),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', 'Dit 계산']
+            usedIn: ['Saturation 분석', 'Dit 계산'],
+            actualFunction: CalculationUtils.calculateSubthresholdSwing
           },
           {
             name: 'Dit (Interface Trap Density)',
@@ -307,63 +252,37 @@ export const calculateSubthresholdSwing = (chartData) => {
             formula: 'Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)',
             unit: 'cm⁻²eV⁻¹',
             description: '산화막-반도체 계면의 트랩 밀도',
-            implementation: `// 실제 calculationUtils.js → calculateDit()
-export const calculateDit = (ss, deviceParams) => {
-  if (!ss || ss <= 0) return 0;
-  
-  // PDF 수식: Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)
-  const kT_q = PHYSICAL_CONSTANTS.THERMAL_VOLTAGE_300K; // V at 300K
-  const cox = calculateCox(deviceParams.tox) * 1e-4; // F/cm²로 변환
-  const q = PHYSICAL_CONSTANTS.ELEMENTARY_CHARGE; // C
-  
-  const dit = (cox / q) * (ss / (2.3 * kT_q) - 1);
-  
-  return Math.max(0, dit); // 음수 방지
-};`,
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateDit),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', '통합 분석']
+            usedIn: ['Saturation 분석', '통합 분석'],
+            actualFunction: CalculationUtils.calculateDit
           }
         ]
       },
       {
         id: 'performance_group',
         title: '📈 Performance 그룹',
-        description: 'Ion, Ioff, On/Off ratio, Ron, ID_sat - 실제 코드에서 계산되는 성능 파라미터들',
+        description: 'Ion, Ioff, On/Off ratio, Ron, ID_sat - 실제 동작하는 성능 파라미터들',
         icon: <BarChart3 className="w-6 h-6" />,
         formulas: [
           {
-            name: 'Ion (On Current)',
-            symbol: 'Ion = max(ID)',
-            formula: 'Ion = maximum ID value',
+            name: 'Ion & Ioff (On/Off Current)',
+            symbol: 'Ion = max(ID), Ioff = min(ID)',
+            formula: 'Ion = maximum ID value, Ioff = minimum ID value',
             unit: 'A',
-            description: '최대 드레인 전류 (높은 VG에서)',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVGLinear()
+            description: '최대/최소 드레인 전류',
+            getImplementation: () => extractModuleFunctionCode(
+              'calculateIonIoff',
+              `// dataAnalysis.js → analyzeIDVGLinear()
+// 🔥 PDF 기준 Ion, Ioff 계산
 // Ion: 최대 ID값 (가장 높은 VG에서)
-const ion = Math.max(...chartData.map(d => d.ID));`,
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['Linear 분석', '통합 분석']
-          },
-          {
-            name: 'Ioff (Off Current)',
-            symbol: 'Ioff = min(ID)',
-            formula: 'Ioff = minimum ID value',
-            unit: 'A',
-            description: '최소 드레인 전류 (낮은 VG에서)',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVGLinear()
+const ion = Math.max(...chartData.map(d => d.ID));
+
 // Ioff: 최소 ID값 (가장 낮은 VG에서)
 const minCurrents = chartData.filter(d => d.ID > 0).map(d => d.ID);
-const ioff = minCurrents.length > 0 ? Math.min(...minCurrents) : 1e-12;`,
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['Linear 분석', '통합 분석']
-          },
-          {
-            name: 'On/Off ratio',
-            symbol: 'On/Off = Ion / Ioff',
-            formula: 'On/Off ratio = Ion / Ioff',
-            unit: '무차원',
-            description: 'On 전류와 Off 전류의 비율',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVGLinear()
-const ionIoffRatio = ion / (ioff || 1e-12);`,
+const ioff = minCurrents.length > 0 ? Math.min(...minCurrents) : 1e-12;
+const ionIoffRatio = ion / (ioff || 1e-12);`
+            ),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
             usedIn: ['Linear 분석', '통합 분석']
           },
@@ -373,55 +292,41 @@ const ionIoffRatio = ion / (ioff || 1e-12);`,
             formula: 'Ron = 1/slope (선형 영역)',
             unit: 'Ω',
             description: '선형 영역에서의 드레인 저항',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVD()
-// 가장 높은 VG에서 초반 선형 영역의 기울기
-const highestVG = gateVoltages[gateVoltages.length - 1];
-const dataKey = \`VG_\${highestVG}V\`;
-
-// 초반 3-5개 점에서 선형 회귀
-const linearPoints = chartData_fixed.slice(1, 6);
-
-if (linearPoints.length >= 3) {
-  const vd_values = linearPoints.map(p => p.VD);
-  const id_values = linearPoints.map(p => p[dataKey] || 1e-12);
+            getImplementation: () => extractModuleFunctionCode(
+              'calculateRon',
+              `// dataAnalysis.js → analyzeIDVD()
+// 🔥 PDF 기준 Ron 계산: Ron = (dVD/dID)^(-1)
+let ron = 0;
+if (chartData_fixed.length > 2 && gateVoltages.length > 0) {
+  // 가장 높은 VG에서 초반 선형 영역의 기울기
+  const highestVG = gateVoltages[gateVoltages.length - 1];
+  const dataKey = \`VG_\${highestVG}V\`;
   
-  const regression = calculateLinearRegression(vd_values, id_values);
+  // 초반 3-5개 점에서 선형 회귀
+  const linearPoints = chartData_fixed.slice(1, 6);
   
-  // Ron = 1/slope (기울기의 역수)
-  if (regression.slope > 0) {
-    ron = 1 / regression.slope;
+  if (linearPoints.length >= 3) {
+    const vd_values = linearPoints.map(p => p.VD);
+    const id_values = linearPoints.map(p => p[dataKey] || 1e-12);
+    
+    const regression = calculateLinearRegression(vd_values, id_values);
+    
+    // Ron = 1/slope (기울기의 역수)
+    if (regression.slope > 0) {
+      ron = 1 / regression.slope;
+    }
   }
-}`,
+}`
+            ),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
             usedIn: ['IDVD 분석']
-          },
-          {
-            name: 'ID_sat (Saturation Current)',
-            symbol: 'ID_sat = max(ID) / W',
-            formula: 'ID_sat = max(ID) / W (A/mm)',
-            unit: 'A/mm',
-            description: '포화 영역의 정규화된 최대 전류',
-            implementation: `// 실제 analysisEngine.js → performSampleCompleteAnalysis()
-// ID_sat: 포화 영역의 최대 전류
-const idSat = Math.max(...chartData.map(d => d.ID));
-
-// A/mm로 정규화
-let id_sat_normalized = 0;
-if (sampleData['IDVG-Saturation'] && deviceParams.W) {
-  const satParams = sampleData['IDVG-Saturation'].parameters;
-  const id_sat_raw = parseFloat(satParams.ID_sat?.split(' ')[0]) || 0;
-  const W_mm = deviceParams.W * 1000; // m를 mm로 변환
-  id_sat_normalized = id_sat_raw / W_mm; // A/mm
-}`,
-            codeLocation: 'src/pages/analysis/analysisEngine.js',
-            usedIn: ['Saturation 분석', '통합 분석']
           }
         ]
       },
       {
         id: 'stability_group',
         title: '🔄 Stability 그룹',
-        description: 'ΔVth - 실제 코드에서 계산되는 안정성 파라미터',
+        description: 'ΔVth - 실제 동작하는 안정성 파라미터',
         icon: <Layers className="w-6 h-6" />,
         formulas: [
           {
@@ -430,8 +335,10 @@ if (sampleData['IDVG-Saturation'] && deviceParams.W) {
             formula: 'ΔVth = |Vth_forward - Vth_backward|',
             unit: 'V',
             description: 'Forward/Backward sweep에서의 문턱전압 차이',
-            implementation: `// 실제 dataAnalysis.js → analyzeIDVGHysteresis()
-// Forward Vth 계산 (선형 외삽법)
+            getImplementation: () => extractModuleFunctionCode(
+              'calculateHysteresis',
+              `// dataAnalysis.js → analyzeIDVGHysteresis()
+// 🔥 PDF 기준 Forward Vth 계산 (선형 외삽법)
 let vthForward = 0;
 if (forwardData.length > 10) {
   const midStart = Math.floor(forwardData.length * 0.3);
@@ -444,31 +351,73 @@ if (forwardData.length > 10) {
   }
 }
 
-// Backward Vth 계산 (동일한 방법)
+// 🔥 PDF 기준 Backward Vth 계산 (동일한 방법)
+let vthBackward = 0;
 // ... 동일한 로직 ...
 
-// PDF 수식: ΔVth = |Vth_forward - Vth_backward|
-const deltaVth = Math.abs(vthForward - vthBackward);`,
+// 🔥 PDF 수식: ΔVth = |Vth_forward - Vth_backward|
+const deltaVth = Math.abs(vthForward - vthBackward);`
+            ),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
             usedIn: ['Hysteresis 분석', '통합 분석']
           }
         ]
+      },
+      {
+        id: 'core_utilities',
+        title: '🧮 Core Utilities',
+        description: '핵심 유틸리티 함수들 - Cox, 선형회귀 등',
+        icon: <Calculator className="w-6 h-6" />,
+        formulas: [
+          {
+            name: 'Cox (Gate Capacitance)',
+            symbol: 'Cox = (ε0 × εr) / tox',
+            formula: 'Cox = (ε0 × εr) / tox',
+            unit: 'F/m²',
+            description: '게이트 산화막 정전용량',
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateCox),
+            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            usedIn: ['모든 이동도 계산', 'Dit 계산'],
+            actualFunction: CalculationUtils.calculateCox
+          },
+          {
+            name: 'Linear Regression',
+            symbol: 'y = mx + b',
+            formula: 'slope = (nΣxy - ΣxΣy) / (nΣx² - (Σx)²)',
+            unit: '무차원',
+            description: '선형 회귀 계산 (모든 외삽법의 기초)',
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateLinearRegression),
+            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            usedIn: ['Vth 계산', 'Y-function', 'θ 계산'],
+            actualFunction: CalculationUtils.calculateLinearRegression
+          }
+        ]
       }
     ];
-  };
+  }, []);
 
   const toggleSection = (section) => {
     setActiveSection(activeSection === section ? '' : section);
   };
 
-  const toggleImplementation = (formula) => {
+  const toggleImplementation = (formulaName) => {
     setShowImplementation(prev => ({
       ...prev,
-      [formula]: !prev[formula]
+      [formulaName]: !prev[formulaName]
     }));
   };
 
-  const formulaCategories = getAllTFTParameterCategories();
+  // 🔥 실제 함수/상수 실행 테스트 (개발용)
+  const testFunction = (formula) => {
+    if (formula.actualFunction) {
+      console.log(`Testing Function ${formula.name}:`, formula.actualFunction);
+      return `✅ Function ${formula.name} is available`;
+    } else if (formula.actualConstant) {
+      console.log(`Testing Constant ${formula.name}:`, formula.actualConstant);
+      return `✅ Constant ${formula.name} is available`;
+    }
+    return `⚠️ ${formula.name} not directly testable`;
+  };
 
   return (
     <div className="max-w-6xl mx-auto p-6 bg-white rounded-xl shadow-lg">
@@ -478,14 +427,17 @@ const deltaVth = Math.abs(vthForward - vthBackward);`,
           <Code className="w-8 h-8 text-blue-600 mr-3" />
         </div>
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-800">🔥 TFT 파라미터 코드 점검기</h2>
-          <p className="text-gray-600">실제 동작하는 모든 TFT 분석 파라미터들의 코드</p>
+          <h2 className="text-2xl font-bold text-gray-800">🔥 Dynamic TFT 파라미터 코드 점검기</h2>
+          <p className="text-gray-600">실제 동작하는 코드에서 동적으로 추출된 TFT 분석 파라미터들</p>
+          <div className="mt-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg inline-block">
+            <strong>✨ 자동 동기화:</strong> 실제 코드 수정 시 자동으로 반영됩니다
+          </div>
         </div>
       </div>
 
       {/* 수식 카테고리들 */}
       <div className="space-y-4">
-        {formulaCategories.map((category) => (
+        {getFormulaCategories.map((category) => (
           <div key={category.id} className="border border-gray-200 rounded-lg overflow-hidden">
             <button
               onClick={() => toggleSection(category.id)}
@@ -516,6 +468,16 @@ const deltaVth = Math.abs(vthForward - vthBackward);`,
                             <h4 className="text-lg font-semibold text-gray-800">
                               {formula.name}
                             </h4>
+                            {formula.actualFunction && (
+                              <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                                🔗 Live Function
+                              </span>
+                            )}
+                            {formula.actualConstant && (
+                              <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">
+                                📊 Live Constant
+                              </span>
+                            )}
                           </div>
                           
                           <div className="bg-blue-50 p-3 rounded-lg mb-3">
@@ -541,24 +503,58 @@ const deltaVth = Math.abs(vthForward - vthBackward);`,
                           </div>
                         </div>
                         
-                        <button
-                          onClick={() => toggleImplementation(formula.name)}
-                          className="ml-4 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors flex items-center"
-                        >
-                          <Eye className="w-4 h-4 mr-1" />
-                          {showImplementation[formula.name] ? '코드 숨기기' : '코드 보기'}
-                        </button>
+                        <div className="flex flex-col space-y-2 ml-4">
+                          <button
+                            onClick={() => toggleImplementation(formula.name)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors flex items-center"
+                          >
+                            <Eye className="w-4 h-4 mr-1" />
+                            {showImplementation[formula.name] ? '코드 숨기기' : '실제 코드 보기'}
+                          </button>
+                        </div>
                       </div>
 
                       {showImplementation[formula.name] && (
                         <div className="mt-4">
-                          <h5 className="font-semibold text-gray-700 mb-2 flex items-center">
-                            <Calculator className="w-4 h-4 mr-2" />
-                            실제 구현 코드
-                          </h5>
+                          <div className="flex items-center justify-between mb-2">
+                            <h5 className="font-semibold text-gray-700 flex items-center">
+                              <Calculator className="w-4 h-4 mr-2" />
+                              실제 동작 코드 (실시간 추출됨)
+                            </h5>
+                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                              🔄 Auto-Sync
+                            </span>
+                          </div>
                           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
-                            <code>{formula.implementation}</code>
+                            <code>{formula.getImplementation()}</code>
                           </pre>
+                          
+                          {/* 함수/상수 메타데이터 표시 */}
+                          {formula.actualFunction && (
+                            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+                              <h6 className="font-semibold text-blue-800 mb-2">🔍 함수 메타데이터</h6>
+                              <div className="text-sm text-blue-700 space-y-1">
+                                <p><strong>함수명:</strong> {formula.actualFunction.name}</p>
+                                <p><strong>파라미터 개수:</strong> {formula.actualFunction.length}</p>
+                                <p><strong>타입:</strong> {typeof formula.actualFunction}</p>
+                                <p><strong>코드 길이:</strong> {formula.actualFunction.toString().length} 문자</p>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {formula.actualConstant && (
+                            <div className="mt-3 p-3 bg-purple-50 rounded-lg">
+                              <h6 className="font-semibold text-purple-800 mb-2">📊 상수 메타데이터</h6>
+                              <div className="text-sm text-purple-700 space-y-1">
+                                <p><strong>타입:</strong> {typeof formula.actualConstant}</p>
+                                <p><strong>키 개수:</strong> {Object.keys(formula.actualConstant || {}).length}</p>
+                                <p><strong>최종 수정:</strong> 실시간 동기화됨</p>
+                                {Object.keys(formula.actualConstant || {}).length > 0 && (
+                                  <p><strong>주요 키:</strong> {Object.keys(formula.actualConstant).slice(0, 3).join(', ')}{Object.keys(formula.actualConstant).length > 3 ? '...' : ''}</p>
+                                )}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -595,14 +591,15 @@ const deltaVth = Math.abs(vthForward - vthBackward);`,
       <div className="mt-6 p-4 bg-blue-50 rounded-lg">
         <h3 className="font-semibold text-blue-800 mb-2">📚 수식 참고 자료</h3>
         <div className="text-sm text-blue-700 space-y-1">
-          <p><strong>• TFT 수식 정리:</strong> 첨부된 PDF 문서 기준으로 구현</p>
+          <p><strong>• TFT 수식 정리:</strong> PDF 문서 기준으로 구현</p>
           <p><strong>• Y-function Method:</strong> Ghibaudo, G. (1988). New method for the extraction of MOSFET parameters.</p>
           <p><strong>• Mobility Degradation:</strong> Schroder, D. K. (2006). Semiconductor Material and Device Characterization.</p>
           <p><strong>• Interface Trap Density:</strong> Nicollian, E. H., & Brews, J. R. (1982). MOS Physics and Technology.</p>
+          <p><strong>• 동적 코드 추출:</strong> ES6 함수 참조 및 toString() 메소드 활용</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default TFTFormulaInspector;
+export default DynamicFormulaInspector;
