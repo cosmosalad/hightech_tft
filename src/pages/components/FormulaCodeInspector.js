@@ -142,27 +142,10 @@ const DynamicFormulaInspector = () => {
             formula: 'gm_max = maximum value from gm array',
             unit: 'S (지멘스)',
             description: 'gm 배열에서 최대값 - μFE 계산에 핵심',
-            getImplementation: () => extractModuleFunctionCode(
-              'calculateGmMaxFromLinear',
-              `// analysisEngine.js → calculateGmMaxFromLinear()
-const calculateGmMaxFromLinear = (linearResult) => {
-  if (!linearResult.gmData || linearResult.gmData.length === 0) {
-    return 0;
-  }
-  
-  // gmData에서 최대값 찾기
-  const maxGmPoint = linearResult.gmData.reduce((max, current) => 
-    current.gm > max.gm ? current : max
-  );
-  
-  return maxGmPoint.gm;
-};
-
-// 통합 분석에서 사용
-const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;`
-            ),
+            getImplementation: () => extractFunctionCode(AnalysisEngine.calculateGmMaxFromLinear),
             codeLocation: 'src/pages/analysis/analysisEngine.js',
-            usedIn: ['통합 분석', 'μFE 계산']
+            usedIn: ['통합 분석', 'μFE 계산'],
+            actualFunction: AnalysisEngine.calculateGmMaxFromLinear
           }
         ]
       },
@@ -226,35 +209,35 @@ const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;`
         formulas: [
           {
             name: 'Vth (Threshold Voltage)',
-            symbol: 'Vth = VG_max - log(ID_max) / slope',
-            formula: 'gm_max 기준 선형 외삽법',
+            symbol: 'Vth = Vg_at_gm_max - Id_at_gm_max / gm_max',
+            formula: 'Linear Extrapolation Method (선형 외삽법)',
             unit: 'V',
-            description: 'gm_max 지점에서 선형 외삽법으로 계산',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateThresholdVoltage),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', '통합 분석'],
-            actualFunction: CalculationUtils.calculateThresholdVoltage
+            description: 'Linear 측정 데이터의 gm_max 지점의 접선을 이용해 문턱전압을 계산합니다.',
+            getImplementation: () => extractFunctionCode(AnalysisEngine.calculateVthFromLinear),
+            codeLocation: 'src/pages/analysis/analysisEngine.js',
+            usedIn: ['Linear 분석', '통합 분석'],
+            actualFunction: AnalysisEngine.calculateVthFromLinear
           },
           {
             name: 'SS (Subthreshold Swing)',
-            symbol: 'SS = dVG/d(log ID) = 1/slope',
-            formula: 'SS = dVG/d(log ID) = 1/slope',
+            symbol: 'SS = [d(log₁₀|I_D|)/dV_G]⁻¹',
+            formula: 'SS = 1 / slope_of_logID_vs_VG',
             unit: 'V/decade',
-            description: '전류 10배 변화에 필요한 게이트 전압',
+            description: 'Linear 측정 데이터의 Subthreshold 영역에서 전류를 10배 증가시키는 데 필요한 게이트 전압입니다.',
             getImplementation: () => extractFunctionCode(CalculationUtils.calculateSubthresholdSwing),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', 'Dit 계산'],
+            usedIn: ['Linear 분석', 'Dit 계산', '통합 분석'],
             actualFunction: CalculationUtils.calculateSubthresholdSwing
           },
           {
             name: 'Dit (Interface Trap Density)',
-            symbol: 'Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)',
+            symbol: 'Dit = [SS·q/(k_B·T·ln10) - 1] · C_ox/q',
             formula: 'Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)',
             unit: 'cm⁻²eV⁻¹',
-            description: '산화막-반도체 계면의 트랩 밀도',
+            description: 'Linear 측정에서 계산된 SS 값을 이용하여 산화막-반도체 계면의 트랩 밀도를 추정합니다.',
             getImplementation: () => extractFunctionCode(CalculationUtils.calculateDit),
             codeLocation: 'src/pages/analysis/calculationUtils.js',
-            usedIn: ['Saturation 분석', '통합 분석'],
+            usedIn: ['Linear 분석', '통합 분석'],
             actualFunction: CalculationUtils.calculateDit
           }
         ]
@@ -271,20 +254,10 @@ const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;`
             formula: 'Ion = maximum ID value, Ioff = minimum ID value',
             unit: 'A',
             description: '최대/최소 드레인 전류',
-            getImplementation: () => extractModuleFunctionCode(
-              'calculateIonIoff',
-              `// dataAnalysis.js → analyzeIDVGLinear()
-// 🔥 PDF 기준 Ion, Ioff 계산
-// Ion: 최대 ID값 (가장 높은 VG에서)
-const ion = Math.max(...chartData.map(d => d.ID));
-
-// Ioff: 최소 ID값 (가장 낮은 VG에서)
-const minCurrents = chartData.filter(d => d.ID > 0).map(d => d.ID);
-const ioff = minCurrents.length > 0 ? Math.min(...minCurrents) : 1e-12;
-const ionIoffRatio = ion / (ioff || 1e-12);`
-            ),
+            getImplementation: () => extractFunctionCode(DataAnalysis.calculateIonIoff),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['Linear 분석', '통합 분석']
+            usedIn: ['Linear 분석', '통합 분석'],
+            actualFunction: DataAnalysis.calculateIonIoff
           },
           {
             name: 'Ron (On Resistance)',
@@ -292,34 +265,10 @@ const ionIoffRatio = ion / (ioff || 1e-12);`
             formula: 'Ron = 1/slope (선형 영역)',
             unit: 'Ω',
             description: '선형 영역에서의 드레인 저항',
-            getImplementation: () => extractModuleFunctionCode(
-              'calculateRon',
-              `// dataAnalysis.js → analyzeIDVD()
-// 🔥 PDF 기준 Ron 계산: Ron = (dVD/dID)^(-1)
-let ron = 0;
-if (chartData_fixed.length > 2 && gateVoltages.length > 0) {
-  // 가장 높은 VG에서 초반 선형 영역의 기울기
-  const highestVG = gateVoltages[gateVoltages.length - 1];
-  const dataKey = \`VG_\${highestVG}V\`;
-  
-  // 초반 3-5개 점에서 선형 회귀
-  const linearPoints = chartData_fixed.slice(1, 6);
-  
-  if (linearPoints.length >= 3) {
-    const vd_values = linearPoints.map(p => p.VD);
-    const id_values = linearPoints.map(p => p[dataKey] || 1e-12);
-    
-    const regression = calculateLinearRegression(vd_values, id_values);
-    
-    // Ron = 1/slope (기울기의 역수)
-    if (regression.slope > 0) {
-      ron = 1 / regression.slope;
-    }
-  }
-}`
-            ),
+            getImplementation: () => extractFunctionCode(DataAnalysis.calculateRon),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['IDVD 분석']
+            usedIn: ['IDVD 분석'],
+            actualFunction: DataAnalysis.calculateRon
           }
         ]
       },
@@ -335,31 +284,10 @@ if (chartData_fixed.length > 2 && gateVoltages.length > 0) {
             formula: 'ΔVth = |Vth_forward - Vth_backward|',
             unit: 'V',
             description: 'Forward/Backward sweep에서의 문턱전압 차이',
-            getImplementation: () => extractModuleFunctionCode(
-              'calculateHysteresis',
-              `// dataAnalysis.js → analyzeIDVGHysteresis()
-// 🔥 PDF 기준 Forward Vth 계산 (선형 외삽법)
-let vthForward = 0;
-if (forwardData.length > 10) {
-  const midStart = Math.floor(forwardData.length * 0.3);
-  const midEnd = Math.floor(forwardData.length * 0.7);
-  const x = forwardData.slice(midStart, midEnd).map(d => d.VG);
-  const y = forwardData.slice(midStart, midEnd).map(d => d.sqrtID);
-  const regression = calculateLinearRegression(x, y);
-  if (regression.slope !== 0) {
-    vthForward = -regression.intercept / regression.slope;
-  }
-}
-
-// 🔥 PDF 기준 Backward Vth 계산 (동일한 방법)
-let vthBackward = 0;
-// ... 동일한 로직 ...
-
-// 🔥 PDF 수식: ΔVth = |Vth_forward - Vth_backward|
-const deltaVth = Math.abs(vthForward - vthBackward);`
-            ),
+            getImplementation: () => extractFunctionCode(DataAnalysis.calculateHysteresis),
             codeLocation: 'src/pages/analysis/dataAnalysis.js',
-            usedIn: ['Hysteresis 분석', '통합 분석']
+            usedIn: ['Hysteresis 분석', '통합 분석'],
+            actualFunction: DataAnalysis.calculateHysteresis
           }
         ]
       },
@@ -521,9 +449,6 @@ const deltaVth = Math.abs(vthForward - vthBackward);`
                               <Calculator className="w-4 h-4 mr-2" />
                               실제 동작 코드 (실시간 추출됨)
                             </h5>
-                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                              🔄 Auto-Sync
-                            </span>
                           </div>
                           <pre className="bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto text-sm">
                             <code>{formula.getImplementation()}</code>

@@ -125,7 +125,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Vth:</span>
-                  <span className="font-mono">{result.parameters['Vth (Saturation)']}</span>
+                  <span className="font-mono">{result.parameters['Vth (Linear 기준)']}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">gm_max:</span>
@@ -148,7 +148,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">SS:</span>
-                  <span className="font-mono">{result.parameters['SS']}</span>
+                  <span className="font-mono">{result.parameters['SS (Linear 기준)']}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Ion/Ioff:</span>
@@ -179,7 +179,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Dit:</span>
-                  <span className="font-mono">{result.parameters['Dit (계산값)']}</span>
+                  <span className="font-mono">{result.parameters['Dit (Linear 기준)']}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Ron:</span>
@@ -560,7 +560,7 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
                 </span>
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
-                {result.parameters['Vth (Saturation)']}
+                {result.parameters['Vth (Linear 기준)']}
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
                 {result.parameters['gm_max (Linear 기준)']}
@@ -578,10 +578,10 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
                 {result.parameters['θ (계산값)']}
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
-                {result.parameters['SS']}
+                {result.parameters['SS (Linear 기준)']}
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
-                {result.parameters['Dit (계산값)']}
+                {result.parameters['Dit (Linear 기준)']}
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">
                 {result.parameters['Ion/Ioff']}

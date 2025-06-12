@@ -1,4 +1,3 @@
-// 🔄 SYNC: 계산 유틸리티 함수들 import (동적 추출됨)
 import { 
  calculateCox,                // 🔄 SYNC: Cox 계산 함수
  calculateLinearRegression,   // 🔄 SYNC: 선형회귀 계산 함수
@@ -78,7 +77,36 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
  };
 };
 
-// 🔄 SYNC: IDVG Linear 분석 함수 (동적 추출됨)
+// 🔥 수정: Linear Extrapolation Method를 사용한 Vth 계산 함수
+const calculateVthFromLinear = (chartData, gmData) => {
+ if (!gmData || gmData.length === 0) {
+   return 0;
+ }
+ 
+ // gm_max 지점 찾기
+ const maxGmPoint = gmData.reduce((max, current) => 
+   current.gm > max.gm ? current : max
+ );
+ 
+ const vg_max = maxGmPoint.VG;
+ const gm_max = maxGmPoint.gm;
+ 
+ // gm_max 지점에서의 ID 찾기
+ const currentPoint = chartData.find(d => Math.abs(d.VG - vg_max) < 0.1);
+ if (!currentPoint) {
+   return 0;
+ }
+ 
+ const id_max = currentPoint.ID;
+ 
+ // 🔥 수정: Linear Extrapolation Method
+ // Vth = VG_max - ID_max / gm_max (선형 외삽법)
+ const vth = vg_max - (id_max / gm_max);
+ 
+ return vth;
+};
+
+// 🔄 SYNC: IDVG Linear 분석 함수 (🔥 변경: Vth, SS, Dit 추가 + 올바른 Linear Extrapolation Method)
 export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => {
  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
 
@@ -156,6 +184,13 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
 
  const muFE = calculateMuFE(maxGm, deviceParams, vdsLinear);  // 🔄 SYNC: μFE 계산 함수 호출
 
+ // 🔥 수정: Linear에서 올바른 Linear Extrapolation Method로 Vth 계산
+ const vth = calculateVthFromLinear(chartData, gmData);        // 🔥 수정: 올바른 Linear Extrapolation Method
+
+ // 🔥 추가: Linear에서 SS, Dit 계산
+ const ss = calculateSubthresholdSwing(chartData);            // 🔄 SYNC: SS 계산 함수 호출
+ const dit = calculateDit(ss, deviceParams);                 // 🔄 SYNC: Dit 계산 함수 호출
+
  return {
    chartData,
    gmData,
@@ -167,12 +202,16 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
      'Ion/Ioff': ionIoffRatio.toExponential(2),
      'gm_max': maxGm.toExponential(2) + ' S',
      'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산',
-     μFE: muFE > 0 ? muFE.toExponential(2) + ' cm²/V·s' : 'N/A (파라미터 입력 필요)'
+     μFE: muFE > 0 ? muFE.toExponential(2) + ' cm²/V·s' : 'N/A (파라미터 입력 필요)',
+     // 🔥 수정: Linear에서 계산된 Vth, SS, Dit (올바른 Linear Extrapolation Method 사용)
+     Vth: vth.toFixed(2) + ' V',
+     SS: ss.toFixed(3) + ' V/decade',
+     Dit: dit > 0 ? dit.toExponential(2) + ' cm⁻²eV⁻¹' : 'N/A (파라미터 입력 필요)'
    }
  };
 };
 
-// 🔄 SYNC: IDVG Saturation 분석 함수 (동적 추출됨)
+// 🔄 SYNC: IDVG Saturation 분석 함수 (🔥 변경: Vth, SS, Dit 제거, ID_sat만 유지)
 export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams) => {
  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
  
@@ -242,10 +281,7 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
    maxGm = gmData.length > 0 ? Math.max(...gmData.map(d => d.gm)) : 0;
  }
 
- const vth = calculateThresholdVoltage(chartData, gmData);  // 🔄 SYNC: Vth 계산 함수 호출
- const ss = calculateSubthresholdSwing(chartData);         // 🔄 SYNC: SS 계산 함수 호출
- const dit = calculateDit(ss, deviceParams);              // 🔄 SYNC: Dit 계산 함수 호출
-
+ // 🔥 변경: Saturation에서는 ID_sat만 계산 (Vth, SS, Dit 제거)
  const idSat = Math.max(...chartData.map(d => d.ID));
 
  return {
@@ -254,17 +290,15 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
    measuredVDS: vdsSat,
    parameters: {
      'VDS (측정값)': vdsSat.toFixed(1) + ' V',
-     Vth: vth.toFixed(2) + ' V',
-     SS: ss.toFixed(3) + ' V/decade',
-     Dit: dit > 0 ? dit.toExponential(2) + ' cm⁻²eV⁻¹' : 'N/A (파라미터 입력 필요)',
      ID_sat: idSat.toExponential(2) + ' A',
      gm_max: Math.round(maxGm * 1e6) + ' µS',
      'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산'
+     // 🔥 제거: Vth, SS, Dit는 이제 Linear에서만 계산
    }
  };
 };
 
-// 🔄 SYNC: IDVG Hysteresis 분석 함수 (동적 추출됨)
+// 🔄 SYNC: IDVG Hysteresis 분석 함수 (기존과 동일)
 export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams) => {
  let vgIndex = -1, idIndex = -1;
  
@@ -376,4 +410,81 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
      'Stability': stability
    }
  };
+};
+
+// 🔄 SYNC: Ion/Ioff 계산 함수 (동적 추출용)
+export const calculateIonIoff = (chartData) => {
+  if (!chartData || chartData.length === 0) {
+    return { ion: 0, ioff: 0, ionIoffRatio: 0 };
+  }
+  // 🔥 PDF 기준 Ion, Ioff 계산
+  // Ion: 최대 ID값
+  const ion = Math.max(...chartData.map(d => d.ID));
+
+  // Ioff: 최소 ID값 (0보다 큰 값 중에서)
+  const minCurrents = chartData.filter(d => d.ID > 0).map(d => d.ID);
+  const ioff = minCurrents.length > 0 ? Math.min(...minCurrents) : 1e-12;
+  const ionIoffRatio = ion / (ioff || 1e-12);
+  
+  // inspector를 위해 객체 대신 함수 본문 전체가 보이도록 구현합니다.
+  // 실제 반환값은 객체여야 하지만, 여기서는 문자열로 반환하지 않습니다.
+  return { ion, ioff, ionIoffRatio };
+};
+
+// 🔄 SYNC: Ron 계산 함수 (동적 추출용)
+export const calculateRon = (chartData_fixed, gateVoltages) => {
+  let ron = 0;
+  if (chartData_fixed && chartData_fixed.length > 2 && gateVoltages && gateVoltages.length > 0) {
+    const highestVG = gateVoltages[gateVoltages.length - 1];
+    const dataKey = `VG_${highestVG}V`;
+    
+    // 초반 3-5개 점에서 선형 회귀
+    const linearPoints = chartData_fixed.slice(1, 6);
+    
+    if (linearPoints.length >= 3) {
+      const vd_values = linearPoints.map(p => p.VD);
+      const id_values = linearPoints.map(p => p[dataKey] || 1e-12);
+      
+      const regression = calculateLinearRegression(vd_values, id_values);
+      
+      // Ron = 1/slope (기울기의 역수)
+      if (regression.slope > 0) {
+        ron = 1 / regression.slope;
+      }
+    }
+  }
+  return ron;
+};
+
+// 🔄 SYNC: Hysteresis (ΔVth) 계산 함수 (동적 추출용)
+export const calculateHysteresis = (forwardData, backwardData) => {
+  // 🔥 PDF 기준 Forward Vth 계산 (선형 외삽법)
+  let vthForward = 0;
+  if (forwardData && forwardData.length > 10) {
+    const midStart = Math.floor(forwardData.length * 0.3);
+    const midEnd = Math.floor(forwardData.length * 0.7);
+    const x = forwardData.slice(midStart, midEnd).map(d => d.VG);
+    const y = forwardData.slice(midStart, midEnd).map(d => d.sqrtID);
+    const regression = calculateLinearRegression(x, y);
+    if (regression.slope !== 0) {
+      vthForward = -regression.intercept / regression.slope;
+    }
+  }
+
+  // 🔥 PDF 기준 Backward Vth 계산 (선형 외삽법)
+  let vthBackward = 0;
+  if (backwardData && backwardData.length > 10) {
+    const midStart = Math.floor(backwardData.length * 0.3);
+    const midEnd = Math.floor(backwardData.length * 0.7);
+    const x = backwardData.slice(midStart, midEnd).map(d => d.VG);
+    const y = backwardData.slice(midStart, midEnd).map(d => d.sqrtID);
+    const regression = calculateLinearRegression(x, y);
+    if (regression.slope !== 0) {
+      vthBackward = -regression.intercept / regression.slope;
+    }
+  }
+
+  // 🔥 PDF 수식: ΔVth = |Vth_forward - Vth_backward|
+  const deltaVth = Math.abs(vthForward - vthBackward);
+  return deltaVth;
 };
