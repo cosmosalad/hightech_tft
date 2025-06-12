@@ -19,12 +19,12 @@ This React-based web application automatically analyzes TFT electrical character
 
 ## 📊 Supported Measurements & Parameters
 
-| Measurement Type | Extracted Parameters |
+| Measurement Type | Best Suited For |
 |-----------------|---------------------|
-| **IDVG-Linear** | gₘ, μFE, μ₀, μₑff, Iₒₙ, Iₒff, Ion/Ioff ratio |
-| **IDVG-Saturation** | Vₜₕ, SS, Dᵢₜ, ID,sat, gₘ,max |
+| **IDVG-Linear** | gₘ, Vₜₕ, μFE, μ₀, μₑff, Ion/Ioff ratio, gₘ max |
+| **IDVG-Saturation** | Vₜₕ, ID,sat, gₘ,sat |
 | **IDVD** | Rₒₙ (On-resistance) |
-| **IDVG-Hysteresis** | ΔVₜₕ, Stability assessment |
+| **IDVG-Linear-Hysteresis** | Hysteresis (ΔVₜₕ), Stability assessment |
 
 ## 🏗️ TFT Fabrication Context
 
