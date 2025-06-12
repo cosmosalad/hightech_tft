@@ -1,70 +1,168 @@
-# Getting Started with Create React App
+# TFT Electrical Characterization Analyzer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A comprehensive web-based analysis tool for Thin-Film Transistor (TFT) electrical characterization using probe station measurement data.
 
-## Available Scripts
+![TFT Analyzer](https://img.shields.io/badge/TFT-Analyzer-blue) ![React](https://img.shields.io/badge/React-18.0+-blue.svg) ![License](https://img.shields.io/badge/license-Academic-green.svg)
 
-In the project directory, you can run:
+## 🔬 Overview
 
-### `npm start`
+This React-based web application automatically analyzes TFT electrical characteristics from probe station measurements. Simply upload Excel files from your probe station, and the tool will generate comprehensive graphs and extract key TFT parameters through advanced calculation algorithms.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+### 🎯 Key Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Automated Parameter Extraction**: Calculates mobility, threshold voltage, subthreshold swing, and other critical TFT parameters
+- **Multi-Measurement Analysis**: Supports IDVG-Linear, IDVG-Saturation, IDVD, and Hysteresis measurements
+- **Sample-Based Data Fusion**: Groups measurements by sample name for integrated analysis
+- **Advanced Mobility Calculations**: Implements Y-function method for accurate μ₀ and μₑff calculations
+- **Quality Assessment System**: Evaluates data quality and provides reliability scores
+- **Interactive Visualizations**: Real-time charts with customizable parameters
 
-### `npm test`
+## 📊 Supported Measurements & Parameters
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+| Measurement Type | Best Suited For |
+|-----------------|---------------------|
+| **IDVG-Linear** | gₘ, Vₜₕ, μFE, μ₀, μₑff, Ion/Ioff ratio, gₘ max |
+| **IDVG-Saturation** | Vₜₕ, ID,sat, gₘ,sat |
+| **IDVD** | Rₒₙ (On-resistance) |
+| **IDVG-Linear-Hysteresis** | Hysteresis (ΔVₜₕ), Stability assessment |
 
-### `npm run build`
+## 🏗️ TFT Fabrication Context
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+This tool is designed for analyzing TFTs fabricated with the following process splits:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Process Parameters
+- **Gate Dielectric**: SiO₂ (20nm, 60nm, 100nm splits)
+- **Channel Layer**: IZO double-layer structure
+ - **Layer 1**: 15-20nm thickness (Ar: 20sccm, O₂: 0sccm)
+ - **Layer 2**: 15nm thickness (Ar: 20sccm, O₂: 0-3sccm splits)
+- **Electrodes**: Al 100nm (E-beam evaporation + annealing)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🚀 Quick Start
 
-### `npm run eject`
+**[🌐 Access the Live Application](https://m.site.naver.com/1JN3i)** - No installation required!
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+Simply visit the application and start uploading your probe station measurement files.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## 📁 File Format Requirements
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+### Supported File Types
+- Excel files (.xls, .xlsx)
+- Probe station measurement data
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### File Naming Convention
+For automatic detection, include measurement type in filename:
+- `Sample1_IDVD.xlsx` - Output characteristics
+- `Sample1_IDVG_Linear.xlsx` - Linear transfer characteristics
+- `Sample1_IDVG_Saturation.xlsx` - Saturation transfer characteristics
+- `Sample1_IDVG_Linear_Hysteresis.xlsx` - Hysteresis measurements
 
-## Learn More
+## 🧮 Calculation Algorithms
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Core TFT Parameters
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+#### Field-Effect Mobility (μFE)
 
-### Code Splitting
+μFE = L/(W×Cox×VDS) × gm,max
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### Low-Field Mobility (μ₀) - Y-Function Method
+Y = ID/√gm = A×(VG - Vth)
+μ₀ = A²L/(Cox×VD×W)
 
-### Analyzing the Bundle Size
+#### Effective Mobility (μeff)
+μeff = μ₀ / (1 + θ(VG - Vth))
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+#### Threshold Voltage (Vth)
+Linear extrapolation from gm,max point
+Vth = VG,max - log(ID,max) / slope
 
-### Making a Progressive Web App
+#### Subthreshold Swing (SS)
+SS = dVG/d(log ID) = 1/slope
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+#### Interface Trap Density (Dit)
+Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)
 
-### Advanced Configuration
+## 🎛️ Analysis Modes
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 1. Basic Analysis Mode
+- Individual file analysis
+- Fast parameter extraction
+- Educational and quick verification purposes
 
-### Deployment
+### 2. Integrated Analysis Mode ⭐ **Recommended**
+- Sample-based data grouping
+- Cross-measurement parameter optimization
+- Research-grade accuracy
+- Quality assessment and validation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## 📈 Features in Detail
 
-### `npm run build` fails to minify
+### Data Processing Pipeline
+1. **File Upload & Detection**: Automatic measurement type recognition
+2. **Data Parsing**: Excel file processing with robust error handling
+3. **Parameter Calculation**: Physics-based algorithms for accurate extraction
+4. **Data Fusion**: Sample-based integration for optimal results
+5. **Quality Assessment**: Reliability scoring and validation warnings
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+### Interactive Visualizations
+- **Transfer Characteristics**: ID-VG plots with log/linear scales
+- **Output Characteristics**: ID-VD family curves
+- **Transconductance**: gm vs VG plots
+- **Hysteresis Loops**: Forward/backward sweep comparison
+
+### Device Parameter Input
+- Channel width (W) and length (L)
+- Gate oxide thickness (tox)
+- Automatic Cox calculation
+
+## 🔧 Technology Stack
+
+- **Frontend**: React 18+ with Hooks
+- **Visualization**: Recharts for interactive graphs
+- **File Processing**: SheetJS for Excel parsing
+- **Styling**: Tailwind CSS
+- **Mathematical Operations**: Custom calculation utilities
+
+## 📚 Scientific Background
+
+This tool implements established semiconductor characterization methods:
+
+- **Y-Function Method**: Ghibaudo, G. (1988) for mobility extraction
+- **Subthreshold Analysis**: Based on MOSFET physics principles
+- **Interface Trap Calculations**: Following Nicollian-Brews methodology
+
+## 🤝 Contributing
+
+We welcome contributions from the semiconductor community!
+
+### How to Contribute
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+### Areas for Contribution
+- Additional measurement types (IG-VG, CV measurements)
+- New mobility models (Universal mobility model, etc.)
+- Temperature-dependent analysis
+- Advanced statistical analysis tools
+
+## 🐛 Issues & Feature Requests
+
+Found a bug or have a feature request? Please open an issue on GitHub with:
+- Detailed description of the problem/request
+- Sample data files (if applicable)
+- Expected vs actual behavior
+- Your browser/system information
+
+## 📖 Documentation
+
+Detailed documentation including:
+- Formula verification and validation
+- Code structure explanation
+- API reference for developers
+- Measurement best practices
+
+Access the formula inspector within the application for real-time code verification.
+
+---
