@@ -2,7 +2,7 @@
 
 A comprehensive web-based analysis tool for Thin-Film Transistor (TFT) electrical characterization using probe station measurement data.
 
-![TFT Analyzer](https://img.shields.io/badge/TFT-Analyzer-blue) ![React](https://img.shields.io/badge/React-18.0+-blue.svg) ![License](https://img.shields.io/badge/license-MIT-green.svg)
+![TFT Analyzer](https://img.shields.io/badge/TFT-Analyzer-blue) ![React](https://img.shields.io/badge/React-18.0+-blue.svg) ![License](https://img.shields.io/badge/license-Academic-green.svg)
 
 ## 🔬 Overview
 
