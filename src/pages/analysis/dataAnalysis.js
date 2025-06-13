@@ -137,7 +137,6 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
       Ioff: ioff.toExponential(2) + ' A',
       'Ion/Ioff': ratio.toExponential(2),
       'gm_max': gmMax.value.toExponential(2) + ' S',
-      'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산',
       μFE: muFE > 0 ? muFE.toExponential(2) + ' cm²/V·s' : 'N/A (파라미터 입력 필요)',
       Vth: vth.toFixed(2) + ' V',
       SS: ss.toFixed(3) + ' V/decade',
@@ -225,7 +224,6 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
       'VDS (측정값)': vdsSat.toFixed(1) + ' V',
       ID_sat: idSat.toExponential(2) + ' A/mm',
       gm_max: (gmMax.value * 1e6).toFixed(0) + ' µS',
-      'gm 데이터 출처': useExcelGm ? 'Excel 파일' : '수치 계산'
     }
   };
 };
