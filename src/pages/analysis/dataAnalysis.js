@@ -139,7 +139,7 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
       'gm_max': gmMax.value.toExponential(2) + ' S',
       μFE: muFE > 0 ? muFE.toExponential(2) + ' cm²/V·s' : 'N/A (파라미터 입력 필요)',
       Vth: vth.toFixed(2) + ' V',
-      SS: ss.toFixed(3) + ' V/decade',
+      SS: ss.toFixed(3) + ' mV/decade',
       Dit: dit > 0 ? dit.toExponential(2) + ' cm⁻²eV⁻¹' : 'N/A (파라미터 입력 필요)'
     }
   };

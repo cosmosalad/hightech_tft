@@ -210,7 +210,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       'μ0 품질': mu0_quality,
       'μeff (정확 계산)': muEff > 0 ? `${muEff.toExponential(2)} cm²/V·s` : 'N/A',
       'θ (계산값)': `${theta.toExponential(2)} V⁻¹`,
-      'SS (Linear 기준)': ss > 0 ? `${ss.toFixed(3)} V/decade` : 'N/A',
+      'SS (Linear 기준)': ss > 0 ? `${ss.toFixed(3)} mV/decade` : 'N/A',
       'Dit (Linear 기준)': dit > 0 ? `${dit.toExponential(2)} cm⁻²eV⁻¹` : 'N/A',
       'Ron': ron > 0 ? `${ron.toExponential(2)} Ω` : 'N/A',
       'Ion': ion > 0 ? `${ion.toExponential(2)} A` : 'N/A',
