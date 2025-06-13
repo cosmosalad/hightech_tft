@@ -9,6 +9,8 @@ import * as CalculationUtils from '../analysis/calculationUtils';
 import * as DataAnalysis from '../analysis/dataAnalysis';
 import * as AnalysisEngine from '../analysis/analysisEngine';
 import * as Constants from '../utils/constants';
+// 🔥 새 모듈들도 import
+import * as TFTParams from '../parameters/index.js';
 
 const DynamicFormulaInspector = () => {
   const [activeSection, setActiveSection] = useState('');
@@ -57,65 +59,10 @@ const DynamicFormulaInspector = () => {
             formula: '물리학 기본 상수들',
             unit: '다양함',
             description: '진공 유전율, 기본 전하량, 볼츠만 상수, 열전압 등',
-            getImplementation: () => extractConstantValue(Constants.PHYSICAL_CONSTANTS),
-            codeLocation: 'src/pages/utils/constants.js',
+            getImplementation: () => TFTParams.CONSTANTS ? extractConstantValue(TFTParams.CONSTANTS) : 'Constants not available',
+            codeLocation: 'src/pages/parameters/utils.js',
             usedIn: ['Cox 계산', 'Dit 계산', '열전압 계산'],
-            actualConstant: Constants.PHYSICAL_CONSTANTS
-          },
-          {
-            name: 'UNIT_CONVERSIONS',
-            symbol: 'nm→m, cm²→m², 등',
-            formula: '단위 변환 함수들',
-            unit: '변환 함수',
-            description: '길이, 면적, 이동도, 전류 등의 단위 변환',
-            getImplementation: () => extractConstantValue(Constants.UNIT_CONVERSIONS),
-            codeLocation: 'src/pages/utils/constants.js',
-            usedIn: ['모든 계산', '단위 통일'],
-            actualConstant: Constants.UNIT_CONVERSIONS
-          },
-          {
-            name: 'TFT_CONSTANTS',
-            symbol: 'μ 범위, Vth 범위, SS 등',
-            formula: 'TFT 파라미터 일반적 범위',
-            unit: '다양함',
-            description: '이동도 범위, 문턱전압 범위, SS 이상값, θ 범위 등',
-            getImplementation: () => extractConstantValue(Constants.TFT_CONSTANTS),
-            codeLocation: 'src/pages/utils/constants.js',
-            usedIn: ['물리적 타당성 검증', '품질 평가'],
-            actualConstant: Constants.TFT_CONSTANTS
-          },
-          {
-            name: 'validatePhysicalParameters',
-            symbol: '검증 함수들',
-            formula: 'TFT 파라미터 유효성 검증',
-            unit: '검증 결과',
-            description: '이동도, Vth, SS, θ 등의 물리적 타당성 검증',
-            getImplementation: () => extractConstantValue(Constants.validatePhysicalParameters),
-            codeLocation: 'src/pages/utils/constants.js',
-            usedIn: ['품질 평가', '결과 검증'],
-            actualConstant: Constants.validatePhysicalParameters
-          },
-          {
-            name: 'getThermalVoltage',
-            symbol: 'kT/q = f(T)',
-            formula: 'getThermalVoltage(temperature_K)',
-            unit: 'V',
-            description: '온도별 열전압 계산 함수',
-            getImplementation: () => extractFunctionCode(Constants.getThermalVoltage),
-            codeLocation: 'src/pages/utils/constants.js',
-            usedIn: ['온도 의존성 계산'],
-            actualFunction: Constants.getThermalVoltage
-          },
-          {
-            name: 'calculateCoxForMaterial',
-            symbol: 'Cox = f(재료, 두께)',
-            formula: 'calculateCoxForMaterial(thickness_m, material)',
-            unit: 'F/m²',
-            description: '재료별 Cox 계산 (SiO₂, Si₃N₄, Al₂O₃, HfO₂)',
-            getImplementation: () => extractFunctionCode(Constants.calculateCoxForMaterial),
-            codeLocation: 'src/pages/utils/constants.js',
-            usedIn: ['다양한 절연막 대응'],
-            actualFunction: Constants.calculateCoxForMaterial
+            actualConstant: TFTParams.CONSTANTS
           }
         ]
       },
@@ -131,10 +78,10 @@ const DynamicFormulaInspector = () => {
             formula: 'gm = ΔID / ΔVG',
             unit: 'S (지멘스)',
             description: '게이트 전압 변화에 대한 드레인 전류 변화율',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateGm),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateGm),
+            codeLocation: 'src/pages/parameters/gm.js',
             usedIn: ['IDVG-Linear 분석', 'IDVG-Saturation 분석'],
-            actualFunction: CalculationUtils.calculateGm
+            actualFunction: TFTParams.calculateGm
           },
           {
             name: 'gm_max (Maximum Transconductance)',
@@ -142,10 +89,10 @@ const DynamicFormulaInspector = () => {
             formula: 'gm_max = maximum value from gm array',
             unit: 'S (지멘스)',
             description: 'gm 배열에서 최대값 - μFE 계산에 핵심',
-            getImplementation: () => extractFunctionCode(AnalysisEngine.calculateGmMaxFromLinear),
-            codeLocation: 'src/pages/analysis/analysisEngine.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateGmMax),
+            codeLocation: 'src/pages/parameters/gm_max.js',
             usedIn: ['통합 분석', 'μFE 계산'],
-            actualFunction: AnalysisEngine.calculateGmMaxFromLinear
+            actualFunction: TFTParams.calculateGmMax
           }
         ]
       },
@@ -161,10 +108,10 @@ const DynamicFormulaInspector = () => {
             formula: 'μFE = L/(W×Cox×VDS) × gm_max',
             unit: 'cm²/V·s',
             description: 'Linear 측정에서 계산되는 기본 이동도',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMuFE),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateMuFE),
+            codeLocation: 'src/pages/parameters/field_effect_mobility.js',
             usedIn: ['Linear 분석', '통합 분석'],
-            actualFunction: CalculationUtils.calculateMuFE
+            actualFunction: TFTParams.calculateMuFE
           },
           {
             name: 'μ0 (Low-field Mobility)',
@@ -172,10 +119,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Y-function method로 계산: μ0 = A²L/(Cox×VD×W)',
             unit: 'cm²/V·s',
             description: 'Y-function method를 사용한 저전계 이동도',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMu0UsingYFunction),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateMu0),
+            codeLocation: 'src/pages/parameters/low_field_field_effect_mobility.js',
             usedIn: ['통합 분석', 'μeff 계산'],
-            actualFunction: CalculationUtils.calculateMu0UsingYFunction
+            actualFunction: TFTParams.calculateMu0
           },
           {
             name: 'μeff (Effective Mobility)',
@@ -183,10 +130,10 @@ const DynamicFormulaInspector = () => {
             formula: 'μeff = μ0 / (1 + θ(VG - Vth))',
             unit: 'cm²/V·s',
             description: '실제 동작 조건에서의 유효 이동도',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateMuEff),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateMuEff),
+            codeLocation: 'src/pages/parameters/effective_mobility.js',
             usedIn: ['통합 분석'],
-            actualFunction: CalculationUtils.calculateMuEff
+            actualFunction: TFTParams.calculateMuEff
           },
           {
             name: 'θ (Mobility Degradation Factor)',
@@ -194,10 +141,10 @@ const DynamicFormulaInspector = () => {
             formula: 'θ = (μ0×W×Cox×VD)/(ID×L) - 1/(VG-Vth)',
             unit: 'V⁻¹',
             description: '게이트 전압 증가에 따른 이동도 감소 계수',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateTheta),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateTheta),
+            codeLocation: 'src/pages/parameters/mobility_degradation_factor.js',
             usedIn: ['통합 분석'],
-            actualFunction: CalculationUtils.calculateTheta
+            actualFunction: TFTParams.calculateTheta
           }
         ]
       },
@@ -213,10 +160,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Linear Extrapolation Method (선형 외삽법)',
             unit: 'V',
             description: 'Linear 측정 데이터의 gm_max 지점의 접선을 이용해 문턱전압을 계산합니다.',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateThresholdVoltage),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateVth),
+            codeLocation: 'src/pages/parameters/vth.js',
             usedIn: ['Linear 분석', '통합 분석'],
-            actualFunction: CalculationUtils.calculateThresholdVoltage
+            actualFunction: TFTParams.calculateVth
           },
           {
             name: 'SS (Subthreshold Swing)',
@@ -224,10 +171,10 @@ const DynamicFormulaInspector = () => {
             formula: 'SS = 1 / slope_of_logID_vs_VG',
             unit: 'V/decade',
             description: 'Linear 측정 데이터의 Subthreshold 영역에서 전류를 10배 증가시키는 데 필요한 게이트 전압입니다.',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateSubthresholdSwing),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateSS),
+            codeLocation: 'src/pages/parameters/ss.js',
             usedIn: ['Linear 분석', 'Dit 계산', '통합 분석'],
-            actualFunction: CalculationUtils.calculateSubthresholdSwing
+            actualFunction: TFTParams.calculateSS
           },
           {
             name: 'Dit (Interface Trap Density)',
@@ -235,10 +182,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)',
             unit: 'cm⁻²eV⁻¹',
             description: 'Linear 측정에서 계산된 SS 값을 이용하여 산화막-반도체 계면의 트랩 밀도를 추정합니다.',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateDit),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateDit),
+            codeLocation: 'src/pages/parameters/dit.js',
             usedIn: ['Linear 분석', '통합 분석'],
-            actualFunction: CalculationUtils.calculateDit
+            actualFunction: TFTParams.calculateDit
           }
         ]
       },
@@ -254,10 +201,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Ion = maximum ID value, Ioff = minimum ID value',
             unit: 'A',
             description: '최대/최소 드레인 전류',
-            getImplementation: () => extractFunctionCode(DataAnalysis.calculateIonIoff),
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateOnOffRatio),
+            codeLocation: 'src/pages/parameters/on_off_ratio.js',
             usedIn: ['Linear 분석', '통합 분석'],
-            actualFunction: DataAnalysis.calculateIonIoff
+            actualFunction: TFTParams.calculateOnOffRatio
           },
           {
             name: 'Ron (On Resistance)',
@@ -265,10 +212,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Ron = 1/slope (선형 영역)',
             unit: 'Ω',
             description: '선형 영역에서의 드레인 저항',
-            getImplementation: () => extractFunctionCode(DataAnalysis.calculateRon),
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateRon),
+            codeLocation: 'src/pages/parameters/ron.js',
             usedIn: ['IDVD 분석'],
-            actualFunction: DataAnalysis.calculateRon
+            actualFunction: TFTParams.calculateRon
           }
         ]
       },
@@ -284,10 +231,10 @@ const DynamicFormulaInspector = () => {
             formula: 'ΔVth = |Vth_forward - Vth_backward|',
             unit: 'V',
             description: 'Forward/Backward sweep에서의 문턱전압 차이',
-            getImplementation: () => extractFunctionCode(DataAnalysis.calculateHysteresis),
-            codeLocation: 'src/pages/analysis/dataAnalysis.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateDeltaVth),
+            codeLocation: 'src/pages/parameters/dvth.js',
             usedIn: ['Hysteresis 분석', '통합 분석'],
-            actualFunction: DataAnalysis.calculateHysteresis
+            actualFunction: TFTParams.calculateDeltaVth
           }
         ]
       },
@@ -303,10 +250,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Cox = (ε0 × εr) / tox',
             unit: 'F/m²',
             description: '게이트 산화막 정전용량',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateCox),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.calculateCox),
+            codeLocation: 'src/pages/parameters/utils.js',
             usedIn: ['모든 이동도 계산', 'Dit 계산'],
-            actualFunction: CalculationUtils.calculateCox
+            actualFunction: TFTParams.calculateCox
           },
           {
             name: 'Linear Regression',
@@ -314,10 +261,10 @@ const DynamicFormulaInspector = () => {
             formula: 'slope = (nΣxy - ΣxΣy) / (nΣx² - (Σx)²)',
             unit: '무차원',
             description: '선형 회귀 계산 (모든 외삽법의 기초)',
-            getImplementation: () => extractFunctionCode(CalculationUtils.calculateLinearRegression),
-            codeLocation: 'src/pages/analysis/calculationUtils.js',
+            getImplementation: () => extractFunctionCode(TFTParams.linearRegression),
+            codeLocation: 'src/pages/parameters/utils.js',
             usedIn: ['Vth 계산', 'Y-function', 'θ 계산'],
-            actualFunction: CalculationUtils.calculateLinearRegression
+            actualFunction: TFTParams.linearRegression
           }
         ]
       }
