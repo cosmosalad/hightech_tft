@@ -213,10 +213,10 @@ const DynamicFormulaInspector = () => {
             formula: 'Linear Extrapolation Method (선형 외삽법)',
             unit: 'V',
             description: 'Linear 측정 데이터의 gm_max 지점의 접선을 이용해 문턱전압을 계산합니다.',
-            getImplementation: () => extractFunctionCode(AnalysisEngine.calculateVthFromLinear),
-            codeLocation: 'src/pages/analysis/analysisEngine.js',
+            getImplementation: () => extractFunctionCode(CalculationUtils.calculateThresholdVoltage),
+            codeLocation: 'src/pages/analysis/calculationUtils.js',
             usedIn: ['Linear 분석', '통합 분석'],
-            actualFunction: AnalysisEngine.calculateVthFromLinear
+            actualFunction: CalculationUtils.calculateThresholdVoltage
           },
           {
             name: 'SS (Subthreshold Swing)',

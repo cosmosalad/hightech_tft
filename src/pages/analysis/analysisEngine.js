@@ -6,11 +6,13 @@ import {
  analyzeIDVGHysteresis 
 } from './dataAnalysis';
 import { 
- calculateMu0UsingYFunction,  // 🔄 SYNC: Y-function 계산 (동적 추출됨)
- calculateLinearRegression,   // 🔄 SYNC: 선형회귀 계산 (동적 추출됨)
- calculateCox,               // 🔄 SYNC: Cox 계산 (동적 추출됨)
- calculateTheta,             // 🔄 SYNC: θ 계산 (동적 추출됨)
- calculateMuEff              // 🔄 SYNC: μeff 계산 (동적 추출됨)
+ calculateMu0UsingYFunction,
+ calculateLinearRegression,
+ calculateCox,
+ calculateTheta,
+ calculateMuEff,
+ calculateSubthresholdSwing,  // 🔥 수정된 함수 사용
+ calculateDit                 // 🔥 수정된 함수 사용
 } from './calculationUtils';
 
 // 🔄 SYNC: 물리 상수들 (동적 추출됨)
@@ -53,13 +55,13 @@ const performAnalysis = (data, type, filename, deviceParams) => {
  
  switch (type) {
    case 'IDVD':
-     return analyzeIDVD(headers, dataRows, filename, deviceParams);        // 🔄 SYNC: IDVD 분석 (동적 추출됨)
+     return analyzeIDVD(headers, dataRows, filename, deviceParams);
    case 'IDVG-Linear':
-     return analyzeIDVGLinear(headers, dataRows, filename, deviceParams);  // 🔄 SYNC: Linear 분석 (동적 추출됨)
+     return analyzeIDVGLinear(headers, dataRows, filename, deviceParams);
    case 'IDVG-Saturation':
-     return analyzeIDVGSaturation(headers, dataRows, filename, deviceParams); // 🔄 SYNC: Saturation 분석 (동적 추출됨)
+     return analyzeIDVGSaturation(headers, dataRows, filename, deviceParams);
    case 'IDVG-Hysteresis':
-     return analyzeIDVGHysteresis(headers, dataRows, filename, deviceParams); // 🔄 SYNC: Hysteresis 분석 (동적 추출됨)
+     return analyzeIDVGHysteresis(headers, dataRows, filename, deviceParams);
    default:
      return { error: 'Unknown file type' };
  }
@@ -99,30 +101,23 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
  };
 
  try {
-   // 🔥 변경: Linear에서 정확한 Vth, SS, Dit 추출
+   // 🔥 수정: Linear 분석 결과에서 직접 SS, Dit 추출 (이미 수정된 함수로 계산됨)
    let vth_lin = 0, ss = 0, dit = 0, gm_max_lin = 0;
    if (sampleData['IDVG-Linear']) {
      const linParams = sampleData['IDVG-Linear'].parameters;
-     // Linear에서 Vth 추출 (기존 Linear 분석에 추가 필요)
-     const linData = sampleData['IDVG-Linear'];
      
-     // Linear 데이터에서 Vth 계산
-     if (linData.gmData && linData.gmData.length > 0) {
-       vth_lin = calculateVthFromLinear(linData.chartData, linData.gmData);
-     }
+     // Linear 분석에서 이미 계산된 값들 직접 사용
+     vth_lin = parseFloat(linParams.Vth?.split(' ')[0]) || 0;
+     ss = parseFloat(linParams.SS?.split(' ')[0]) || 0;
+     dit = parseFloat(linParams.Dit?.split(' ')[0]) || 0;
+     gm_max_lin = parseFloat(linParams['gm_max']?.split(' ')[0]) || 0;
      
-     // Linear 데이터에서 SS 계산
-     ss = calculateSSFromLinear(linData.chartData);
-     
-     // Linear 데이터에서 Dit 계산
-     dit = calculateDitFromLinear(ss, deviceParams);
-     
-     gm_max_lin = calculateGmMaxFromLinear(linData);
+     console.log(`${sampleName} Linear 결과: Vth=${vth_lin}V, SS=${ss}V/dec, Dit=${dit.toExponential(2)}`);
    } else {
      results.warnings.push('Linear 데이터 없음 - Vth, SS, Dit, gm_max 계산 불가');
    }
 
-   // Saturation에서는 ID_sat만 추출 (기존 역할 축소)
+   // Saturation에서는 ID_sat만 추출
    let id_sat_raw = 0, gm_max_sat = 0;
    if (sampleData['IDVG-Saturation']) {
      const satParams = sampleData['IDVG-Saturation'].parameters;
@@ -162,23 +157,23 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
      results.warnings.push('Hysteresis 데이터 없음 - 안정성 평가 불가');
    }
 
-   // 🔄 SYNC: μFE 계산 (Linear 기준으로 수정)
+   // μFE 계산
    let muFE = 0;
    const finalGmMax = gm_max_lin > 0 ? gm_max_lin : gm_max_sat;
    
    if (finalGmMax > 0 && deviceParams.W > 0 && deviceParams.L > 0 && vds_linear > 0) {
-     const cox = calculateCox(deviceParams.tox);  // 🔄 SYNC: Cox 계산 함수
+     const cox = calculateCox(deviceParams.tox);
      muFE = (deviceParams.L / (deviceParams.W * cox * vds_linear)) * finalGmMax;
      muFE = muFE * 1e4;
    } else {
      results.warnings.push('μFE 계산 불가 - 파라미터 또는 gm 데이터 부족');
    }
 
-   // 🔄 SYNC: Y-function method로 정확한 μ0 계산 (Linear Vth 사용)
+   // Y-function method로 μ0 계산
    let mu0 = 0, mu0CalculationInfo = '', yFunctionQuality = 'N/A';
 
    if (sampleData['IDVG-Linear']) {
-     const yFunctionResult = calculateMu0UsingYFunction(sampleData['IDVG-Linear'], deviceParams, vth_lin); // 🔥 변경: vth_lin 사용
+     const yFunctionResult = calculateMu0UsingYFunction(sampleData['IDVG-Linear'], deviceParams, vth_lin);
      
      if (yFunctionResult.mu0 > 0 && yFunctionResult.quality !== 'Poor') {
        mu0 = yFunctionResult.mu0;
@@ -201,18 +196,18 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
      results.warnings.push('Linear 데이터 없음 - Y-function 계산 불가');
    }
 
-   // 🔄 SYNC: 정확한 θ (theta) 계산 (Linear Vth 사용)
+   // θ (theta) 계산
    let muEff = 0, theta = 0, vg_for_theta = 0, thetaCalculationInfo = '';
 
    if (mu0 > 0 && vth_lin !== 0 && sampleData['IDVG-Linear']) {
      const linearData = sampleData['IDVG-Linear'];
      
-     const thetaResult = calculateTheta(  // 🔄 SYNC: θ 계산 함수
+     const thetaResult = calculateTheta(
        mu0, 
        deviceParams, 
        linearData.chartData, 
        linearData.gmData, 
-       vth_lin,  // 🔥 변경: vth_lin 사용
+       vth_lin,
        vds_linear
      );
      
@@ -232,7 +227,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
        vg_for_theta = vth_lin + 5;
      }
      
-     muEff = calculateMuEff(mu0, theta, vg_for_theta, vth_lin);  // 🔥 변경: vth_lin 사용
+     muEff = calculateMuEff(mu0, theta, vg_for_theta, vth_lin);
      
      if (muFE > 0 && muEff > 0) {
        const relativeDiff = Math.abs(muEff - muFE) / muFE;
@@ -260,7 +255,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
    }
 
    results.parameters = {
-     'Vth (Linear 기준)': vth_lin !== 0 ? `${vth_lin.toFixed(2)} V` : 'N/A',  // 🔥 변경: Linear 기준으로 표시
+     'Vth (Linear 기준)': vth_lin !== 0 ? `${vth_lin.toFixed(2)} V` : 'N/A',
      'gm_max (Linear 기준)': finalGmMax > 0 ? `${finalGmMax.toExponential(2)} S` : 'N/A',
      'μFE (통합 계산)': muFE > 0 ? `${muFE.toExponential(2)} cm²/V·s` : 'N/A',
      'μ0 (Y-function)': mu0 > 0 ? `${mu0.toExponential(2)} cm²/V·s` : 'N/A',
@@ -270,8 +265,8 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
      'θ (계산값)': theta > 0 ? `${theta.toExponential(2)} V⁻¹` : 'N/A',
      'θ 계산 방법': thetaCalculationInfo,
      'VG@gm_max': vg_for_theta > 0 ? `${vg_for_theta.toFixed(1)} V` : 'N/A',
-     'SS (Linear 기준)': ss > 0 ? `${ss.toFixed(3)} V/decade` : 'N/A',  // 🔥 변경: Linear 기준으로 표시
-     'Dit (Linear 기준)': dit > 0 ? `${dit.toExponential(2)} cm⁻²eV⁻¹` : 'N/A',  // 🔥 변경: Linear 기준으로 표시
+     'SS (Linear 기준)': ss > 0 ? `${ss.toFixed(3)} V/decade` : 'N/A',
+     'Dit (Linear 기준)': dit > 0 ? `${dit.toExponential(2)} cm⁻²eV⁻¹` : 'N/A',
      'Ron': ron > 0 ? `${ron.toExponential(2)} Ω` : 'N/A',
      'Ion': ion > 0 ? `${ion.toExponential(2)} A` : 'N/A',
      'Ioff': ioff > 0 ? `${ioff.toExponential(2)} A` : 'N/A',
@@ -291,74 +286,6 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
  }
 
  return results;
-};
-
-// 🔥 수정: Linear 데이터에서 Vth 계산 함수 (Linear Extrapolation Method)
-export const calculateVthFromLinear = (chartData, gmData) => {
- if (!gmData || gmData.length === 0) {
-   return 0;
- }
- 
- // gm_max 지점 찾기
- const maxGmPoint = gmData.reduce((max, current) => 
-   current.gm > max.gm ? current : max
- );
- 
- const vg_max = maxGmPoint.VG;
- const gm_max = maxGmPoint.gm;
- 
- // gm_max 지점에서의 ID 찾기
- const currentPoint = chartData.find(d => Math.abs(d.VG - vg_max) < 0.1);
- if (!currentPoint) {
-   return 0;
- }
- 
- const id_max = currentPoint.ID;
- 
- // 🔥 수정: Linear Extrapolation Method
- // Vth = VG_max - ID_max / gm_max (선형 외삽법)
- const vth = vg_max - (id_max / gm_max);
- 
- return vth;
-};
-
-// 🔥 추가: Linear 데이터에서 SS 계산 함수
-const calculateSSFromLinear = (chartData) => {
- const subthresholdData = chartData.filter(d => {
-   const logID = Math.log10(Math.abs(d.ID));
-   return logID > -10 && logID < -6;
- });
- 
- if (subthresholdData.length < 5) {
-   return 0;
- }
- 
- const x = subthresholdData.map(d => d.VG);
- const y = subthresholdData.map(d => Math.log10(Math.abs(d.ID)));
- const regression = calculateLinearRegression(x, y);
- 
- if (regression.slope === 0) {
-   return 0;
- }
- 
- // SS = dVG/d(log ID) = 1/slope
- const ss_V_per_decade = 1 / regression.slope;
- 
- return Math.abs(ss_V_per_decade);
-};
-
-// 🔥 추가: Linear 데이터에서 Dit 계산 함수
-const calculateDitFromLinear = (ss, deviceParams) => {
- if (!ss || ss <= 0) return 0;
- 
- // Dit = (Cox/q) × (SS/(2.3×kT/q) - 1)
- const kT_q = PHYSICAL_CONSTANTS.THERMAL_VOLTAGE_300K;
- const cox = calculateCox(deviceParams.tox) * 1e-4;
- const q = PHYSICAL_CONSTANTS.ELEMENTARY_CHARGE;
- 
- const dit = (cox / q) * (ss / (2.3 * kT_q) - 1);
- 
- return Math.max(0, dit);
 };
 
 // 🔄 SYNC: Linear 데이터에서 정확한 gm_max 재계산 (동적 추출됨)
