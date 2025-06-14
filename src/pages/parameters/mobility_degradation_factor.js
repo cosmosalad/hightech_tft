@@ -1,9 +1,30 @@
+/**
+ * 📉 θ (Mobility Degradation Factor) 계산 모듈
+ * 
+ * 📖 물리적 의미:
+ * - 게이트 전압이 증가함에 따라 MOSFET 채널 내에서 발생하는 carrier 유효 이동도(μeff) 감소 현상을 정량화하는 계수
+ * - 높은 게이트 전압 → 강한 수직 전기장 → 표면 산란 증가 → 이동도 감소
+ * - θ가 클수록 이동도 저하가 심함
+ * 
+ * 📏 측정 데이터: IDVG-Linear
+ * - 저전계 조건 (VD < 1V)에서 측정
+ * - μ0 (Y-function으로 구한 값) 필요
+ * - VG > Vth + 1V 영역의 데이터 사용 (높은 게이트 전압에서 선형성 확인)
+ * 
+ * 🧮 계산 수식: θ = (μ0×W×Cox×VD)/(ID×L) - 1/(VG-Vth)
+ * - 이론적 배경: μeff = μ0 / (1 + θ(VG-Vth))
+ * - 변형하면: (μ0×W×Cox×VD)/(ID×L) = θ + 1/(VG-Vth)
+ * - Ycal = θ + Xcal 형태로 선형 회귀하여 y절편이 θ
+ * 
+ * 📊 일반적 범위: 0.001 ~ 2.0 V⁻¹
+ */
+
 import { linearRegression, calculateCox } from './utils.js';
 
 export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
   // 🔒 강화된 입력 검증
   
-  // μ0 검증
+  // μ0 검증 (Y-function으로 구한 저전계 이동도)
   if (!mu0 || !isFinite(mu0) || mu0 <= 0) {
     return { theta: 0, method: 'Invalid μ0 value', error: `μ0: ${mu0}` };
   }
@@ -11,7 +32,7 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     return { theta: 0, method: 'μ0 too high - check units', error: `μ0: ${mu0} cm²/V·s` };
   }
   
-  // Vth 검증
+  // Vth 검증 (문턱 전압)
   if (!isFinite(vth)) {
     return { theta: 0, method: 'Invalid Vth value', error: `Vth: ${vth}` };
   }
@@ -19,7 +40,7 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     return { theta: 0, method: 'Vth too extreme', error: `Vth: ${vth} V` };
   }
   
-  // VDS 검증
+  // VDS 검증 (저전계 조건 확인)
   if (!vds || !isFinite(vds) || vds <= 0) {
     return { theta: 0, method: 'Invalid VDS value', error: `VDS: ${vds}` };
   }
@@ -34,54 +55,25 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
   
   const { W, L, tox } = deviceParams;
   
-  // W 검증
-  if (!W || !isFinite(W) || W <= 0) {
-    return { theta: 0, method: 'Invalid channel width (W)', error: `W: ${W}` };
-  }
-  if (W > 0.01) {  // 10mm
-    return { theta: 0, method: 'W too large - check units', error: `W: ${W} m (should be μm level)` };
+  // 기하학적 파라미터 검증
+  if (!W || !isFinite(W) || W <= 0 || W > 0.01) {  // W > 10mm는 비현실적
+    return { theta: 0, method: 'Invalid channel width (W)', error: `W: ${W} m` };
   }
   
-  // L 검증
-  if (!L || !isFinite(L) || L <= 0) {
-    return { theta: 0, method: 'Invalid channel length (L)', error: `L: ${L}` };
-  }
-  if (L > 0.01) {  // 10mm
-    return { theta: 0, method: 'L too large - check units', error: `L: ${L} m (should be μm level)` };
-  }
-  if (L > W * 1000) {  // L >> W는 비현실적
-    return { theta: 0, method: 'L/W ratio unrealistic', error: `W: ${W*1e6}μm, L: ${L*1e6}μm` };
+  if (!L || !isFinite(L) || L <= 0 || L > 0.01) {  // L > 10mm는 비현실적
+    return { theta: 0, method: 'Invalid channel length (L)', error: `L: ${L} m` };
   }
   
-  // tox 검증
-  if (!tox || !isFinite(tox) || tox <= 0) {
-    return { theta: 0, method: 'Invalid oxide thickness (tox)', error: `tox: ${tox}` };
-  }
-  if (tox > 1e-6) {  // 1μm
-    return { theta: 0, method: 'tox too large - check units', error: `tox: ${tox} m (should be nm level)` };
-  }
-  if (tox < 1e-9) {  // 1nm
-    return { theta: 0, method: 'tox too small - unrealistic', error: `tox: ${tox*1e9} nm` };
+  if (!tox || !isFinite(tox) || tox <= 0 || tox > 1e-6 || tox < 1e-9) {
+    return { theta: 0, method: 'Invalid oxide thickness (tox)', error: `tox: ${tox*1e9} nm` };
   }
   
   // chartData 검증
-  if (!chartData || !Array.isArray(chartData)) {
-    return { theta: 0, method: 'Invalid chart data', error: 'chartData not an array' };
-  }
-  if (chartData.length === 0) {
-    return { theta: 0, method: 'No chart data', error: 'empty chartData array' };
+  if (!chartData || !Array.isArray(chartData) || chartData.length === 0) {
+    return { theta: 0, method: 'Invalid chart data', error: 'chartData missing or empty' };
   }
   
-  // chartData 구조 검증
-  const samplePoint = chartData[0];
-  if (!samplePoint || typeof samplePoint !== 'object') {
-    return { theta: 0, method: 'Invalid chart data structure', error: 'chart points not objects' };
-  }
-  if (!('VG' in samplePoint) || !('ID' in samplePoint)) {
-    return { theta: 0, method: 'Missing VG or ID in chart data', error: 'required fields: VG, ID' };
-  }
-  
-  // Cox 계산 및 검증
+  // Cox 계산
   let cox;
   try {
     cox = calculateCox(tox);
@@ -105,10 +97,10 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
   let validVGPoints = 0;
   let validCurrentPoints = 0;
   
+  // 📊 선형 회귀용 데이터 수집
   for (const point of chartData) {
     totalPoints++;
     
-    // 데이터 포인트 검증
     if (!point || typeof point !== 'object') continue;
     
     const vg = point.VG;
@@ -117,14 +109,17 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     // VG, ID 유효성 검증
     if (!isFinite(vg) || !isFinite(id)) continue;
     
+    // 🎯 높은 VG 영역만 사용 (VG > Vth + 1V)
+    // 이 영역에서 θ의 효과가 선형적으로 나타남
     if (vg > vth + 1.0) {
       validVGPoints++;
-      if (id > 1e-12) {
+      if (id > 1e-12) {  // 의미있는 전류 값
         validCurrentPoints++;
         
-        // 계산값 검증
-        const xcal = 1 / (vg - vth);                                    
-        const ycal = (mu0_SI * W_SI * cox_SI * vds) / (id * L_SI);     
+        // 🧮 선형 회귀용 x, y 계산
+        // 수식: (μ0×W×Cox×VD)/(ID×L) = θ + 1/(VG-Vth)
+        const xcal = 1 / (vg - vth);                                    // X축: 1/(VG-Vth)
+        const ycal = (mu0_SI * W_SI * cox_SI * vds) / (id * L_SI);     // Y축: 이론값
         
         if (isFinite(xcal) && isFinite(ycal) && xcal > 0 && ycal > 0) {
           points.push({ xcal, ycal });
@@ -133,7 +128,7 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     }
   }
   
-  // 데이터 충분성 검증
+  // 📈 데이터 충분성 검증
   if (totalPoints < 10) {
     return { 
       theta: 0, 
@@ -150,14 +145,6 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     };
   }
   
-  if (validCurrentPoints < 3) {
-    return { 
-      theta: 0, 
-      method: 'Cannot measure - insufficient valid current data', 
-      error: `Only ${validCurrentPoints} points with valid current` 
-    };
-  }
-  
   if (points.length < 3) {
     return { 
       theta: 0, 
@@ -166,7 +153,7 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     };
   }
   
-  // 선형 회귀 계산
+  // 📐 선형 회귀 계산
   const x = points.map(p => p.xcal);
   const y = points.map(p => p.ycal);
   
@@ -180,9 +167,10 @@ export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
     return { theta: 0, method: 'Linear regression error', error: error.message };
   }
   
+  // 🎯 θ = y절편 (수식: Ycal = θ + Xcal에서 y절편이 θ)
   const theta = regression.intercept;
   
-  // 물리적 타당성 최종 검증
+  // ✅ 물리적 타당성 최종 검증
   if (theta <= 0) {
     return { 
       theta: 0, 

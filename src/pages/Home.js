@@ -21,7 +21,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
   const comparisonData = useMemo(() => [
     { feature: "파일별 독립 분석", basic: "✅", advanced: "✅" },
     { feature: "샘플명 기반 데이터 융합", basic: "❌", advanced: "✅" },
-    { feature: "정확한 μeff 계산", basic: "⚠️ 기본", advanced: "✅ 고급" },
+    { feature: "μeff 계산", basic: "⚠️ 기본", advanced: "✅ 고급" },
     { feature: "실제 θ 값 계산", basic: "❌ 고정값", advanced: "✅ 실측값" },
     { feature: "품질 평가 시스템", basic: "❌", advanced: "✅" },
     { feature: "경고 및 검증", basic: "❌", advanced: "✅" },
@@ -178,7 +178,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                     </li>
                     <li className="flex items-start">
                       <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <strong>정확한 μeff 계산</strong> - Linear gm + Saturation Vth 조합
+                      <strong>정확한 μFE 계산</strong> - 각 측정의 최적 파라미터 융합
                     </li>
                     <li className="flex items-start">
                       <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
