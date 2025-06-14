@@ -11,8 +11,8 @@ const SSRangeEditor = ({
   sampleName,
   onApplyResult 
 }) => {
-  const [startVG, setStartVG] = useState('-1.0'); // 문자열
-  const [endVG, setEndVG] = useState('1.0');   // 문자열
+  const [startVG, setStartVG] = useState('-1.0'); // 문자열로 관리
+  const [endVG, setEndVG] = useState('1.0');     // 문자열로 관리
   const [calculationResult, setCalculationResult] = useState(null);
   const [isCalculating, setIsCalculating] = useState(false);
   const [previewData, setPreviewData] = useState([]);
@@ -26,23 +26,41 @@ const SSRangeEditor = ({
       const maxVG = Math.max(...vgValues);
       
       // 기본값: 전체 범위의 30-70% 구간
-      setStartVG(Math.round((minVG + (maxVG - minVG) * 0.3) * 10) / 10);
-      setEndVG(Math.round((minVG + (maxVG - minVG) * 0.7) * 10) / 10);
+      const startValue = Math.round((minVG + (maxVG - minVG) * 0.3) * 10) / 10;
+      const endValue = Math.round((minVG + (maxVG - minVG) * 0.7) * 10) / 10;
       
-      generatePreviewData();
+      // ✅ 문자열로 변환해서 설정
+      setStartVG(startValue.toString());
+      setEndVG(endValue.toString());
+      
+      console.log(`Initial VG range: ${startValue}V to ${endValue}V`);
     }
   }, [isOpen, chartData]);
 
-  // 미리보기 데이터 생성
+  // 미리보기 데이터 생성 (수정된 버전)
   const generatePreviewData = () => {
     if (!chartData) return;
+    
+    // ✅ 입력값을 숫자로 변환
+    const numericStartVG = parseFloat(startVG);
+    const numericEndVG = parseFloat(endVG);
+    
+    // 유효하지 않은 입력값 처리
+    if (isNaN(numericStartVG) || isNaN(numericEndVG)) {
+      console.warn('Invalid VG range values:', startVG, endVG);
+      setPreviewData([]);
+      return;
+    }
     
     const preview = chartData.map(d => ({
       VG: d.VG,
       logID: Math.log10(Math.abs(d.ID)),
-      inRange: d.VG >= startVG && d.VG <= endVG,
+      inRange: d.VG >= numericStartVG && d.VG <= numericEndVG, // ✅ 숫자로 비교
       ID: d.ID
     })).filter(d => isFinite(d.logID));
+    
+    const pointsInRange = preview.filter(p => p.inRange).length;
+    console.log(`Range: ${numericStartVG}V to ${numericEndVG}V, Points in range: ${pointsInRange}`);
     
     setPreviewData(preview);
   };
@@ -65,10 +83,10 @@ const SSRangeEditor = ({
     setIsCalculating(true);
     
     try {
-      // 선택된 범위의 데이터 필터링 (변환된 숫자 변수 사용)
+      // 선택된 범위의 데이터 필터링
       const selectedData = chartData.filter(d => 
         d.VG >= numericStartVG && d.VG <= numericEndVG
-    );
+      );
 
       if (selectedData.length < 3) {
         alert('선택된 범위에 데이터가 부족합니다 (최소 3개 점 필요).');
@@ -76,12 +94,12 @@ const SSRangeEditor = ({
         return;
       }
 
-    // SS 계산 (변환된 숫자 변수 사용)
-    const ssResult = calculateSS(chartData, { 
-      customRange: true, 
-      startVG: numericStartVG, 
-      endVG: numericEndVG 
-    });
+      // SS 계산
+      const ssResult = calculateSS(chartData, { 
+        customRange: true, 
+        startVG: numericStartVG, 
+        endVG: numericEndVG 
+      });
 
       // R² 계산을 위한 선형 회귀
       const logData = selectedData.map(d => ({
@@ -116,16 +134,18 @@ const SSRangeEditor = ({
         return sum + Math.pow(y[i] - predicted, 2);
       }, 0);
       
-      const rSquared = 1 - (ssResidual / ssTotal);
+      const rSquared = Math.max(0, Math.min(1, 1 - (ssResidual / ssTotal)));
 
       setCalculationResult({
         ss: ssResult,
-        rSquared: Math.max(0, Math.min(1, rSquared)),
+        rSquared: rSquared,
         dataPoints: logData.length,
         slope: slope,
         intercept: intercept,
         range: { startVG: numericStartVG, endVG: numericEndVG }
       });
+
+      console.log(`SS calculation completed: ${ssResult.toFixed(1)} mV/decade, R² = ${rSquared.toFixed(3)}`);
 
     } catch (error) {
       console.error('SS 계산 오류:', error);
@@ -181,13 +201,43 @@ const SSRangeEditor = ({
     return { quality, color, bgColor, issues };
   };
 
+  // 추천 범위 설정 함수
+  const setRecommendedRange = (type) => {
+    if (!chartData) return;
+    
+    const vgValues = chartData.map(d => d.VG).sort((a, b) => a - b);
+    const minVG = Math.min(...vgValues);
+    const maxVG = Math.max(...vgValues);
+    
+    switch (type) {
+      case 'subthreshold':
+        setStartVG('-2.0');
+        setEndVG('2.0');
+        break;
+      case 'switching':
+        setStartVG('-1.0');
+        setEndVG('1.0');
+        break;
+      case 'negative':
+        setStartVG(Math.max(minVG, -3).toString());
+        setEndVG('0.0');
+        break;
+      case 'positive':
+        setStartVG('0.0');
+        setEndVG(Math.min(maxVG, 3).toString());
+        break;
+      default:
+        break;
+    }
+  };
+
   const qualityInfo = getQualityAssessment();
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[95vh] overflow-y-auto">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
           <div className="flex items-center">
@@ -222,6 +272,37 @@ const SSRangeEditor = ({
                 선형 구간 선택
               </h3>
 
+              {/* 추천 범위 버튼들 */}
+              <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                <h4 className="text-sm font-semibold text-blue-800 mb-2">🎯 추천 범위</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <button
+                    onClick={() => setRecommendedRange('switching')}
+                    className="px-2 py-1 bg-blue-100 hover:bg-blue-200 rounded transition-colors"
+                  >
+                    스위칭 (-1V ~ 1V)
+                  </button>
+                  <button
+                    onClick={() => setRecommendedRange('subthreshold')}
+                    className="px-2 py-1 bg-green-100 hover:bg-green-200 rounded transition-colors"
+                  >
+                    서브임계 (-2V ~ 2V)
+                  </button>
+                  <button
+                    onClick={() => setRecommendedRange('negative')}
+                    className="px-2 py-1 bg-purple-100 hover:bg-purple-200 rounded transition-colors"
+                  >
+                    음의 영역만
+                  </button>
+                  <button
+                    onClick={() => setRecommendedRange('positive')}
+                    className="px-2 py-1 bg-orange-100 hover:bg-orange-200 rounded transition-colors"
+                  >
+                    양의 영역만
+                  </button>
+                </div>
+              </div>
+
               {/* VG 범위 입력 */}
               <div className="space-y-4 mb-6">
                 <div className="grid grid-cols-2 gap-4">
@@ -232,9 +313,12 @@ const SSRangeEditor = ({
                     <input
                       type="number"
                       step="0.1"
+                      min="-20"
+                      max="20"
                       value={startVG}
                       onChange={(e) => setStartVG(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="-1.0"
                     />
                   </div>
                   <div>
@@ -244,9 +328,12 @@ const SSRangeEditor = ({
                     <input
                       type="number"
                       step="0.1"
+                      min="-20"
+                      max="20"
                       value={endVG}
                       onChange={(e) => setEndVG(e.target.value)}
                       className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="1.0"
                     />
                   </div>
                 </div>
@@ -254,15 +341,16 @@ const SSRangeEditor = ({
                 <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
                   <strong>💡 선택 가이드:</strong>
                   <ul className="mt-1 space-y-1">
-                    <li>• Subthreshold 영역 (-5V ~ 5V 범위)</li>
-                    <li>• 선형성이 좋은 구간 선택</li>
-                    <li>• 최소 5개 이상의 데이터 포인트</li>
+                    <li>• Subthreshold 영역에서 선형성이 좋은 구간 선택</li>
+                    <li>• 최소 5개 이상의 데이터 포인트 필요</li>
+                    <li>• 음수 범위도 지원 (예: -3V ~ -1V)</li>
+                    <li>• R² &gt; 0.9 목표로 범위 조정</li>
                   </ul>
                 </div>
 
                 <button
                   onClick={handleCalculate}
-                  disabled={isCalculating || startVG >= endVG}
+                  disabled={isCalculating || parseFloat(startVG) >= parseFloat(endVG)} // ✅ 숫자로 비교
                   className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center justify-center"
                 >
                   {isCalculating ? (
@@ -277,6 +365,14 @@ const SSRangeEditor = ({
                     </>
                   )}
                 </button>
+
+                {/* 현재 선택된 범위 정보 */}
+                {previewData.length > 0 && (
+                  <div className="text-xs text-gray-600 bg-gray-50 p-2 rounded">
+                    <strong>선택된 범위:</strong> {startVG}V ~ {endVG}V<br />
+                    <strong>포함된 데이터:</strong> {previewData.filter(d => d.inRange).length}개 포인트
+                  </div>
+                )}
               </div>
 
               {/* 계산 결과 */}
@@ -349,15 +445,22 @@ const SSRangeEditor = ({
                       <XAxis 
                         dataKey="VG" 
                         label={{ value: 'VG (V)', position: 'insideBottom', offset: -5 }}
+                        type="number"
+                        scale="linear"
+                        domain={['dataMin', 'dataMax']}
                       />
                       <YAxis 
                         label={{ value: 'log₁₀(ID)', angle: -90, position: 'insideLeft' }}
+                        type="number"
+                        scale="linear"
+                        domain={['dataMin', 'dataMax']}
                       />
                       <Tooltip 
                         formatter={(value, name) => [
                           typeof value === 'number' ? value.toFixed(3) : value, 
                           name === 'logID' ? 'log₁₀(ID)' : name
                         ]}
+                        labelFormatter={(value) => `VG: ${value}V`}
                       />
                       <Line 
                         type="monotone" 
@@ -385,7 +488,7 @@ const SSRangeEditor = ({
               )}
 
               <div className="mt-4 text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                <div className="flex items-center space-x-4">
+                <div className="flex items-center space-x-4 mb-2">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-blue-500 rounded-full mr-2"></div>
                     전체 데이터
@@ -395,8 +498,10 @@ const SSRangeEditor = ({
                     선택된 범위
                   </div>
                 </div>
-                <div className="mt-2 text-xs">
-                  선택된 범위: {previewData.filter(d => d.inRange).length}개 포인트
+                <div className="text-xs">
+                  총 데이터: {previewData.length}개<br />
+                  선택된 범위: {previewData.filter(d => d.inRange).length}개 포인트<br />
+                  현재 범위: {startVG}V ~ {endVG}V
                 </div>
               </div>
             </div>

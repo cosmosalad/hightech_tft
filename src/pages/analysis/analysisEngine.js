@@ -222,7 +222,17 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       'VDS (Linear)': vds_linear > 0 ? `${vds_linear.toFixed(2)} V` : 'N/A'
     };
 
-    results.quality = evaluateDataQuality(results.parameters, results.warnings);
+    // ✅ 새로운 품질 평가 시스템 적용
+    results.quality = evaluateDataQuality(
+      results.parameters, 
+      results.warnings,
+      {
+        hasLinear: results.hasLinear,
+        hasSaturation: results.hasSaturation,
+        hasIDVD: results.hasIDVD,
+        hasHysteresis: results.hasHysteresis
+      }
+    );
 
   } catch (error) {
     console.error(`${sampleName} 완전 분석 실패:`, error);
@@ -232,39 +242,213 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
   return results;
 };
 
-const evaluateDataQuality = (params, warnings) => {
-  let score = 100;
+// ✅ 개선된 품질 평가 함수 (기존 함수 완전 교체)
+const evaluateDataQuality = (params, warnings, dataAvailability) => {
+  let score = 0; // 0점에서 시작해서 데이터에 따라 가산
   let issues = [];
-
-  if (params['Vth (Linear 기준)'] === 'N/A') {
-    score -= 20;
-    issues.push('Vth 없음');
+  
+  // 🎯 1. 데이터 완성도 평가 (40점 만점)
+  let dataScore = 0;
+  let totalMeasurements = 0;
+  let completeMeasurements = 0;
+  
+  // Linear 데이터 (필수) - 15점
+  if (dataAvailability.hasLinear) {
+    dataScore += 15;
+    completeMeasurements++;
+    if (params['Vth (Linear 기준)'] === 'N/A') {
+      dataScore -= 5;
+      issues.push('Linear Vth 계산 실패');
+    }
+    if (params['gm_max (Linear 기준)'] === 'N/A') {
+      dataScore -= 5;
+      issues.push('Linear gm_max 계산 실패');
+    }
+  } else {
+    issues.push('Linear 데이터 없음 (치명적)');
   }
-  if (params['gm_max (Linear 기준)'] === 'N/A') {
-    score -= 20;
-    issues.push('gm_max 없음');
+  totalMeasurements++;
+  
+  // Saturation 데이터 - 10점
+  if (dataAvailability.hasSaturation) {
+    dataScore += 10;
+    completeMeasurements++;
+  } else {
+    issues.push('Saturation 데이터 없음');
   }
-  if (params['μFE (통합 계산)'] === 'N/A') {
-    score -= 15;
-    issues.push('μFE 계산 불가');
+  totalMeasurements++;
+  
+  // IDVD 데이터 - 10점
+  if (dataAvailability.hasIDVD) {
+    dataScore += 10;
+    completeMeasurements++;
+    if (params['Ron'] === 'N/A') {
+      dataScore -= 3;
+      issues.push('Ron 계산 실패');
+    }
+  } else {
+    issues.push('IDVD 데이터 없음');
   }
-
-  if (params['μ0 품질'] === 'Poor') {
-    score -= 10;
+  totalMeasurements++;
+  
+  // Hysteresis 데이터 - 5점
+  if (dataAvailability.hasHysteresis) {
+    dataScore += 5;
+    completeMeasurements++;
+    if (params['ΔVth (Hysteresis)'] === 'N/A') {
+      dataScore -= 2;
+      issues.push('Hysteresis 분석 실패');
+    }
+  } else {
+    issues.push('Hysteresis 데이터 없음');
+  }
+  totalMeasurements++;
+  
+  score += dataScore;
+  
+  // 🔬 2. 파라미터 품질 평가 (35점 만점)
+  let paramScore = 0;
+  
+  // μFE 계산 성공 - 10점
+  if (params['μFE (통합 계산)'] !== 'N/A') {
+    paramScore += 10;
+  } else {
+    issues.push('μFE 계산 실패');
+  }
+  
+  // μ0 Y-function 품질 - 10점
+  if (params['μ0 품질'] === 'Excellent') {
+    paramScore += 10;
+  } else if (params['μ0 품질'] === 'Good') {
+    paramScore += 7;
+  } else if (params['μ0 품질'] === 'Fair') {
+    paramScore += 4;
+  } else if (params['μ0 품질'] === 'Poor') {
+    paramScore += 1;
     issues.push('Y-function 품질 불량');
+  } else if (params['μ0 품질'] === 'Fallback') {
+    paramScore += 3;
+    issues.push('Y-function 실패, Fallback 사용');
+  } else {
+    issues.push('μ0 계산 실패');
   }
-
-  score -= warnings.length * 3;
-
-  let grade = 'A';
-  if (score < 90) grade = 'B';
-  if (score < 80) grade = 'C';
-  if (score < 70) grade = 'D';
-  if (score < 60) grade = 'F';
+  
+  // μeff 계산 성공 - 8점
+  if (params['μeff (정확 계산)'] !== 'N/A') {
+    paramScore += 8;
+  } else {
+    issues.push('μeff 계산 실패');
+  }
+  
+  // SS 품질 - 7점
+  if (params['SS (Linear 기준)'] !== 'N/A') {
+    const ssValue = parseFloat(params['SS (Linear 기준)']);
+    if (ssValue < 100) {
+      paramScore += 7; // 우수
+    } else if (ssValue < 300) {
+      paramScore += 5; // 양호
+    } else if (ssValue < 1000) {
+      paramScore += 3; // 보통
+    } else {
+      paramScore += 1; // 불량
+      issues.push('높은 SS 값 (>1V/decade)');
+    }
+  } else {
+    issues.push('SS 계산 실패');
+  }
+  
+  score += paramScore;
+  
+  // 🚨 3. 경고 및 오류 감점 (25점 감점 가능)
+  let warningPenalty = Math.min(warnings.length * 5, 25); // 경고당 5점 감점, 최대 25점
+  score -= warningPenalty;
+  
+  if (warnings.length > 0) {
+    issues.push(`${warnings.length}개 경고사항 발생`);
+  }
+  
+  // 🎁 4. 보너스 점수 (20점 가능)
+  let bonusScore = 0;
+  
+  // 완전한 데이터셋 보너스 - 10점
+  if (completeMeasurements === totalMeasurements) {
+    bonusScore += 10;
+  }
+  
+  // Ion/Ioff 우수 - 5점
+  if (params['Ion/Ioff'] !== 'N/A') {
+    const ionIoffRatio = parseFloat(params['Ion/Ioff']);
+    if (ionIoffRatio > 1e6) {
+      bonusScore += 5;
+    } else if (ionIoffRatio > 1e4) {
+      bonusScore += 3;
+    }
+  }
+  
+  // 낮은 Hysteresis - 5점
+  if (params['ΔVth (Hysteresis)'] !== 'N/A') {
+    const deltaVth = Math.abs(parseFloat(params['ΔVth (Hysteresis)']));
+    if (deltaVth < 0.1) {
+      bonusScore += 5;
+    } else if (deltaVth < 0.5) {
+      bonusScore += 2;
+    }
+  }
+  
+  score += bonusScore;
+  
+  // 📊 5. 최종 등급 결정 (엄격한 기준)
+  score = Math.max(0, Math.min(100, score)); // 0-100 범위 제한
+  
+  let grade = 'F';
+  if (score >= 95 && completeMeasurements === totalMeasurements) {
+    grade = 'A+'; // 완벽한 데이터 + 우수한 품질
+  } else if (score >= 90 && completeMeasurements >= 3) {
+    grade = 'A';  // 우수 (3개 이상 측정 + 90점 이상)
+  } else if (score >= 80 && completeMeasurements >= 2) {
+    grade = 'B';  // 양호 (2개 이상 측정 + 80점 이상)
+  } else if (score >= 70) {
+    grade = 'C';  // 보통 (70점 이상)
+  } else if (score >= 60) {
+    grade = 'D';  // 미흡 (60점 이상)
+  }
+  // else F (60점 미만)
+  
+  // 🎯 추가 등급 조건
+  if (!dataAvailability.hasLinear) {
+    grade = 'F'; // Linear 데이터 없으면 무조건 F
+    issues.push('필수 Linear 데이터 부재');
+  }
+  
+  if (completeMeasurements === 1 && grade !== 'F') {
+    // 단일 데이터만 있으면 최대 D등급
+    if (grade === 'A+' || grade === 'A' || grade === 'B' || grade === 'C') {
+      grade = 'D';
+    }
+    issues.push('단일 측정 데이터로 제한된 분석');
+  }
 
   return {
-    score: Math.max(0, score),
+    score: Math.round(score),
     grade,
-    issues
+    issues,
+    breakdown: {
+      dataScore: dataScore,
+      paramScore: paramScore,
+      warningPenalty: warningPenalty,
+      bonusScore: bonusScore,
+      completeMeasurements: completeMeasurements,
+      totalMeasurements: totalMeasurements
+    }
   };
+};
+
+// 📋 등급별 기준 명시 (선택사항 - 디버깅용)
+export const QUALITY_STANDARDS = {
+  'A+': '완벽한 데이터셋(4개) + 모든 파라미터 우수 (95점 이상)',
+  'A': '우수한 품질 + 3개 이상 측정 (90-94점)',
+  'B': '양호한 품질 + 2개 이상 측정 (80-89점)', 
+  'C': '보통 품질 (70-79점)',
+  'D': '미흡한 품질 또는 제한된 데이터 (60-69점)',
+  'F': '불량한 품질 또는 필수 데이터 부재 (60점 미만)'
 };
