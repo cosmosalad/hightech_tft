@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { ArrowRight, Star, Calculator, Play, Home, Upload, Github, X } from 'lucide-react';
+import { ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download, CheckCircle, AlertTriangle } from 'lucide-react';
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
 
-// Enhanced FileUploadSection with GitHub integration
+// Simplified FileUploadSection with GitHub integration
 const EnhancedFileUploadSection = ({ 
   uploadedFiles, 
   handleFileUpload, 
@@ -14,8 +14,9 @@ const EnhancedFileUploadSection = ({
   const [activeTab, setActiveTab] = useState('local');
   const [selectedFolder, setSelectedFolder] = useState('공통');
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState(new Set());
 
-  // GitHub 기본 설정 - 실제 GitHub 정보로 변경하세요
+  // GitHub 기본 설정
   const GITHUB_CONFIG = {
     username: 'cosmosalad',
     repo: 'hightech_tft',
@@ -79,60 +80,92 @@ const EnhancedFileUploadSection = ({
   const loadFileFromGitHub = async (filename, folder) => {
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/excel/${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
     
-    try {
-      const response = await fetch(rawUrl);
-      
-      if (!response.ok) {
-        throw new Error(`파일을 불러올 수 없습니다: ${response.status}`);
-      }
-
-      const arrayBuffer = await response.arrayBuffer();
-      const file = new File([arrayBuffer], filename, {
-        type: 'application/vnd.ms-excel'
-      });
-
-      const fileInfo = {
-        file,
-        name: filename,
-        type: detectFileType(filename),
-        id: Date.now() + Math.random(),
-        source: 'github',
-        folder: folder,
-        url: rawUrl,
-        alias: generateSampleName(filename)
-      };
-
-      if (onGitHubFilesLoaded) {
-        onGitHubFilesLoaded([fileInfo]);
-      }
-      
-      return fileInfo;
-    } catch (error) {
-      console.error(`GitHub 파일 로드 오류 (${filename}):`, error);
-      throw error;
+    const response = await fetch(rawUrl);
+    
+    if (!response.ok) {
+      throw new Error(`파일을 불러올 수 없습니다: ${response.status}`);
     }
+
+    const arrayBuffer = await response.arrayBuffer();
+    const file = new File([arrayBuffer], filename, {
+      type: 'application/vnd.ms-excel'
+    });
+
+    const fileInfo = {
+      file,
+      name: filename,
+      type: detectFileType(filename),
+      id: Date.now() + Math.random(),
+      source: 'github',
+      folder: folder,
+      url: rawUrl,
+      alias: generateSampleName(filename)
+    };
+
+    return fileInfo;
   };
 
-  // 전체 폴더 로드
-  const loadAllFilesInFolder = async () => {
-    const files = FOLDER_FILES[selectedFolder] || [];
-    if (files.length === 0) {
-      alert('해당 폴더에 파일이 없습니다.');
+  // 선택된 파일들 불러오기 (메인 기능)
+  const loadSelectedFiles = async () => {
+    if (selectedFiles.size === 0) {
+      alert('불러올 파일을 선택해주세요.');
       return;
     }
-    
+
     setIsLoading(true);
+    const filesToLoad = Array.from(selectedFiles);
+    const loadedFiles = [];
     
     try {
-      for (const filename of files) {
-        await loadFileFromGitHub(filename, selectedFolder);
+      for (const filename of filesToLoad) {
+        try {
+          const fileInfo = await loadFileFromGitHub(filename, selectedFolder);
+          loadedFiles.push(fileInfo);
+        } catch (error) {
+          console.error(`파일 로드 실패: ${filename}`, error);
+        }
       }
-      alert(`${files.length}개 파일을 성공적으로 불러왔습니다!`);
-    } catch (error) {
-      alert(`파일 로드 중 오류가 발생했습니다: ${error.message}`);
+      
+      if (loadedFiles.length > 0) {
+        // 부모 컴포넌트에 파일들 추가
+        onGitHubFilesLoaded(loadedFiles);
+        alert(`${loadedFiles.length}개 파일을 성공적으로 불러왔습니다!`);
+        setSelectedFiles(new Set()); // 선택 초기화
+      } else {
+        alert('파일 로드에 실패했습니다.');
+      }
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // 파일 선택 토글
+  const toggleFileSelection = (filename) => {
+    setSelectedFiles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(filename)) {
+        newSet.delete(filename);
+      } else {
+        newSet.add(filename);
+      }
+      return newSet;
+    });
+  };
+
+  // 전체 선택/해제
+  const toggleSelectAll = () => {
+    const files = FOLDER_FILES[selectedFolder] || [];
+    if (selectedFiles.size === files.length) {
+      setSelectedFiles(new Set()); // 전체 해제
+    } else {
+      setSelectedFiles(new Set(files)); // 전체 선택
+    }
+  };
+
+  // 폴더 변경 시 선택 초기화
+  const handleFolderChange = (folder) => {
+    setSelectedFolder(folder);
+    setSelectedFiles(new Set());
   };
 
   // 파일 타입별 아이콘
@@ -219,16 +252,17 @@ const EnhancedFileUploadSection = ({
       {activeTab === 'github' && (
         <div>
           <p className="text-gray-600 mb-6">
-            GitHub 저장소에서 엑셀 파일을 불러오세요
+            GitHub 저장소에서 엑셀 파일을 선택해서 불러오세요
           </p>
           
-          <div className="mb-6">
+          {/* 폴더 선택 */}
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               폴더 선택:
             </label>
             <select
               value={selectedFolder}
-              onChange={(e) => setSelectedFolder(e.target.value)}
+              onChange={(e) => handleFolderChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="공통">📁 공통</option>
@@ -236,32 +270,76 @@ const EnhancedFileUploadSection = ({
             </select>
           </div>
 
+          {/* 파일 선택 영역 */}
+          {FOLDER_FILES[selectedFolder]?.length > 0 ? (
+            <div className="mb-4">
+              {/* 전체 선택 및 선택 개수 */}
+              <div className="flex items-center justify-between mb-3">
+                <label className="flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={selectedFiles.size === FOLDER_FILES[selectedFolder].length && FOLDER_FILES[selectedFolder].length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="ml-2 text-sm font-medium text-gray-700">전체 선택</span>
+                </label>
+                <span className="text-sm text-blue-600 font-medium">
+                  {selectedFiles.size}개 선택됨
+                </span>
+              </div>
+
+              {/* 파일 목록 */}
+              <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                {FOLDER_FILES[selectedFolder].map((filename) => {
+                  const fileType = detectFileType(filename);
+                  const sampleName = generateSampleName(filename);
+                  const isSelected = selectedFiles.has(filename);
+                  
+                  return (
+                    <label key={filename} className={`flex items-center p-2 rounded cursor-pointer transition-colors ${
+                      isSelected ? 'bg-blue-100 border border-blue-300' : 'bg-white hover:bg-gray-50 border border-gray-200'
+                    }`}>
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleFileSelection(filename)}
+                        className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-lg ml-3 mr-2">{getFileTypeIcon(fileType)}</span>
+                      <div className="flex-1">
+                        <div className="font-medium text-sm text-gray-800">{filename}</div>
+                        <div className="text-xs text-gray-500">
+                          샘플명: <strong>{sampleName}</strong>
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="mb-4 text-center py-8 text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+              📁 해당 폴더에 파일이 없습니다.
+            </div>
+          )}
+
+          {/* 불러오기 버튼 (단일 버튼) */}
           <button
-            onClick={loadAllFilesInFolder}
-            disabled={isLoading || !FOLDER_FILES[selectedFolder]?.length}
+            onClick={loadSelectedFiles}
+            disabled={isLoading || selectedFiles.size === 0}
             className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
           >
-            <Github className="w-5 h-5 mr-2" />
-            {isLoading ? '불러오는 중...' : `📁 ${selectedFolder} 폴더 전체 파일 불러오기`}
+            <Download className="w-5 h-5 mr-2" />
+            {isLoading ? '불러오는 중...' : `선택한 ${selectedFiles.size}개 파일 불러오기`}
           </button>
-
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="text-sm text-blue-700">
-              <p><strong>📁 {selectedFolder} 폴더 파일 목록:</strong></p>
-              <ul className="mt-2 list-disc list-inside">
-                {FOLDER_FILES[selectedFolder]?.map((filename) => (
-                  <li key={filename} className="text-xs">{filename}</li>
-                )) || <li className="text-xs text-gray-500">파일이 없습니다.</li>}
-              </ul>
-            </div>
-          </div>
         </div>
       )}
       
-      {/* 업로드된 파일 목록 */}
+      {/* 불러온 파일 목록 */}
       {uploadedFiles.length > 0 && (
         <div className="mt-6">
-          <h3 className="font-semibold mb-3">업로드된 파일:</h3>
+          <h3 className="font-semibold mb-3">불러온 파일들:</h3>
           <div className="space-y-3">
             {uploadedFiles.map((file) => (
               <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -442,6 +520,7 @@ const HomePage = ({
           </div>
         </div>
 
+        {/* 완벽한 통합 분석 시작 버튼 */}
         {uploadedFiles.length > 0 && (
           <div className="text-center">
             <button
@@ -457,7 +536,7 @@ const HomePage = ({
               ) : (
                 <>
                   <Star className="w-5 h-5 mr-2" />
-                  완벽한 통합 분석 시작
+                  완벽한 통합 분석 시작 ({uploadedFiles.length}개 파일)
                 </>
               )}
             </button>

@@ -53,6 +53,11 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
+  // GitHub 파일 로드 핸들러 (추가된 함수)
+  const handleGitHubFilesLoaded = (newFiles) => {
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+  };
+
   // 파일 제거
   const removeFile = (id) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
@@ -109,6 +114,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       handleFileUpload={handleFileUpload}
       removeFile={removeFile}
       updateFileAlias={updateFileAlias}
+      handleGitHubFilesLoaded={handleGitHubFilesLoaded}
       setShowParamInput={setShowParamInput}
       setDeviceParams={setDeviceParams}
       startAnalysis={startAnalysis}
