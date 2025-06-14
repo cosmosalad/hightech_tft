@@ -495,31 +495,7 @@ const HomePage = ({
             <FormulaCodeInspector />
           </div>
         )}
-
-        <div className="bg-white p-8 rounded-xl shadow-lg mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">🔬 통합 분석의 장점</h2>
-          <div className="grid md:grid-cols-2 gap-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-lg mb-3 text-blue-800">기존 방식의 문제점</h3>
-              <ul className="text-gray-600 space-y-2 text-sm">
-                <li>• 단일 측정: SS 영역 선택 부정확</li>
-                <li>• 기존 θ: 고정값 사용으로 μeff 부정확</li>
-                <li>• 각각 독립적 계산으로 일관성 부족</li>
-                <li>• 실제 물리적 연관성 무시</li>
-              </ul>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <h3 className="font-semibold text-lg mb-3 text-green-800">통합 분석의 해결책</h3>
-              <ul className="text-gray-600 space-y-2 text-sm">
-                <li>• ✅ Linear → 정확한 Vth, gm_max, SS</li>
-                <li>• ✅ Y-function → 정확한 μ0</li>
-                <li>• ✅ 실제 θ 값 계산으로 정확한 μeff</li>
-                <li>• ✅ 물리적으로 일관된 결과</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
+        
         {/* 완벽한 통합 분석 시작 버튼 */}
         {uploadedFiles.length > 0 && (
           <div className="text-center">

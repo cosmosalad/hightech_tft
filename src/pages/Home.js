@@ -1,9 +1,10 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator } from 'lucide-react';
+import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator, Search, X, ExternalLink } from 'lucide-react';
 import FormulaCodeInspector from './components/FormulaCodeInspector'; // Corrected import path
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -15,6 +16,19 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
 
   const openProcessModal = () => {
     onNavigate('simulator');
+  };
+
+  const openSearchModal = () => {
+    setIsSearchModalOpen(true);
+  };
+
+  const closeSearchModal = () => {
+    setIsSearchModalOpen(false);
+  };
+
+  const handlePerplexityClick = () => {
+    window.open('https://www.perplexity.ai/collections/tft-electrical-characterizatio-o0IzZp54QHm0KZql5Vbvfw', '_blank');
+    closeSearchModal();
   };
 
   // 테이블 데이터를 useMemo로 최적화
@@ -316,13 +330,211 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         )}        
 
+        {/* 검색창 섹션 - 푸터 바로 위에 추가 */}
+        <section className="mb-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20">
+              <div className="text-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">TFT 전기적 특성 분석 가이드</h3>
+                <p className="text-sm text-gray-600">상세한 이론과 분석 방법을 찾아보세요</p>
+              </div>
+              
+              <button
+                onClick={openSearchModal}
+                className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-3 px-6 rounded-xl font-medium hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl"
+              >
+                <Search className="w-5 h-5 mr-3" />
+                분석 가이드 및 이론 검색
+                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+              </button>
+            </div>
+          </div>
+        </section>
+
         {/* 푸터 */}
-        <footer className="text-center mt-16 pt-8 border-t border-gray-200/50">
+        <footer className="text-center pt-8 border-t border-gray-200/50">
           <p className="text-gray-500 text-sm">
             © 2025 <a href="https://www.kopo.ac.kr/seongnam/content.do?menu=11163" className="text-blue-600 hover:underline transition-colors">폴리텍 성남캠퍼스 하이테크 반도체공정 </a>. All rights reserved.
           </p>
         </footer>
       </div>
+
+      {/* 검색 모달 */}
+      {isSearchModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden">
+            {/* 모달 헤더 */}
+            <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Search className="w-6 h-6 mr-3" />
+                  <h2 className="text-xl font-bold">TFT 전기적 특성 분석 가이드</h2>
+                </div>
+                <button
+                  onClick={closeSearchModal}
+                  className="text-white/80 hover:text-white transition-colors p-1 hover:bg-white/20 rounded-lg"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            
+            {/* 모달 컨텐츠 - 스크롤 가능 */}
+            <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">📚 TFT 전기적 특성 분석 완벽 가이드</h3>
+                <p className="text-gray-600 text-sm mb-4">
+                  TFT의 전기적 특성 분석에 대한 상세한 이론, 측정 방법, 그리고 데이터 해석 방법을 제공합니다.
+                </p>
+              </div>
+
+              {/* 측정 방법 섹션 */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">1</div>
+                  주요 측정 방법
+                </h4>
+                
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <h5 className="font-semibold text-blue-800 mb-2">IDVG-Linear 측정</h5>
+                    <ul className="text-sm text-blue-700 space-y-1">
+                      <li>• 게이트 전압: -10V ~ 20V (0.1V 스텝)</li>
+                      <li>• 드레인 전압: 0.1V (낮은 전압)</li>
+                      <li>• 측정 파라미터: gm, Vth, μFE, SS</li>
+                      <li>• 선형 영역에서의 기본 특성 분석</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
+                    <h5 className="font-semibold text-purple-800 mb-2">IDVG-Saturation 측정</h5>
+                    <ul className="text-sm text-purple-700 space-y-1">
+                      <li>• 게이트 전압: -10V ~ 20V (0.1V 스텝)</li>
+                      <li>• 드레인 전압: 20V (높은 전압)</li>
+                      <li>• 측정 파라미터: Vth(sat), gm,sat</li>
+                      <li>• 포화 영역에서의 특성 분석</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <h5 className="font-semibold text-green-800 mb-2">IDVD 측정</h5>
+                    <ul className="text-sm text-green-700 space-y-1">
+                      <li>• 드레인 전압: 0V ~ 30V (1V 스텝)</li>
+                      <li>• 게이트 전압: 다양한 고정값</li>
+                      <li>• 측정 파라미터: Ron, 출력 특성</li>
+                      <li>• 전류-전압 특성 곡선 분석</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
+                    <h5 className="font-semibold text-orange-800 mb-2">IDVG-Hysteresis 측정</h5>
+                    <ul className="text-sm text-orange-700 space-y-1">
+                      <li>• 순방향: -10V → 20V</li>
+                      <li>• 역방향: 20V → -10V</li>
+                      <li>• 측정 파라미터: 히스테리시스</li>
+                      <li>• 소자 안정성 평가</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* 핵심 파라미터 섹션 */}
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</div>
+                  핵심 분석 파라미터
+                </h4>
+                
+                <div className="space-y-4">
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
+                    <h5 className="font-semibold text-gray-800 mb-2">🔬 Field-Effect Mobility (μFE)</h5>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <strong>공식:</strong> μFE = (L/W) × (1/Cox) × (1/VD) × (∂ID/∂VG)
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      선형 영역에서 계산되는 기본적인 이동도로, 소자의 전하 수송 능력을 나타냅니다.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-100">
+                    <h5 className="font-semibold text-gray-800 mb-2">⚡ Effective Mobility (μeff)</h5>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <strong>공식:</strong> μeff = μ0 / (1 + θ × (VG - Vth))
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      실제 소자에서 게이트 전압에 따른 이동도 감소 효과를 고려한 정확한 이동도입니다.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-100">
+                    <h5 className="font-semibold text-gray-800 mb-2">🎯 Threshold Voltage (Vth)</h5>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <strong>추출 방법:</strong> Linear extrapolation, Maximum gm 방법
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      소자가 도통되기 시작하는 게이트 전압으로, 소자의 동작 특성을 결정하는 핵심 파라미터입니다.
+                    </p>
+                  </div>
+                  
+                  <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-100">
+                    <h5 className="font-semibold text-gray-800 mb-2">📐 Subthreshold Swing (SS)</h5>
+                    <p className="text-sm text-gray-600 mb-2">
+                      <strong>공식:</strong> SS = dVG/d(log ID) [V/decade]
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      전류가 한 자릿수 변하는데 필요한 게이트 전압으로, 소자의 스위칭 특성을 나타냅니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* 분석 팁 섹션 */}
+              <div className="mb-6">
+                <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+                  <div className="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">3</div>
+                  데이터 분석 핵심 팁
+                </h4>
+                
+                <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-100 mb-4">
+                  <h5 className="font-semibold text-gray-800 mb-2">⚠️ 주의사항</h5>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Linear 영역과 Saturation 영역의 측정 조건을 정확히 구분</li>
+                    <li>• Contact resistance의 영향을 고려한 정확한 μFE 계산</li>
+                    <li>• 온도, 습도 등 환경 조건이 측정에 미치는 영향 고려</li>
+                    <li>• 여러 번의 측정을 통한 재현성 확인</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-100">
+                  <h5 className="font-semibold text-gray-800 mb-2">💡 고급 분석 기법</h5>
+                  <ul className="text-sm text-gray-700 space-y-1">
+                    <li>• Y-function 방법을 통한 정확한 μ0 및 θ 추출</li>
+                    <li>• 샘플명별 데이터 통합으로 신뢰성 있는 결과 도출</li>
+                    <li>• 다양한 측정 조건의 데이터를 활용한 종합적 분석</li>
+                    <li>• 통계적 방법을 통한 데이터 품질 평가</li>
+                  </ul>
+                </div>
+              </div>
+
+              {/* 외부 링크 버튼 */}
+              <div className="border-t border-gray-200 pt-6">
+                <button
+                  onClick={handlePerplexityClick}
+                  className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold hover:from-indigo-600 hover:to-purple-700 transition-all duration-300 flex items-center justify-center group shadow-lg hover:shadow-xl"
+                >
+                  <ExternalLink className="w-5 h-5 mr-3" />
+                  더 상세한 가이드 보러가기 (Perplexity AI)
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </button>
+                
+                <p className="text-xs text-gray-500 text-center mt-4">
+                  클릭하면 새 창에서 Perplexity AI 컬렉션이 열립니다
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
