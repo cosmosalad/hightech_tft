@@ -28,7 +28,7 @@ export { calculateTheta } from './mobility_degradation_factor.js';
 
 // Threshold & Switching 관련
 export { calculateVth } from './vth.js';
-export { calculateSS } from './ss.js';
+export { calculateSS, evaluateSSQuality } from './ss.js';
 export { calculateDit } from './dit.js';
 
 // Performance 관련

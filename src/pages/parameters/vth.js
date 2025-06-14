@@ -1,3 +1,4 @@
+export const calculateVth = (chartData, gmData) => {
 /**
  * ⚡ Vth (Threshold Voltage) 계산 모듈
  * 
@@ -18,7 +19,6 @@
  * 📊 일반적 범위: ±1V 이내 (이상적), ±5V 이내 (허용 가능)
  */
 
-export const calculateVth = (chartData, gmData) => {
   // 입력 데이터 유효성 검사
   if (!gmData || gmData.length === 0) return 0;
   

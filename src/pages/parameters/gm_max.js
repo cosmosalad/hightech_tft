@@ -1,3 +1,4 @@
+export const calculateGmMax = (gmData) => {
 /**
  * 📈 gm_max (Maximum Transconductance) 계산 모듈
  * 
@@ -20,7 +21,6 @@
  * - 소자의 최적 동작점 결정
  */
 
-export const calculateGmMax = (gmData) => {
   // 입력 데이터 유효성 검사
   if (!gmData || gmData.length === 0) return { value: 0, vg: 0 };
   

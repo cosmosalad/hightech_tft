@@ -65,7 +65,7 @@ const HomePage = ({
               </div>
               <div className="flex items-start">
                 <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">2</span>
-                <p><strong>데이터 융합:</strong> Linear의 gm_max + Vth + Y-function μ0 = 정확한 μeff</p>
+                <p><strong>데이터 융합:</strong> Linear의 gm_max + Vth + Y-function μ0 = μeff</p>
               </div>
               <div className="flex items-start">
                 <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">3</span>

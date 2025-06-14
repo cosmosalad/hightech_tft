@@ -1,4 +1,7 @@
 
+import { linearRegression } from './utils.js';
+
+export const calculateRon = (chartData, gateVoltages) => {
 /**
  * 🔌 Ron (On-Resistance) 계산 모듈
  * 
@@ -18,9 +21,6 @@
  * 📊 선형 영역: 일반적으로 VD = 1~5V 구간 (옴의 법칙 적용)
  */
 
-import { linearRegression } from './utils.js';
-
-export const calculateRon = (chartData, gateVoltages) => {
   // 입력 데이터 유효성 검사
   if (!chartData || !gateVoltages || gateVoltages.length === 0) return 0;
   

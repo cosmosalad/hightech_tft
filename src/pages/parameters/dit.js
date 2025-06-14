@@ -1,3 +1,6 @@
+import { calculateCox, CONSTANTS } from './utils.js';
+
+export const calculateDit = (ss, deviceParams) => {
 /**
  * 🔬 Dit (Interface Trap Density) 계산 모듈
  * 
@@ -17,9 +20,6 @@
  * 📊 일반적 범위: 1×10¹⁰ ~ 1×10¹² cm⁻²eV⁻¹ (우수~보통)
  */
 
-import { calculateCox, CONSTANTS } from './utils.js';
-
-export const calculateDit = (ss, deviceParams) => {
   // 입력값 유효성 검사
   if (!ss || ss <= 0 || !deviceParams.tox) return 0;
   

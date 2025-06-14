@@ -1,3 +1,6 @@
+import { calculateGm } from './gm.js';
+
+export const calculateGmSat = (chartData) => {
 /**
  * ⚡ gm_sat (Saturation Transconductance) 계산 모듈
  * 
@@ -12,9 +15,6 @@
  * 🧮 계산 방법: gm.js와 동일한 수치 미분 사용
  */
 
-import { calculateGm } from './gm.js';
-
-export const calculateGmSat = (chartData) => {
   // gm 계산 로직은 동일하므로 기존 함수 재사용
   // 차이점은 측정 조건(VD = 20V)뿐
   return calculateGm(chartData);

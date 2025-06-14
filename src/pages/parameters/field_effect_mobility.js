@@ -1,3 +1,6 @@
+import { calculateCox } from './utils.js';
+
+export const calculateMuFE = (gm_max, deviceParams, vds) => {
 /**
  * 🚀 μFE (Field-Effect Mobility) 계산 모듈
  * 
@@ -21,9 +24,6 @@
  * - IGZO TFT: 5 ~ 50 cm²/V·s
  */
 
-import { calculateCox } from './utils.js';
-
-export const calculateMuFE = (gm_max, deviceParams, vds) => {
   // 입력값 유효성 검사
   if (!gm_max || !deviceParams.W || !deviceParams.L || !vds) return 0;
 

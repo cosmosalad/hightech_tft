@@ -1,3 +1,4 @@
+export const calculateGm = (chartData) => {
 /**
  * 📊 gm (Transconductance) 계산 모듈
  * 
@@ -18,7 +19,7 @@
  * 📊 단위: S (지멘스) = A/V
  */
 
-export const calculateGm = (chartData) => {
+
   // 입력 데이터 유효성 검사 (최소 3개 점 필요)
   if (!chartData || chartData.length < 3) return [];
   

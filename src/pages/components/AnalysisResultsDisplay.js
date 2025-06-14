@@ -1,6 +1,8 @@
-import React from 'react';
-import { ArrowLeft, Home, Table, Star } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import SSRangeEditor from './SSRangeEditor';
+import { evaluateSSQuality, calculateDit } from '../parameters/index.js';
 
 const AnalysisResultsDisplay = ({
   analysisResults,
@@ -9,8 +11,93 @@ const AnalysisResultsDisplay = ({
   showDataTable,
   setShowDataTable,
   setCurrentPage,
-  handleGoToMainHome
+  handleGoToMainHome,
+  setAnalysisResults,
+  setCompleteAnalysisResults
 }) => {
+  // 🆕 SS Editor용 state
+  const [ssEditorState, setSSEditorState] = useState({
+    isOpen: false,
+    currentSample: null,
+    currentMeasurement: null,
+    chartData: null,
+    currentSS: null
+  });
+
+  // 🆕 SS 수정기 열기 함수
+  const openSSEditor = (sampleName, measurementType, chartData, currentSS) => {
+    setSSEditorState({
+      isOpen: true,
+      currentSample: sampleName,
+      currentMeasurement: measurementType,
+      chartData: chartData,
+      currentSS: parseFloat(currentSS.split(' ')[0]) // "150.2 mV/decade"에서 숫자만 추출
+    });
+  };
+
+  // 🆕 SS 업데이트 핸들러
+  const handleSSUpdate = (result) => {
+    const { newSS, rSquared, dataPoints, range } = result;
+    
+    // analysisResults 업데이트
+    const updatedResults = { ...analysisResults };
+    const measurementType = ssEditorState.currentMeasurement;
+    
+    const sampleIndex = updatedResults[measurementType].findIndex(
+      r => r.displayName === ssEditorState.currentSample
+    );
+
+    if (sampleIndex !== -1) {
+      // SS 값 업데이트
+      updatedResults[measurementType][sampleIndex].parameters.SS = 
+        `${newSS.toFixed(1)} mV/decade (수정됨)`;
+      
+      // Dit도 재계산 (SS에 의존하므로)
+      if (updatedResults[measurementType][sampleIndex].parameters.Dit) {
+        const newDit = calculateDit(newSS / 1000, deviceParams);
+        updatedResults[measurementType][sampleIndex].parameters.Dit = 
+          newDit > 0 ? `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)` : 'N/A';
+      }
+      
+      setAnalysisResults(updatedResults);
+      
+      // 통합 분석 결과도 업데이트 (있다면)
+      if (completeAnalysisResults && setCompleteAnalysisResults) {
+        const updatedCompleteResults = { ...completeAnalysisResults };
+        if (updatedCompleteResults[ssEditorState.currentSample]) {
+          updatedCompleteResults[ssEditorState.currentSample].parameters['SS (Linear 기준)'] = 
+            `${newSS.toFixed(1)} mV/decade (수정됨)`;
+          
+          // Dit도 재계산
+          const newDit = calculateDit(newSS / 1000, deviceParams);
+          if (newDit > 0) {
+            updatedCompleteResults[ssEditorState.currentSample].parameters['Dit (Linear 기준)'] = 
+              `${newDit.toExponential(2)} cm⁻²eV⁻¹ (재계산)`;
+          }
+          
+          setCompleteAnalysisResults(updatedCompleteResults);
+        }
+      }
+    }
+    
+    alert(`SS 값이 ${ssEditorState.currentSS} → ${newSS.toFixed(1)} mV/decade로 업데이트되었습니다!`);
+  };
+
+  // 🆕 SS 품질 평가 아이콘 함수
+  const getSSQualityIcon = (ssValue, chartData) => {
+    if (!chartData || !ssValue) return null;
+    
+    const quality = evaluateSSQuality(chartData, -1, 1, parseFloat(ssValue));
+    
+    if (quality.rSquared >= 0.95) {
+      return <CheckCircle className="w-4 h-4 text-green-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
+    } else if (quality.rSquared >= 0.85) {
+      return <AlertTriangle className="w-4 h-4 text-yellow-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
+    } else {
+      return <AlertTriangle className="w-4 h-4 text-red-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -39,6 +126,8 @@ const AnalysisResultsDisplay = ({
           <CompleteAnalysisSection 
             completeAnalysisResults={completeAnalysisResults}
             deviceParams={deviceParams}
+            analysisResults={analysisResults}
+            openSSEditor={openSSEditor}
           />
         )}
 
@@ -53,6 +142,8 @@ const AnalysisResultsDisplay = ({
               key={type}
               type={type}
               resultArray={resultArray}
+              openSSEditor={openSSEditor}
+              getSSQualityIcon={getSSQualityIcon}
             />
           );
         })}
@@ -77,13 +168,23 @@ const AnalysisResultsDisplay = ({
             )}
           </>
         )}
+
+        {/* 🆕 SS Range Editor 모달 */}
+        <SSRangeEditor
+          isOpen={ssEditorState.isOpen}
+          onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))}
+          chartData={ssEditorState.chartData}
+          currentSS={ssEditorState.currentSS}
+          sampleName={ssEditorState.currentSample}
+          onApplyResult={handleSSUpdate}
+        />
       </div>
     </div>
   );
 };
 
 // 완전 분석 결과 섹션
-const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
+const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor }) => (
   <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-lg p-8 mb-8">
     <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center">
       <Star className="w-8 h-8 text-yellow-500 mr-3" />
@@ -123,22 +224,31 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
             <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
               <h4 className="font-semibold text-blue-800 mb-3">🎯 핵심 파라미터</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Vth:</span>
-                  <span className="font-mono">{result.parameters['Vth (Linear 기준)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">gm_max:</span>
-                  <span className="font-mono">{result.parameters['gm_max (Linear 기준)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">μFE:</span>
-                  <span className="font-mono">{result.parameters['μFE (통합 계산)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">μeff:</span>
-                  <span className="font-mono">{result.parameters['μeff (정확 계산)']}</span>
-                </div>
+                {['Vth (Linear 기준)', 'gm_max (Linear 기준)', 'μFE (통합 계산)', 'μeff (정확 계산)'].map((key) => (
+                  <div key={key} className="flex justify-between items-center">
+                    <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-mono text-xs">{result.parameters[key]}</span>
+                      {/* 🆕 SS/Dit 관련 파라미터에 수정 버튼 */}
+                      {(key.includes('SS') || key.includes('Dit')) && result.hasLinear && (
+                        <button
+                          onClick={() => {
+                            const linearResult = analysisResults['IDVG-Linear']?.find(
+                              r => r.displayName === sampleName
+                            );
+                            if (linearResult) {
+                              openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters[key]);
+                            }
+                          }}
+                          className="p-1 hover:bg-blue-100 rounded transition-colors"
+                          title={`${key} 수정하기`}
+                        >
+                          <Edit3 className="w-3 h-3 text-blue-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -146,22 +256,31 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
             <div className="bg-gradient-to-br from-green-50 to-yellow-50 p-4 rounded-lg">
               <h4 className="font-semibold text-green-800 mb-3">📊 품질 지표</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">SS:</span>
-                  <span className="font-mono">{result.parameters['SS (Linear 기준)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ion/Ioff:</span>
-                  <span className="font-mono">{result.parameters['Ion/Ioff']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Hysteresis:</span>
-                  <span className="font-mono">{result.parameters['ΔVth (Hysteresis)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">안정성:</span>
-                  <span className="font-mono">{result.parameters['Stability']}</span>
-                </div>
+                {['SS (Linear 기준)', 'Ion/Ioff', 'ΔVth (Hysteresis)', 'Stability'].map((key) => (
+                  <div key={key} className="flex justify-between items-center">
+                    <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-mono text-xs">{result.parameters[key]}</span>
+                      {/* 🆕 SS 파라미터에 수정 버튼 */}
+                      {key.includes('SS') && result.hasLinear && (
+                        <button
+                          onClick={() => {
+                            const linearResult = analysisResults['IDVG-Linear']?.find(
+                              r => r.displayName === sampleName
+                            );
+                            if (linearResult) {
+                              openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters[key]);
+                            }
+                          }}
+                          className="p-1 hover:bg-blue-100 rounded transition-colors"
+                          title="SS 값 수정하기"
+                        >
+                          <Edit3 className="w-3 h-3 text-blue-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -169,22 +288,31 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
               <h4 className="font-semibold text-purple-800 mb-3">🔬 계산 상세</h4>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">μ0:</span>
-                  <span className="font-mono">{result.parameters['μ0 (Y-function)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">θ:</span>
-                  <span className="font-mono">{result.parameters['θ (계산값)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Dit:</span>
-                  <span className="font-mono">{result.parameters['Dit (Linear 기준)']}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Ron:</span>
-                  <span className="font-mono">{result.parameters['Ron']}</span>
-                </div>
+                {['μ0 (Y-function)', 'θ (계산값)', 'Dit (Linear 기준)', 'Ron'].map((key) => (
+                  <div key={key} className="flex justify-between items-center">
+                    <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                    <div className="flex items-center space-x-1">
+                      <span className="font-mono text-xs">{result.parameters[key]}</span>
+                      {/* 🆕 Dit 파라미터에 수정 버튼 (SS 의존적이므로) */}
+                      {key.includes('Dit') && result.hasLinear && (
+                        <button
+                          onClick={() => {
+                            const linearResult = analysisResults['IDVG-Linear']?.find(
+                              r => r.displayName === sampleName
+                            );
+                            if (linearResult) {
+                              openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters['SS (Linear 기준)']);
+                            }
+                          }}
+                          className="p-1 hover:bg-blue-100 rounded transition-colors"
+                          title="SS를 통해 Dit 수정하기"
+                        >
+                          <Edit3 className="w-3 h-3 text-blue-600" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -218,7 +346,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams }) => (
 );
 
 // 개별 분석 섹션
-const IndividualAnalysisSection = ({ type, resultArray }) => {
+const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
   return (
@@ -256,7 +384,7 @@ const IndividualAnalysisSection = ({ type, resultArray }) => {
           )}
         </div>
 
-        {/* 파라미터 표시 영역 */}
+        {/* 파라미터 표시 영역 - 🆕 SS 수정 기능 추가 */}
         <div>
           <h3 className="text-lg font-semibold mb-4">개별 계산 파라미터</h3>
           {resultArray.map((result, index) => (
@@ -270,7 +398,28 @@ const IndividualAnalysisSection = ({ type, resultArray }) => {
                 {Object.entries(result.parameters).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
                     <span className="font-medium text-gray-700 text-sm">{key}:</span>
-                    <span className="text-gray-900 font-mono text-xs">{value}</span>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-900 font-mono text-xs">{value}</span>
+                      
+                      {/* 🆕 SS 수정 버튼 추가 */}
+                      {key === 'SS' && (type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
+                        <div className="flex items-center space-x-1">
+                          {getSSQualityIcon(value, result.chartData)}
+                          <button
+                            onClick={() => openSSEditor(
+                              result.displayName, 
+                              type, 
+                              result.chartData, 
+                              value
+                            )}
+                            className="p-1 hover:bg-blue-100 rounded transition-colors group"
+                            title="SS 값 수정하기"
+                          >
+                            <Edit3 className="w-3 h-3 text-blue-600 group-hover:text-blue-800" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>

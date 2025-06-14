@@ -1,3 +1,4 @@
+export const calculateMuEff = (mu0, theta, vg, vth) => {
 /**
  * 🔬 μeff (Effective Mobility) 계산 모듈
  * 
@@ -23,7 +24,7 @@
  * - 실제 동작 조건에서의 성능 예측에 중요
  */
 
-export const calculateMuEff = (mu0, theta, vg, vth) => {
+
   // 🔒 입력값 유효성 검사
   if (!mu0 || !theta || vg <= vth) return 0;
   

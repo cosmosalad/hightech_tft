@@ -120,7 +120,9 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   const renderAnalyzerPage = () => (
     <AnalysisResultsDisplay
       analysisResults={analysisResults}
+      setAnalysisResults={setAnalysisResults} 
       completeAnalysisResults={completeAnalysisResults}
+      setCompleteAnalysisResults={setCompleteAnalysisResults}
       deviceParams={deviceParams}
       showDataTable={showDataTable}
       setShowDataTable={setShowDataTable}

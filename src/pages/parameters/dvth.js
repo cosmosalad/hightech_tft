@@ -1,3 +1,6 @@
+import { linearRegression } from './utils.js';
+
+export const calculateDeltaVth = (forwardData, backwardData) => {
 /**
  * 🔄 ΔVth (Hysteresis) 계산 모듈
  * 
@@ -24,9 +27,6 @@
  * - > 2.0V: Poor (불량)
  */
 
-import { linearRegression } from './utils.js';
-
-export const calculateDeltaVth = (forwardData, backwardData) => {
   // 입력 데이터 유효성 검사
   if (!forwardData || !backwardData) return { deltaVth: 0, vthForward: 0, vthBackward: 0 };
   

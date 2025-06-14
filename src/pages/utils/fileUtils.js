@@ -10,6 +10,7 @@ export const detectFileType = (filename) => {
   // Hysteresis 패턴 감지 (가장 구체적인 것부터)
   if (name.includes('idvg') && 
       (name.includes('linear') || name.includes('lin')) && 
+      (name.includes('hys') || name.includes('hysteresis')) || 
       (name.includes('hys') || name.includes('hysteresis'))) {
     return 'IDVG-Hysteresis';
   }

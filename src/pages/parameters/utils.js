@@ -7,6 +7,7 @@
  * - 물리 상수: 정확한 계산을 위한 표준값들
  */
 
+export const linearRegression = (x, y) => {
 /**
  * 📐 Linear Regression (선형 회귀) 함수
  * 
@@ -23,7 +24,7 @@
  * @param {Array} y - 종속변수 배열  
  * @returns {Object} { slope: 기울기, intercept: y절편 }
  */
-export const linearRegression = (x, y) => {
+
   const n = x.length;                                    // 데이터 포인트 개수
   const sumX = x.reduce((a, b) => a + b, 0);            // Σx
   const sumY = y.reduce((a, b) => a + b, 0);            // Σy
@@ -37,6 +38,8 @@ export const linearRegression = (x, y) => {
   return { slope, intercept };
 };
 
+
+export const calculateCox = (tox) => {
 /**
  * 📏 Cox (Gate Capacitance) 계산 함수
  * 
@@ -53,7 +56,7 @@ export const linearRegression = (x, y) => {
  * @param {number} tox - 산화막 두께 (m)
  * @returns {number} Cox 값 (F/m²)
  */
-export const calculateCox = (tox) => {
+
   const epsilon_0 = 8.854e-12;  // 진공 유전율 (F/m)
   const epsilon_r = 3.9;        // SiO₂ 상대 유전율 (무차원)
   

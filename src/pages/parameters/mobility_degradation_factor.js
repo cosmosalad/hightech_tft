@@ -1,3 +1,6 @@
+import { linearRegression, calculateCox } from './utils.js';
+
+export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
 /**
  * 📉 θ (Mobility Degradation Factor) 계산 모듈
  * 
@@ -19,9 +22,6 @@
  * 📊 일반적 범위: 0.001 ~ 2.0 V⁻¹
  */
 
-import { linearRegression, calculateCox } from './utils.js';
-
-export const calculateTheta = (mu0, deviceParams, chartData, vth, vds) => {
   // 🔒 강화된 입력 검증
   
   // μ0 검증 (Y-function으로 구한 저전계 이동도)

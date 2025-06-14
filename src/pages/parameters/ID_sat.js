@@ -1,3 +1,4 @@
+export const calculateIDSat = (chartData, deviceParams) => {
 /**
  * 🚀 ID_sat (Saturation Current Density) 계산 모듈
  * 
@@ -13,7 +14,6 @@
  * 🧮 계산 수식: ID_sat = ID(VG = VG_max) / W
  */
 
-export const calculateIDSat = (chartData, deviceParams) => {
   // 입력 데이터 검증
   if (!chartData || !deviceParams.W) return 0;
   

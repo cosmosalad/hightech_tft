@@ -1,3 +1,4 @@
+export const calculateOnOffRatio = (chartData) => {
 /**
  * ⚡ Ion/Ioff (On/Off Current Ratio) 계산 모듈
  * 
@@ -22,7 +23,6 @@
  * - < 10²: 불량한 스위칭
  */
 
-export const calculateOnOffRatio = (chartData) => {
   // 입력 데이터 유효성 검사
   if (!chartData || chartData.length === 0) {
     return { ion: 0, ioff: 0, ratio: 0 };
