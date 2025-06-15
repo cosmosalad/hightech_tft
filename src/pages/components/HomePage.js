@@ -424,7 +424,7 @@ const HomePage = ({
             Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
           </p>
           <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
-            <p className="text-lg font-semibold text-purple-800">🎯 완벽한 통합 분석</p>
+            <p className="text-lg font-semibold text-purple-800">🎯 통합 분석</p>
             <p className="text-sm text-purple-600">샘플명별로 데이터를 묶어서 정확한 TFT 특성을 계산합니다</p>
           </div>
         </div>
@@ -496,7 +496,7 @@ const HomePage = ({
           </div>
         )}
         
-        {/* 완벽한 통합 분석 시작 버튼 */}
+        {/* 통합 분석 시작 버튼 */}
         {uploadedFiles.length > 0 && (
           <div className="text-center">
             <button
@@ -512,7 +512,7 @@ const HomePage = ({
               ) : (
                 <>
                   <Star className="w-5 h-5 mr-2" />
-                  완벽한 통합 분석 시작 ({uploadedFiles.length}개 파일)
+                  통합 분석 시작 ({uploadedFiles.length}개 파일)
                 </>
               )}
             </button>

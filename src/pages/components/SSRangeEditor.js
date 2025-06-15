@@ -175,21 +175,21 @@ const SSRangeEditor = ({
     
     const { rSquared, dataPoints, ss } = calculationResult;
     
-    let quality = 'Poor';
+    let quality = '미흡';
     let color = 'text-red-600';
     let bgColor = 'bg-red-50';
     let issues = [];
     
     if (rSquared >= 0.95 && dataPoints >= 10 && ss < 1000) {
-      quality = 'Excellent';
+      quality = '우수';
       color = 'text-green-600';
       bgColor = 'bg-green-50';
     } else if (rSquared >= 0.90 && dataPoints >= 8 && ss < 1500) {
-      quality = 'Good';
+      quality = '양호';
       color = 'text-blue-600';
       bgColor = 'bg-blue-50';
     } else if (rSquared >= 0.85 && dataPoints >= 5) {
-      quality = 'Fair';
+      quality = '보통';
       color = 'text-yellow-600';
       bgColor = 'bg-yellow-50';
     }

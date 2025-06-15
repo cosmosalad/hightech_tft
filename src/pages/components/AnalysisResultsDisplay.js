@@ -50,7 +50,7 @@ const AnalysisResultsDisplay = ({
     if (sampleIndex !== -1) {
       // SS 값 업데이트
       updatedResults[measurementType][sampleIndex].parameters.SS = 
-        `${newSS.toFixed(1)} mV/decade (수정됨)`;
+        `${newSS.toFixed(1)} mV/decade (범위 조정)`;
       
       // Dit도 재계산 (SS에 의존하므로)
       if (updatedResults[measurementType][sampleIndex].parameters.Dit) {
@@ -66,7 +66,7 @@ const AnalysisResultsDisplay = ({
         const updatedCompleteResults = { ...completeAnalysisResults };
         if (updatedCompleteResults[ssEditorState.currentSample]) {
           updatedCompleteResults[ssEditorState.currentSample].parameters['SS (Linear 기준)'] = 
-            `${newSS.toFixed(1)} mV/decade (수정됨)`;
+            `${newSS.toFixed(1)} mV/decade (범위 조정)`;
           
           // Dit도 재계산
           const newDit = calculateDit(newSS / 1000, deviceParams);
@@ -87,14 +87,17 @@ const AnalysisResultsDisplay = ({
   const getSSQualityIcon = (ssValue, chartData) => {
     if (!chartData || !ssValue) return null;
     
-    const quality = evaluateSSQuality(chartData, -1, 1, parseFloat(ssValue));
+    const ssNumeric = parseFloat(ssValue.split(' ')[0]);
     
-    if (quality.rSquared >= 0.95) {
-      return <CheckCircle className="w-4 h-4 text-green-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
-    } else if (quality.rSquared >= 0.85) {
-      return <AlertTriangle className="w-4 h-4 text-yellow-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
+    // SS 값 크기를 우선 고려
+    if (ssNumeric > 1000) {
+      return <AlertTriangle className="w-4 h-4 text-red-500" title="높은 SS 값 (>1000 mV/decade)" />;
+    } else if (ssNumeric > 300) {
+      return <AlertTriangle className="w-4 h-4 text-yellow-500" title="보통 SS 값 (300-1000 mV/decade)" />;
+    } else if (ssNumeric > 100) {
+      return <CheckCircle className="w-4 h-4 text-blue-500" title="양호한 SS 값 (100-300 mV/decade)" />;
     } else {
-      return <AlertTriangle className="w-4 h-4 text-red-500" title={`품질: ${quality.quality} (R² = ${quality.rSquared.toFixed(3)})`} />;
+      return <CheckCircle className="w-4 h-4 text-green-500" title="우수한 SS 값 (<100 mV/decade)" />;
     }
   };
 
