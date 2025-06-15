@@ -104,15 +104,16 @@ const handleSSUpdate = (result) => {
     
     const ssNumeric = parseFloat(ssValue.split(' ')[0]);
     
-    // SS 값 크기를 우선 고려
-    if (ssNumeric > 1000) {
-      return <AlertTriangle className="w-4 h-4 text-red-500" title="높은 SS 값 (>1000 mV/decade)" />;
-    } else if (ssNumeric > 300) {
-      return <CheckCircle className="w-4 h-4 text-yellow-500" title="보통 SS 값 (300-1000 mV/decade)" />;
-    } else if (ssNumeric > 100) {
-      return <CheckCircle className="w-4 h-4 text-blue-500" title="양호한 SS 값 (100-300 mV/decade)" />;
-    } else {
+    if (ssNumeric < 100) {
       return <CheckCircle className="w-4 h-4 text-green-500" title="우수한 SS 값 (<100 mV/decade)" />;
+    } else if (ssNumeric < 500) {
+      return <CheckCircle className="w-4 h-4 text-green-500" title="양호한 SS 값 (100-500 mV/decade)" />;
+    } else if (ssNumeric < 1000) {
+      return <CheckCircle className="w-4 h-4 text-yellow-500" title="보통 SS 값 (500-1000 mV/decade)" />;
+    } else if (ssNumeric < 1500) {
+      return <AlertTriangle className="w-4 h-4 text-orange-500" title="미흡한 SS 값 (1000-1500 mV/decade)" />;
+    } else {
+      return <AlertTriangle className="w-4 h-4 text-red-500" title="매우 미흡한 SS 값 (>1500 mV/decade)" />;
     }
   };
 
@@ -306,13 +307,13 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
             <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
               <h4 className="font-semibold text-purple-800 mb-3">🔬 계산 상세</h4>
               <div className="space-y-2 text-sm">
-                {['μ0 (Y-function)', 'θ (계산값)', 'Dit (Linear 기준)', 'Ron'].map((key) => (
+                {['μ0 (Y-function)', 'θ (계산값)', 'SS (Linear 기준)', 'Ron'].map((key) => (
                   <div key={key} className="flex justify-between items-center">
                     <span className="text-gray-600">{key.split(' ')[0]}:</span>
                     <div className="flex items-center space-x-1">
                       <span className="font-mono text-xs">{result.parameters[key]}</span>
                       {/* 🆕 Dit 파라미터에 수정 버튼 (SS 의존적이므로) */}
-                      {key.includes('Dit') && result.hasLinear && (
+                      {key.includes('SS') && result.hasLinear && (
                         <button
                           onClick={() => {
                             const linearResult = analysisResults['IDVG-Linear']?.find(

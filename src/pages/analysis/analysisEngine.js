@@ -343,14 +343,17 @@ export const evaluateDataQuality = (params, warnings, dataAvailability) => {
   if (params['SS (Linear 기준)'] !== 'N/A') {
     const ssValue = parseFloat(params['SS (Linear 기준)']);
     if (ssValue < 100) {
-      paramScore += 7; // 우수
-    } else if (ssValue < 300) {
-      paramScore += 5; // 양호
+      paramScore += 7; // 우수 (7점)
+    } else if (ssValue < 500) {
+      paramScore += 6; // 양호 (6점)
     } else if (ssValue < 1000) {
-      paramScore += 3; // 보통
-    } else {
-      paramScore += 1; // 불량
+      paramScore += 4; // 보통 (4점)
+    } else if (ssValue < 1500) {
+      paramScore += 2; // 미흡 (2점)
       issues.push('높은 SS 값 (>1V/decade)');
+    } else {
+      paramScore += 1; // 매우 미흡 (1점)
+      issues.push('매우 높은 SS 값 (>1.5V/decade)');
     }
   } else {
     issues.push('SS 계산 실패');

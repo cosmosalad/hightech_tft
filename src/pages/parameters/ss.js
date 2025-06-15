@@ -176,13 +176,17 @@ export const evaluateSSQuality = (chartData, startVG, endVG, ssValue) => {
 
   // SS 값 평가 (30점)
   if (ssValue < 100) {
-    score += 30;
-  } else if (ssValue < 300) {
-    score += 20;
+    score += 30; // 우수
+  } else if (ssValue < 500) {
+    score += 25; // 양호
   } else if (ssValue < 1000) {
-    score += 10;
-  } else {
+    score += 20; // 보통
+  } else if (ssValue < 1500) {
+    score += 10; // 미흡
     issues.push(`높은 SS 값 (${ssValue.toFixed(1)} mV/decade)`);
+  } else {
+    score += 5;  // 매우 미흡
+    issues.push(`매우 높은 SS 값 (${ssValue.toFixed(1)} mV/decade)`);
   }
 
   // 최종 품질 등급

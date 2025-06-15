@@ -170,36 +170,42 @@ const SSRangeEditor = ({
   };
 
   // 품질 평가
-  const getQualityAssessment = () => {
-    if (!calculationResult) return null;
-    
-    const { rSquared, dataPoints, ss } = calculationResult;
-    
-    let quality = '미흡';
-    let color = 'text-red-600';
-    let bgColor = 'bg-red-50';
-    let issues = [];
-    
-    if (rSquared >= 0.95 && dataPoints >= 10 && ss < 1000) {
-      quality = '우수';
-      color = 'text-green-600';
-      bgColor = 'bg-green-50';
-    } else if (rSquared >= 0.90 && dataPoints >= 8 && ss < 1500) {
-      quality = '양호';
-      color = 'text-blue-600';
-      bgColor = 'bg-blue-50';
-    } else if (rSquared >= 0.85 && dataPoints >= 5) {
-      quality = '보통';
-      color = 'text-yellow-600';
-      bgColor = 'bg-yellow-50';
-    }
-    
-    if (rSquared < 0.85) issues.push('낮은 선형성 (R² < 0.85)');
-    if (dataPoints < 5) issues.push('데이터 포인트 부족');
-    if (ss > 1000) issues.push('높은 SS 값 (> 1V/decade)');
-    
-    return { quality, color, bgColor, issues };
-  };
+const getQualityAssessment = () => {
+  if (!calculationResult) return null;
+  
+  const { rSquared, dataPoints, ss } = calculationResult;
+  
+  let quality = '매우 미흡';
+  let color = 'text-red-600';
+  let bgColor = 'bg-red-50';
+  let issues = [];
+  
+  if (rSquared >= 0.95 && dataPoints >= 5 && ss < 100) {
+    quality = '우수';
+    color = 'text-green-600';
+    bgColor = 'bg-green-50';
+  } else if (rSquared >= 0.90 && dataPoints >= 5 && ss < 500) {
+    quality = '양호';
+    color = 'text-blue-600';
+    bgColor = 'bg-blue-50';
+  } else if (rSquared >= 0.85 && dataPoints >= 3 && ss < 1000) {
+    quality = '보통';
+    color = 'text-yellow-600';
+    bgColor = 'bg-yellow-50';
+  } else if (ss < 1500) {
+    quality = '미흡';
+    color = 'text-orange-600';
+    bgColor = 'bg-orange-50';
+  }
+  
+  if (rSquared < 0.85) issues.push('낮은 선형성 (R² < 0.85)');
+  if (dataPoints < 5) issues.push('데이터 포인트 부족');
+  if (ss > 1500) issues.push('매우 높은 SS 값 (> 1.5V/decade)');
+  else if (ss > 1000) issues.push('높은 SS 값 (> 1V/decade)');
+  else if (ss > 500) issues.push('다소 높은 SS 값 (> 500 mV/decade)');
+  
+  return { quality, color, bgColor, issues };
+};
 
   // 추천 범위 설정 함수
   const setRecommendedRange = (type) => {
@@ -342,7 +348,7 @@ const SSRangeEditor = ({
                   <strong>💡 선택 가이드:</strong>
                   <ul className="mt-1 space-y-1">
                     <li>• Subthreshold 영역에서 선형성이 좋은 구간 선택</li>
-                    <li>• 최소 5개 이상의 데이터 포인트 필요</li>
+                    <li>• 최소 3개 이상의 데이터 포인트 필요</li>
                     <li>• 음수 범위도 지원 (예: -3V ~ -1V)</li>
                     <li>• R² &gt; 0.9 목표로 범위 조정</li>
                   </ul>
