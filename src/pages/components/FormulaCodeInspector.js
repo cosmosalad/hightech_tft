@@ -16,7 +16,7 @@ const DynamicFormulaInspector = () => {
   const [sourceCodeCache, setSourceCodeCache] = useState({}); // 캐시
   const [loadingStates, setLoadingStates] = useState({}); // 로딩 상태
 
-  // 🔥 **GitHub API로 소스코드 불러오기**
+  // 🔥 **GitHub Raw URL로 소스코드 불러오기** - 압축되지 않은 원본
   const fetchSourceCodeFromGitHub = useCallback(async (fileName) => {
     // 캐시에 있으면 바로 반환
     if (sourceCodeCache[fileName]) {
@@ -26,13 +26,9 @@ const DynamicFormulaInspector = () => {
     setLoadingStates(prev => ({ ...prev, [fileName]: true }));
 
     try {
+      // GitHub Raw URL 사용 - 이렇게 하면 압축되지 않은 원본 코드를 바로 가져옴
       const response = await fetch(
-        `https://api.github.com/repos/cosmosalad/hightech_tft/contents/src/pages/parameters/${fileName}`,
-        {
-          headers: {
-            'Accept': 'application/vnd.github.v3.raw'
-          }
-        }
+        `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/src/pages/parameters/${fileName}`
       );
 
       if (!response.ok) {
@@ -56,8 +52,8 @@ const DynamicFormulaInspector = () => {
     }
   }, [sourceCodeCache]);
 
-  // 🔥 **개선된 코드 추출 함수**
-  const extractFunctionCode = useCallback(async (func, fileName) => {
+  // 🔥 **개선된 코드 추출 함수** - 특정 함수만 추출
+  const extractFunctionCode = useCallback(async (func, fileName, functionName) => {
     if (typeof func !== 'function') return 'Function not found';
     
     const funcString = func.toString();
@@ -68,8 +64,12 @@ const DynamicFormulaInspector = () => {
     if (isMinified && fileName) {
       try {
         // GitHub에서 원본 소스코드 불러오기
-        const sourceCode = await fetchSourceCodeFromGitHub(fileName);
-        return sourceCode;
+        const fullSourceCode = await fetchSourceCodeFromGitHub(fileName);
+        
+        // 특정 함수만 추출하기
+        const extractedFunction = extractSpecificFunction(fullSourceCode, functionName);
+        
+        return extractedFunction || fullSourceCode; // 추출 실패시 전체 코드
       } catch (error) {
         // 실패 시 압축된 코드에 설명 추가
         return `// ⚠️ 압축된 코드 (GitHub API 접근 실패)
@@ -81,6 +81,42 @@ ${funcString}`;
     
     return funcString; // 개발 환경에서는 원본 그대로
   }, [fetchSourceCodeFromGitHub]);
+
+  // 🔍 **특정 함수 추출 함수**
+  const extractSpecificFunction = (sourceCode, functionName) => {
+    if (!sourceCode || !functionName) return null;
+    
+    // 함수 시작 패턴들
+    const patterns = [
+      `export const ${functionName}`,
+      `const ${functionName}`,
+      `function ${functionName}`,
+      `export function ${functionName}`
+    ];
+    
+    for (const pattern of patterns) {
+      const startIndex = sourceCode.indexOf(pattern);
+      if (startIndex !== -1) {
+        // 함수 시작점 찾기
+        const functionStart = sourceCode.lastIndexOf('/**', startIndex) !== -1 && 
+                              sourceCode.lastIndexOf('/**', startIndex) > sourceCode.lastIndexOf('\n\n', startIndex)
+          ? sourceCode.lastIndexOf('/**', startIndex)  // 주석 포함
+          : startIndex;
+        
+        // 함수 끝점 찾기 (다음 export나 파일 끝)
+        const nextExportIndex = sourceCode.indexOf('\nexport', startIndex + pattern.length);
+        const nextFunctionIndex = sourceCode.indexOf('\nconst ', startIndex + pattern.length);
+        const nextCommentIndex = sourceCode.indexOf('\n/**', startIndex + pattern.length);
+        
+        const endCandidates = [nextExportIndex, nextFunctionIndex, nextCommentIndex].filter(i => i !== -1);
+        const functionEnd = endCandidates.length > 0 ? Math.min(...endCandidates) : sourceCode.length;
+        
+        return sourceCode.substring(functionStart, functionEnd).trim();
+      }
+    }
+    
+    return null;
+  };
 
   // 🎨 코드 구문 강조 함수
   const highlightCode = (code) => {
@@ -121,7 +157,9 @@ ${funcString}`;
     React.useEffect(() => {
       if (showImplementation[param.name]) {
         setIsLoading(true);
-        extractFunctionCode(param.actualFunction, param.fileName)
+        // 함수 이름 추출 (실제 함수명 전달)
+        const functionName = param.actualFunction.name;
+        extractFunctionCode(param.actualFunction, param.fileName, functionName)
           .then(code => {
             setDisplayCode(code);
             setIsLoading(false);
@@ -141,7 +179,7 @@ ${funcString}`;
           </h5>
           <div className="flex items-center space-x-2">
             <span className="text-xs text-gray-500">
-              {sourceCodeCache[param.fileName] ? '📦 GitHub 캐시' : '🌐 실시간 불러오기'}
+              {sourceCodeCache[param.fileName] ? '📦 GitHub Raw 캐시' : '🌐 GitHub Raw 로딩'}
             </span>
             <a
               href={`https://github.com/cosmosalad/hightech_tft/blob/main/src/pages/parameters/${param.fileName}`}
@@ -175,7 +213,7 @@ ${funcString}`;
             <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-700">
               <div><strong>함수명:</strong> {param.actualFunction.name}</div>
               <div><strong>파라미터 개수:</strong> {param.actualFunction.length}</div>
-              <div><strong>소스:</strong> {sourceCodeCache[param.fileName] ? 'GitHub API' : 'Local'}</div>
+              <div><strong>소스:</strong> {sourceCodeCache[param.fileName] ? 'GitHub Raw' : 'Local'}</div>
             </div>
           </div>
         )}
@@ -434,9 +472,9 @@ ${funcString}`;
           <Code className="w-8 h-8 text-blue-600 mr-3" />
           <h2 className="text-3xl font-bold text-gray-800">🔥 TFT 파라미터 코드 점검기</h2>
         </div>
-        <p className="text-gray-600 text-lg">GitHub에서 실시간으로 최신 소스코드를 불러옵니다</p>
+        <p className="text-gray-600 text-lg">GitHub Raw 파일에서 직접 최신 소스코드를 불러옵니다</p>
         <div className="mt-3 px-4 py-2 bg-green-100 text-green-800 rounded-lg inline-block">
-          <strong>🌐 GitHub API 연동:</strong> 항상 최신 원본 코드 표시
+          <strong>🌐 GitHub Raw 연동:</strong> 압축되지 않은 원본 코드 직접 로드
         </div>
       </div>
 
