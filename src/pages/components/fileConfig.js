@@ -12,8 +12,8 @@ export const FOLDER_FILES = {
   '2023sample': [
     '0711_TFT_IDVD_IZO25nm.xls',
     '0711_TFT_IDVG_Linear_Hys_IZO25nm.xls',
-    '0711_TFT_IDVG_VD_Linea_IZO25nm.xls',
-    '0711_TFT_IDVG_VD_Sat_IZO25nm.xls'
+    '0711_TFT_IDVG_Linear_IZO25nm.xls',
+    '0711_TFT_IDVG_Sat_IZO25nm.xls'
   ],
   '공통': [
     '0614_IDVG_Linear_0sccm_300.xls',
