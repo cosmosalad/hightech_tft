@@ -13,20 +13,36 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
   const [measuring, setMeasuring] = useState(false);
   const [measurePoints, setMeasurePoints] = useState([]);
   const [measurements, setMeasurements] = useState([]);
+  const [unitMode, setUnitMode] = useState('px'); // 'px' 또는 'mm'
   const svgRef = useRef(null);
   const containerRef = useRef(null);
 
-  // SVG 치수 측정 기능
-  const handleSVGClick = (e) => {
+  // px를 mm로 환산하는 함수 (180px = 38.5mm 기준, 줌 레벨 고려)
+  const convertPxToMm = (pixelDistance) => {
+    const basePxToMmRatio = 38.5 / 180; // 기본 환산비율
+    const zoomAdjustedRatio = basePxToMmRatio / zoom; // 줌 레벨에 따른 조정
+    return (pixelDistance * zoomAdjustedRatio).toFixed(2);
+  };
+
+  // 거리를 현재 단위에 맞게 포맷하는 함수
+  const formatDistance = (pixelDistance) => {
+    if (unitMode === 'mm') {
+      return `${convertPxToMm(pixelDistance)}mm`;
+    }
+    return `${pixelDistance}px`;
+  };
+
+  // 화면 고정 치수 측정 기능 (뷰포트 좌표 기반)
+  const handleScreenClick = (e) => {
     if (!measuring) return;
     
-    const rect = svgRef.current.getBoundingClientRect();
-    const containerRect = containerRef.current.getBoundingClientRect();
-    
+    // 뷰포트 좌표를 그대로 사용 (화면 기준)
     const point = {
-      x: (e.clientX - rect.left) / zoom,
-      y: (e.clientY - rect.top) / zoom
+      x: e.clientX,
+      y: e.clientY
     };
+    
+    console.log('화면 측정 포인트:', point);
     
     if (measurePoints.length === 0) {
       setMeasurePoints([point]);
@@ -40,7 +56,8 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
         id: Date.now(),
         start: measurePoints[0],
         end: point,
-        distance: distance.toFixed(2)
+        distance: distance.toFixed(1),
+        pixelDistance: distance.toFixed(1) // 원본 픽셀 거리 저장
       }]);
       
       setMeasurePoints([]);
@@ -101,7 +118,7 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
           <Image className="w-6 h-6 mr-3 text-blue-400" />
           <h3 className="text-lg font-semibold">{fileName}</h3>
           <span className="ml-3 px-2 py-1 bg-gray-700 rounded text-xs">
-            SVG 뷰어
+            SVG 뷰어 - 화면 측정 ({unitMode.toUpperCase()})
           </span>
         </div>
         
@@ -114,9 +131,22 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
                 ? 'bg-blue-600 text-white shadow-lg' 
                 : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
             }`}
-            title="치수 측정 모드"
+            title="화면 치수 측정 모드"
           >
             <Ruler className="w-5 h-5" />
+          </button>
+
+          {/* px/mm 단위 토글 버튼 */}
+          <button
+            onClick={() => setUnitMode(prev => prev === 'px' ? 'mm' : 'px')}
+            className={`px-3 py-2 rounded-lg font-mono text-sm transition-all duration-200 ${
+              unitMode === 'mm'
+                ? 'bg-green-600 text-white shadow-lg'
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+            }`}
+            title={`현재: ${unitMode} | 클릭하여 ${unitMode === 'px' ? 'mm' : 'px'}로 전환`}
+          >
+            {unitMode.toUpperCase()}
           </button>
           
           <button
@@ -173,8 +203,8 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
           <p className="text-sm flex items-center justify-center">
             <MousePointer className="w-4 h-4 mr-2" />
             {measurePoints.length === 0 
-              ? "첫 번째 점을 클릭하세요" 
-              : "두 번째 점을 클릭하여 거리를 측정하세요"
+              ? "화면에서 첫 번째 점을 클릭하세요 (화면 좌표 기준)" 
+              : "두 번째 점을 클릭하여 화면상 거리를 측정하세요"
             }
           </p>
         </div>
@@ -183,10 +213,11 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
       {/* SVG 뷰어 영역 */}
       <div 
         ref={containerRef}
-        className="flex-1 overflow-hidden relative bg-gray-100"
+        className="flex-1 overflow-hidden relative bg-black"
         style={{ 
           cursor: measuring ? 'crosshair' : isDragging ? 'grabbing' : 'grab' 
         }}
+        onClick={handleScreenClick}
       >
         <div
           className="absolute inset-0 flex items-center justify-center"
@@ -199,17 +230,50 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
         >
           <div
             ref={svgRef}
-            className="relative bg-white shadow-2xl rounded-lg p-4"
-            onClick={handleSVGClick}
-            dangerouslySetInnerHTML={{ __html: svgContent }}
-          />
-          
+            className="relative bg-black rounded-lg p-4 w-full h-full"
+            style={{ 
+              width: 'calc(100vw - 200px)', 
+              height: 'calc(100vh - 300px)',
+              overflow: 'visible',
+              pointerEvents: measuring ? 'none' : 'auto' // 측정 모드에서는 SVG 드래그 비활성화
+            }}
+          >
+            {svgContent ? (
+              <div 
+                dangerouslySetInnerHTML={{ __html: svgContent }} 
+                style={{ 
+                  width: '100%', 
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+              />
+            ) : (
+              <div className="flex items-center justify-center h-full text-gray-300">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
+                  <p className="text-lg">SVG 로딩 중...</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* 화면 고정 측정 오버레이 */}
+      {measuring && (
+        <div className="fixed inset-0 pointer-events-none z-10">
           {/* 측정 중인 포인트 표시 */}
           {measurePoints.map((point, index) => (
             <div
               key={index}
-              className="absolute w-4 h-4 bg-red-500 rounded-full transform -translate-x-1/2 -translate-y-1/2 border-2 border-white shadow-lg animate-pulse"
-              style={{ left: point.x, top: point.y }}
+              className="absolute w-4 h-4 bg-red-500 border-2 border-white rounded-full animate-pulse"
+              style={{
+                left: point.x - 8,
+                top: point.y - 8,
+                transform: 'translate(0, 0)' // 화면 고정
+              }}
             />
           ))}
           
@@ -218,9 +282,24 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
             <div key={measurement.id}>
               {/* 측정 선 */}
               <svg
-                className="absolute inset-0 pointer-events-none"
-                style={{ width: '100%', height: '100%' }}
+                className="absolute inset-0 w-full h-full"
+                style={{ pointerEvents: 'none' }}
               >
+                <defs>
+                  <marker
+                    id={`arrowhead-${measurement.id}`}
+                    markerWidth="10"
+                    markerHeight="7"
+                    refX="9"
+                    refY="3.5"
+                    orient="auto"
+                  >
+                    <polygon
+                      points="0 0, 10 3.5, 0 7"
+                      fill="#ef4444"
+                    />
+                  </marker>
+                </defs>
                 <line
                   x1={measurement.start.x}
                   y1={measurement.start.y}
@@ -229,51 +308,43 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
                   stroke="#ef4444"
                   strokeWidth="3"
                   strokeDasharray="8,4"
-                />
-                {/* 시작점 */}
-                <circle
-                  cx={measurement.start.x}
-                  cy={measurement.start.y}
-                  r="4"
-                  fill="#ef4444"
-                  stroke="white"
-                  strokeWidth="2"
-                />
-                {/* 끝점 */}
-                <circle
-                  cx={measurement.end.x}
-                  cy={measurement.end.y}
-                  r="4"
-                  fill="#ef4444"
-                  stroke="white"
-                  strokeWidth="2"
+                  markerEnd={`url(#arrowhead-${measurement.id})`}
                 />
               </svg>
               
+              {/* 시작점 */}
+              <div
+                className="absolute w-3 h-3 bg-red-500 border-2 border-white rounded-full"
+                style={{
+                  left: measurement.start.x - 6,
+                  top: measurement.start.y - 6
+                }}
+              />
+              
+              {/* 끝점 */}
+              <div
+                className="absolute w-3 h-3 bg-red-500 border-2 border-white rounded-full"
+                style={{
+                  left: measurement.end.x - 6,
+                  top: measurement.end.y - 6
+                }}
+              />
+              
               {/* 거리 텍스트 */}
               <div
-                className="absolute bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold shadow-lg"
+                className="absolute bg-red-500 text-white px-2 py-1 rounded text-sm font-bold shadow-lg"
                 style={{
-                  left: (measurement.start.x + measurement.end.x) / 2,
-                  top: (measurement.start.y + measurement.end.y) / 2,
-                  transform: 'translate(-50%, -150%)'
+                  left: (measurement.start.x + measurement.end.x) / 2 - 30,
+                  top: (measurement.start.y + measurement.end.y) / 2 - 15,
+                  transform: 'translate(0, 0)' // 화면 고정
                 }}
               >
-                {measurement.distance}px
+                {formatDistance(parseFloat(measurement.pixelDistance))}
               </div>
             </div>
           ))}
         </div>
-
-        {/* 뷰어 도움말 */}
-        <div className="absolute bottom-4 left-4 bg-black/70 text-white p-3 rounded-lg text-xs">
-          <div className="space-y-1">
-            <div>🖱️ <strong>드래그:</strong> 이미지 이동</div>
-            <div>🔍 <strong>마우스휠:</strong> 확대/축소</div>
-            <div>📏 <strong>측정모드:</strong> 두 점 클릭으로 거리 측정</div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* 측정 결과 패널 */}
       {measurements.length > 0 && (
@@ -281,8 +352,16 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
           <div className="flex items-center justify-between mb-3">
             <h4 className="font-semibold flex items-center">
               <Ruler className="w-4 h-4 mr-2" />
-              측정 결과 ({measurements.length}개)
+              화면 측정 결과 ({measurements.length}개)
             </h4>
+            <div className="flex items-center space-x-2">
+              <div className="text-xs text-gray-400">
+                현재 단위: <span className="font-bold text-blue-400">{unitMode.toUpperCase()}</span>
+              </div>
+              <div className="text-xs text-gray-400">
+                줌: {Math.round(zoom * 100)}%
+              </div>
+            </div>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 max-h-24 overflow-y-auto">
@@ -292,7 +371,9 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
                 className="flex justify-between items-center bg-gray-800 p-2 rounded text-sm"
               >
                 <span className="text-gray-300">측정 {index + 1}:</span>
-                <span className="font-bold text-blue-400">{measurement.distance}px</span>
+                <span className="font-bold text-blue-400">
+                  {formatDistance(parseFloat(measurement.pixelDistance))}
+                </span>
                 <button
                   onClick={() => setMeasurements(measurements.filter(m => m.id !== measurement.id))}
                   className="text-red-400 hover:text-red-300 ml-2 p-1 hover:bg-red-900/30 rounded"
@@ -331,27 +412,30 @@ const MaskPictureViewer = ({ onClose }) => {
   const loadFileList = async () => {
     setLoading(true);
     try {
-      // 실제 구현에서는 백엔드 API를 호출해서 파일 목록을 가져와야 함
-      // 예시: const response = await fetch(`/api/files/${selectedFolder}`);
+      // GitHub API를 사용해서 실제 파일 목록 가져오기
+      const response = await fetch(
+        `https://api.github.com/repos/cosmosalad/hightech_tft/contents/data/${selectedFolder}`
+      );
       
-      // 실제 파일 목록 (수동으로 업데이트)
-      const mockFiles = {
-        mask: [
-          'DK_TFT_Mask_4조_최종ver2.svg'
-        ],
-        picture: [
-          // picture 폴더에 파일 추가하면 여기에 추가하세요
-        ]
-      };
-      
-      // 실제 파일 시스템에서 확인하려면 주석 해제
-      // const response = await fetch(`/api/files/${selectedFolder}`);
-      // const fileList = await response.json();
-      
-      setFiles(prev => ({
-        ...prev,
-        [selectedFolder]: mockFiles[selectedFolder] || []
-      }));
+      if (response.ok) {
+        const fileList = await response.json();
+        // SVG 파일만 필터링
+        const svgFiles = fileList
+          .filter(file => file.type === 'file' && file.name.endsWith('.svg'))
+          .map(file => file.name);
+        
+        setFiles(prev => ({
+          ...prev,
+          [selectedFolder]: svgFiles
+        }));
+      } else {
+        // GitHub API 호출 실패 시 빈 배열
+        console.error('GitHub API 호출 실패:', response.status);
+        setFiles(prev => ({
+          ...prev,
+          [selectedFolder]: []
+        }));
+      }
     } catch (error) {
       console.error('파일 목록 로드 실패:', error);
       setFiles(prev => ({
@@ -367,14 +451,20 @@ const MaskPictureViewer = ({ onClose }) => {
   const loadSVGFile = async (fileName) => {
     setLoading(true);
     try {
-      // 실제 파일 경로: C:\Users\HYUN\hightech_tft\data\mask\ 또는 \picture\
-      const response = await fetch(`/data/${selectedFolder}/${fileName}`);
+      // GitHub Raw URL에서 직접 SVG 파일 로드
+      const response = await fetch(
+        `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/${selectedFolder}/${fileName}`
+      );
       
       if (response.ok) {
         const svgText = await response.text();
+        console.log('SVG 파일 로드 성공:', fileName);
+        console.log('SVG 내용 길이:', svgText.length);
+        console.log('SVG 내용 첫 200자:', svgText.substring(0, 200));
         setSvgContent(svgText);
       } else {
         // 파일이 없을 경우 예시 SVG 생성
+        console.error('SVG 파일 로드 실패:', response.status);
         createExampleSVG(fileName);
       }
       
@@ -404,19 +494,17 @@ const MaskPictureViewer = ({ onClose }) => {
         <rect width="100%" height="100%" fill="url(#grid)"/>
         
         ${isPhoto ? `
-          <!-- 사진/측정 결과 스타일 -->
           <rect x="50" y="50" width="500" height="300" fill="#f3f4f6" stroke="#6b7280" stroke-width="2" rx="10"/>
           <circle cx="150" cy="150" r="30" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
           <circle cx="300" cy="200" r="25" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
           <circle cx="450" cy="180" r="35" fill="#10b981" stroke="#059669" stroke-width="2"/>
           
           <line x1="150" y1="150" x2="300" y2="200" stroke="#6b7280" stroke-width="2" stroke-dasharray="5,5"/>
-          <text x="225" y="170" text-anchor="middle" font-size="12" fill="#374151">125.5μm</text>
+          <text x="225" y="170" text-anchor="middle" font-size="12" fill="#374151">화면 측정으로 확인하세요</text>
           
           <line x1="300" y1="200" x2="450" y2="180" stroke="#6b7280" stroke-width="2" stroke-dasharray="5,5"/>
-          <text x="375" y="185" text-anchor="middle" font-size="12" fill="#374151">89.2μm</text>
+          <text x="375" y="185" text-anchor="middle" font-size="12" fill="#374151">화면 측정 모드 사용</text>
         ` : `
-          <!-- 마스크 디자인 스타일 -->
           <rect x="100" y="100" width="400" height="200" fill="none" stroke="#000000" stroke-width="3"/>
           <rect x="150" y="130" width="100" height="60" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
           <rect x="350" y="130" width="100" height="60" fill="#34d399" stroke="#10b981" stroke-width="2"/>
@@ -425,14 +513,14 @@ const MaskPictureViewer = ({ onClose }) => {
           <circle cx="400" cy="250" r="20" fill="none" stroke="#000000" stroke-width="2"/>
           
           <line x1="220" y1="160" x2="350" y2="160" stroke="#000000" stroke-width="2"/>
-          <text x="285" y="155" text-anchor="middle" font-size="10" fill="#000000">130μm</text>
+          <text x="285" y="155" text-anchor="middle" font-size="10" fill="#000000">화면 측정 모드로 확인</text>
         `}
         
         <text x="300" y="380" text-anchor="middle" font-size="16" font-weight="bold" fill="#374151">
           ${fileName}
         </text>
         <text x="300" y="395" text-anchor="middle" font-size="12" fill="#6b7280">
-          ${isPhoto ? '측정 결과 예시' : '마스크 디자인 예시'} - 실제 파일이 로드되면 교체됩니다
+          ${isPhoto ? '측정 결과 예시' : '마스크 디자인 예시'} - 화면 측정 모드를 사용하세요
         </text>
       </svg>
     `;
@@ -453,7 +541,7 @@ const MaskPictureViewer = ({ onClose }) => {
                   <Eye className="w-6 h-6 mr-3" />
                   <h2 className="text-xl font-bold">마스크/픽처 뷰어</h2>
                   <span className="ml-3 px-3 py-1 bg-white/20 rounded-full text-sm">
-                    SVG 파일 전용
+                    화면 측정 모드
                   </span>
                 </div>
                 <button
@@ -539,8 +627,15 @@ const MaskPictureViewer = ({ onClose }) => {
                   <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                   <p className="text-lg mb-2">해당 폴더에 SVG 파일이 없습니다</p>
                   <p className="text-sm">
-                    <code>C:\Users\HYUN\hightech_tft\data\{selectedFolder}\</code> 
-                    <br />폴더에 jpg 파일을 추가해보세요
+                    <a 
+                      href={`https://github.com/cosmosalad/hightech_tft/tree/main/data/${selectedFolder}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:underline"
+                    >
+                      GitHub data/{selectedFolder}/ 폴더
+                    </a>
+                    <br />에 SVG 파일을 추가해보세요
                   </p>
                 </div>
               )}
