@@ -36,52 +36,67 @@ const AnalysisResultsDisplay = ({
   };
 
   // 🆕 SS 업데이트 핸들러
-  const handleSSUpdate = (result) => {
-    const { newSS, rSquared, dataPoints, range } = result;
-    
-    // analysisResults 업데이트
-    const updatedResults = { ...analysisResults };
-    const measurementType = ssEditorState.currentMeasurement;
-    
-    const sampleIndex = updatedResults[measurementType].findIndex(
-      r => r.displayName === ssEditorState.currentSample
-    );
+const handleSSUpdate = (result) => {
+  const { newSS, rSquared, dataPoints, range } = result;
+  
+  // analysisResults 업데이트
+  const updatedResults = { ...analysisResults };
+  const measurementType = ssEditorState.currentMeasurement;
+  
+  const sampleIndex = updatedResults[measurementType].findIndex(
+    r => r.displayName === ssEditorState.currentSample
+  );
 
-    if (sampleIndex !== -1) {
-      // SS 값 업데이트
-      updatedResults[measurementType][sampleIndex].parameters.SS = 
-        `${newSS.toFixed(1)} mV/decade (범위 조정)`;
-      
-      // Dit도 재계산 (SS에 의존하므로)
-      if (updatedResults[measurementType][sampleIndex].parameters.Dit) {
-        const newDit = calculateDit(newSS / 1000, deviceParams);
-        updatedResults[measurementType][sampleIndex].parameters.Dit = 
-          newDit > 0 ? `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)` : 'N/A';
-      }
-      
-      setAnalysisResults(updatedResults);
-      
-      // 통합 분석 결과도 업데이트 (있다면)
-      if (completeAnalysisResults && setCompleteAnalysisResults) {
-        const updatedCompleteResults = { ...completeAnalysisResults };
-        if (updatedCompleteResults[ssEditorState.currentSample]) {
-          updatedCompleteResults[ssEditorState.currentSample].parameters['SS (Linear 기준)'] = 
-            `${newSS.toFixed(1)} mV/decade (범위 조정)`;
-          
-          // Dit도 재계산
-          const newDit = calculateDit(newSS / 1000, deviceParams);
-          if (newDit > 0) {
-            updatedCompleteResults[ssEditorState.currentSample].parameters['Dit (Linear 기준)'] = 
-              `${newDit.toExponential(2)} cm⁻²eV⁻¹ (재계산)`;
-          }
-          
-          setCompleteAnalysisResults(updatedCompleteResults);
-        }
-      }
+  if (sampleIndex !== -1) {
+    // SS 값 업데이트
+    updatedResults[measurementType][sampleIndex].parameters.SS = 
+      `${newSS.toFixed(1)} mV/decade (범위 조정)`;
+    
+    // Dit도 재계산 (SS에 의존하므로)
+    if (updatedResults[measurementType][sampleIndex].parameters.Dit) {
+      const newDit = calculateDit(newSS / 1000, deviceParams);
+      updatedResults[measurementType][sampleIndex].parameters.Dit = 
+        newDit > 0 ? `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)` : 'N/A';
     }
     
-    alert(`SS 값이 ${ssEditorState.currentSS} → ${newSS.toFixed(1)} mV/decade로 업데이트되었습니다!`);
-  };
+    setAnalysisResults(updatedResults);
+    
+    // 통합 분석 결과도 업데이트하고 품질 평가 재계산
+    if (completeAnalysisResults && setCompleteAnalysisResults) {
+    import('../analysis/analysisEngine.js').then(({ evaluateDataQuality }) => {
+      const updatedCompleteResults = { ...completeAnalysisResults };
+      if (updatedCompleteResults[ssEditorState.currentSample]) {
+        // SS, Dit 업데이트
+        updatedCompleteResults[ssEditorState.currentSample].parameters['SS (Linear 기준)'] = 
+          `${newSS.toFixed(1)} mV/decade (범위 조정)`;
+        
+        const newDit = calculateDit(newSS / 1000, deviceParams);
+        if (newDit > 0) {
+          updatedCompleteResults[ssEditorState.currentSample].parameters['Dit (Linear 기준)'] = 
+            `${newDit.toExponential(2)} cm⁻²eV⁻¹ (재계산)`;
+        }
+        
+        // 품질 평가 재계산
+        const newQuality = evaluateDataQuality(
+          updatedCompleteResults[ssEditorState.currentSample].parameters,
+          updatedCompleteResults[ssEditorState.currentSample].warnings || [],
+          {
+            hasLinear: updatedCompleteResults[ssEditorState.currentSample].hasLinear,
+            hasSaturation: updatedCompleteResults[ssEditorState.currentSample].hasSaturation,
+            hasIDVD: updatedCompleteResults[ssEditorState.currentSample].hasIDVD,
+            hasHysteresis: updatedCompleteResults[ssEditorState.currentSample].hasHysteresis
+          }
+        );
+        
+        updatedCompleteResults[ssEditorState.currentSample].quality = newQuality;
+          setCompleteAnalysisResults(updatedCompleteResults);
+        }
+      });
+    }
+  } // ← 이 괄호를 여기로 이동
+  
+  alert(`SS 값이 ${ssEditorState.currentSS} → ${newSS.toFixed(1)} mV/decade로 업데이트되었습니다!`);
+};
 
   // 🆕 SS 품질 평가 아이콘 함수
   const getSSQualityIcon = (ssValue, chartData) => {

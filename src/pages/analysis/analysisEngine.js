@@ -243,7 +243,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
 };
 
 // ✅ 개선된 품질 평가 함수 (기존 함수 완전 교체)
-const evaluateDataQuality = (params, warnings, dataAvailability) => {
+export const evaluateDataQuality = (params, warnings, dataAvailability) => {
   let score = 0; // 0점에서 시작해서 데이터에 따라 가산
   let issues = [];
   
@@ -265,7 +265,7 @@ const evaluateDataQuality = (params, warnings, dataAvailability) => {
       issues.push('Linear gm_max 계산 실패');
     }
   } else {
-    issues.push('Linear 데이터 없음 (치명적)');
+    //issues.push('Linear 데이터 없음 (치명적)');
   }
   totalMeasurements++;
   
@@ -274,7 +274,6 @@ const evaluateDataQuality = (params, warnings, dataAvailability) => {
     dataScore += 10;
     completeMeasurements++;
   } else {
-    issues.push('Saturation 데이터 없음');
   }
   totalMeasurements++;
   
@@ -287,7 +286,7 @@ const evaluateDataQuality = (params, warnings, dataAvailability) => {
       issues.push('Ron 계산 실패');
     }
   } else {
-    issues.push('IDVD 데이터 없음');
+    //issues.push('IDVD 데이터 없음');
   }
   totalMeasurements++;
   
@@ -300,7 +299,7 @@ const evaluateDataQuality = (params, warnings, dataAvailability) => {
       issues.push('Hysteresis 분석 실패');
     }
   } else {
-    issues.push('Hysteresis 데이터 없음');
+    //issues.push('Hysteresis 데이터 없음');
   }
   totalMeasurements++;
   
