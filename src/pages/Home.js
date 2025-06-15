@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator, Search, X, ExternalLink } from 'lucide-react';
-import FormulaCodeInspector from './components/FormulaCodeInspector'; // Corrected import path
+import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator, Search, X, ExternalLink, Eye } from 'lucide-react';
+import FormulaCodeInspector from './components/FormulaCodeInspector';
+import MaskPictureViewer from './components/MaskPictureViewer';
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [showMaskViewer, setShowMaskViewer] = useState(false);
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -91,6 +93,13 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             >
               <Play className="w-5 h-5 mr-2" />
               공정 과정
+            </button>
+            <button
+              onClick={() => setShowMaskViewer(true)}
+              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:from-teal-600 hover:to-cyan-600 transform hover:scale-105"
+            >
+              <Eye className="w-5 h-5 mr-2" />
+              Mask/Image Viewer
             </button>
           </div>
         </header>
@@ -534,6 +543,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </div>
           </div>
         </div>
+      )}
+      {/* 마스크/픽처 뷰어 */}
+      {showMaskViewer && (
+        <MaskPictureViewer onClose={() => setShowMaskViewer(false)} />
       )}
     </div>
   );

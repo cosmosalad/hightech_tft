@@ -419,6 +419,16 @@ ${indexContent}`;
             description: '선형 회귀 계산 (모든 외삽법의 기초)',
             actualFunction: TFTParams.linearRegression,
             codeLocation: 'src/pages/parameters/utils.js'
+          },
+          {
+            name: 'CONSTANTS (Physical Constants)',
+            fileName: 'utils.js',
+            measurement: '물리 상수',
+            formula: 'ε₀, εᵣ, q, kᵦ, T',
+            unit: '다양',
+            description: '정확한 계산을 위한 표준 물리 상수들',
+            actualFunction: () => TFTParams.CONSTANTS,
+            codeLocation: 'src/pages/parameters/utils.js'
           }
         ]
       }
