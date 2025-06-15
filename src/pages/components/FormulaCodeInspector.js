@@ -1,11 +1,10 @@
-// 🔥 Dynamic Formula Code Inspector
-// 실제 파라미터 JS 파일들을 동적으로 보여주는 시스템
+// 🔥 FormulaCodeInspector.js - GitHub API 사용 버전 (오류 수정)
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { 
   Code, Eye, ChevronDown, ChevronRight, Calculator, Zap, Target, 
   AlertTriangle, Github, Activity, BarChart3, TrendingUp, Layers, 
-  FileText, Microscope
+  FileText, Microscope, Loader2
 } from 'lucide-react';
 
 // 🎯 실제 코드에서 파라미터 모듈들을 import
@@ -14,48 +13,174 @@ import * as TFTParams from '../parameters/index.js';
 const DynamicFormulaInspector = () => {
   const [activeSection, setActiveSection] = useState('');
   const [showImplementation, setShowImplementation] = useState({});
+  const [sourceCodeCache, setSourceCodeCache] = useState({}); // 캐시
+  const [loadingStates, setLoadingStates] = useState({}); // 로딩 상태
 
-  // 🔥 실제 함수 코드를 동적으로 추출하는 헬퍼
-  const extractFunctionCode = (func) => {
+  // 🔥 **GitHub API로 소스코드 불러오기**
+  const fetchSourceCodeFromGitHub = useCallback(async (fileName) => {
+    // 캐시에 있으면 바로 반환
+    if (sourceCodeCache[fileName]) {
+      return sourceCodeCache[fileName];
+    }
+
+    setLoadingStates(prev => ({ ...prev, [fileName]: true }));
+
+    try {
+      const response = await fetch(
+        `https://api.github.com/repos/cosmosalad/hightech_tft/contents/src/pages/parameters/${fileName}`,
+        {
+          headers: {
+            'Accept': 'application/vnd.github.v3.raw'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const sourceCode = await response.text();
+      
+      // 캐시에 저장
+      setSourceCodeCache(prev => ({ ...prev, [fileName]: sourceCode }));
+      
+      return sourceCode;
+    } catch (error) {
+      console.error(`Failed to fetch ${fileName}:`, error);
+      return `// ❌ GitHub에서 소스코드를 불러오는데 실패했습니다.
+// 🔗 직접 확인: https://github.com/cosmosalad/hightech_tft/blob/main/src/pages/parameters/${fileName}
+
+// Error: ${error.message}`;
+    } finally {
+      setLoadingStates(prev => ({ ...prev, [fileName]: false }));
+    }
+  }, [sourceCodeCache]);
+
+  // 🔥 **개선된 코드 추출 함수**
+  const extractFunctionCode = useCallback(async (func, fileName) => {
     if (typeof func !== 'function') return 'Function not found';
-    return func.toString();
-  };
+    
+    const funcString = func.toString();
+    
+    // 압축된 코드 감지
+    const isMinified = !funcString.includes('\n') && funcString.length > 200;
+    
+    if (isMinified && fileName) {
+      try {
+        // GitHub에서 원본 소스코드 불러오기
+        const sourceCode = await fetchSourceCodeFromGitHub(fileName);
+        return sourceCode;
+      } catch (error) {
+        // 실패 시 압축된 코드에 설명 추가
+        return `// ⚠️ 압축된 코드 (GitHub API 접근 실패)
+// 📋 원본 코드: https://github.com/cosmosalad/hightech_tft/blob/main/src/pages/parameters/${fileName}
+
+${funcString}`;
+      }
+    }
+    
+    return funcString; // 개발 환경에서는 원본 그대로
+  }, [fetchSourceCodeFromGitHub]);
 
   // 🎨 코드 구문 강조 함수
   const highlightCode = (code) => {
     if (!code) return '';
     
-    // 주석과 코드를 구분하여 스타일링
     return code
       .split('\n')
       .map((line, index) => {
         const trimmedLine = line.trim();
         let className = '';
-        let content = line;
         
-        // 주석 라인 감지
         if (trimmedLine.startsWith('//') || trimmedLine.startsWith('*') || trimmedLine.startsWith('/**') || trimmedLine.startsWith('*/')) {
-          className = 'text-green-400'; // 주석은 초록색
+          className = 'text-green-400';
         } 
-        // 키워드 감지
         else if (trimmedLine.includes('export') || trimmedLine.includes('const') || trimmedLine.includes('function') || trimmedLine.includes('return')) {
-          className = 'text-blue-300'; // 키워드는 파란색
+          className = 'text-blue-300';
         }
-        // 문자열 감지
         else if (trimmedLine.includes('"') || trimmedLine.includes("'")) {
-          className = 'text-yellow-300'; // 문자열은 노란색
+          className = 'text-yellow-300';
         }
-        // 일반 코드
         else {
-          className = 'text-gray-100'; // 일반 코드는 흰색
+          className = 'text-gray-100';
         }
         
         return (
           <div key={index} className={className} style={{ textAlign: 'left' }}>
-            {content}
+            {line}
           </div>
         );
       });
+  };
+
+  // 🔥 **코드 표시 컴포넌트** - async 처리
+  const CodeDisplay = ({ param }) => {
+    const [displayCode, setDisplayCode] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+
+    React.useEffect(() => {
+      if (showImplementation[param.name]) {
+        setIsLoading(true);
+        extractFunctionCode(param.actualFunction, param.fileName)
+          .then(code => {
+            setDisplayCode(code);
+            setIsLoading(false);
+          });
+      }
+    }, [showImplementation[param.name], param.actualFunction, param.fileName]);
+
+    if (!showImplementation[param.name]) return null;
+
+    return (
+      <div className="mt-4">
+        <div className="flex items-center justify-between mb-3">
+          <h5 className="font-bold text-gray-700 flex items-center">
+            <Microscope className="w-5 h-5 mr-2" />
+            실제 동작 코드 ({param.fileName})
+            {isLoading && <Loader2 className="w-4 h-4 ml-2 animate-spin text-blue-500" />}
+          </h5>
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-gray-500">
+              {sourceCodeCache[param.fileName] ? '📦 GitHub 캐시' : '🌐 실시간 불러오기'}
+            </span>
+            <a
+              href={`https://github.com/cosmosalad/hightech_tft/blob/main/src/pages/parameters/${param.fileName}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <Github className="w-3 h-3 mr-1" />
+              GitHub에서 보기
+            </a>
+          </div>
+        </div>
+        
+        <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8 text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" />
+              GitHub에서 소스코드 불러오는 중...
+            </div>
+          ) : (
+            <pre className="text-sm font-mono" style={{ textAlign: 'left' }}>
+              {highlightCode(displayCode)}
+            </pre>
+          )}
+        </div>
+        
+        {/* 함수 메타데이터 */}
+        {param.actualFunction && (
+          <div className="mt-3 p-3 bg-blue-50 rounded-lg">
+            <h6 className="font-semibold text-blue-800 mb-2">🔍 함수 정보</h6>
+            <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-700">
+              <div><strong>함수명:</strong> {param.actualFunction.name}</div>
+              <div><strong>파라미터 개수:</strong> {param.actualFunction.length}</div>
+              <div><strong>소스:</strong> {sourceCodeCache[param.fileName] ? 'GitHub API' : 'Local'}</div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   // 🔥 실제 코드 기반 파라미터 카테고리 생성
@@ -303,15 +428,15 @@ const DynamicFormulaInspector = () => {
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-white rounded-xl shadow-lg">
-      {/* 헤더 */}
+      {/* 헤더 - GitHub API 상태 표시 추가 */}
       <div className="text-center mb-8">
         <div className="flex items-center justify-center mb-4">
           <Code className="w-8 h-8 text-blue-600 mr-3" />
           <h2 className="text-3xl font-bold text-gray-800">🔥 TFT 파라미터 코드 점검기</h2>
         </div>
-        <p className="text-gray-600 text-lg">실제 동작하는 JS 파일들의 코드를 확인하세요</p>
+        <p className="text-gray-600 text-lg">GitHub에서 실시간으로 최신 소스코드를 불러옵니다</p>
         <div className="mt-3 px-4 py-2 bg-green-100 text-green-800 rounded-lg inline-block">
-          <strong>✨ 실시간 동기화:</strong> 실제 코드 수정 시 자동으로 반영됩니다
+          <strong>🌐 GitHub API 연동:</strong> 항상 최신 원본 코드 표시
         </div>
       </div>
 
@@ -385,37 +510,8 @@ const DynamicFormulaInspector = () => {
                         </button>
                       </div>
 
-                      {showImplementation[param.name] && (
-                        <div className="mt-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <h5 className="font-bold text-gray-700 flex items-center">
-                              <Microscope className="w-5 h-5 mr-2" />
-                              실제 동작 코드 ({param.fileName})
-                            </h5>
-                            <span className="text-xs text-gray-500">
-                              함수 크기: {param.actualFunction ? param.actualFunction.toString().length : 0} 문자
-                            </span>
-                          </div>
-                          
-                          <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                            <pre className="text-sm font-mono" style={{ textAlign: 'left' }}>
-                              {highlightCode(extractFunctionCode(param.actualFunction))}
-                            </pre>
-                          </div>
-                          
-                          {/* 함수 메타데이터 */}
-                          {param.actualFunction && (
-                            <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                              <h6 className="font-semibold text-blue-800 mb-2">🔍 함수 정보</h6>
-                              <div className="grid md:grid-cols-3 gap-4 text-sm text-blue-700">
-                                <div><strong>함수명:</strong> {param.actualFunction.name}</div>
-                                <div><strong>파라미터 개수:</strong> {param.actualFunction.length}</div>
-                                <div><strong>타입:</strong> {typeof param.actualFunction}</div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {/* 🔥 여기서 CodeDisplay 컴포넌트 사용 */}
+                      <CodeDisplay param={param} />
                     </div>
                   ))}
                 </div>
@@ -425,16 +521,16 @@ const DynamicFormulaInspector = () => {
         ))}
       </div>
 
-      {/* 푸터 */}
+      {/* 푸터 - GitHub 링크 업데이트 */}
       <div className="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-center">
         <a
-          href="https://github.com/cosmosalad/hightech_tft"
+          href="https://github.com/cosmosalad/hightech_tft/tree/main/src/pages/parameters"
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition-colors"
         >
           <Github className="w-5 h-5 mr-2" />
-          GitHub에서 전체 코드 확인
+          GitHub 파라미터 폴더 보기
         </a>
         
         <button

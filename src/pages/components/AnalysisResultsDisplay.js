@@ -93,7 +93,7 @@ const AnalysisResultsDisplay = ({
     if (ssNumeric > 1000) {
       return <AlertTriangle className="w-4 h-4 text-red-500" title="높은 SS 값 (>1000 mV/decade)" />;
     } else if (ssNumeric > 300) {
-      return <AlertTriangle className="w-4 h-4 text-yellow-500" title="보통 SS 값 (300-1000 mV/decade)" />;
+      return <CheckCircle className="w-4 h-4 text-yellow-500" title="보통 SS 값 (300-1000 mV/decade)" />;
     } else if (ssNumeric > 100) {
       return <CheckCircle className="w-4 h-4 text-blue-500" title="양호한 SS 값 (100-300 mV/decade)" />;
     } else {

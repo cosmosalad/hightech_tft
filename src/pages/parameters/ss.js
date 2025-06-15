@@ -1,3 +1,6 @@
+import { linearRegression } from './utils.js';
+
+export const calculateSS = (chartData, options = {}) => {
 /**
  * ⚡ Enhanced SS (Subthreshold Swing) 계산 모듈 - Custom Range 지원
  * 
@@ -18,63 +21,70 @@
  * - < 100 mV/dec: 우수
  * - 100~300 mV/dec: 양호  
  * - 300~1000 mV/dec: 보통
- * - > 1000 mV/dec: 불량
- * 
- * 🆕 새로운 기능:
- * - 사용자 정의 VG 범위 선택 지원
- * - 품질 평가 및 R² 계산
- * - 실시간 미리보기 데이터 생성
+ * - > 1000 mV/dec: 미흡
  */
 
-import { linearRegression } from './utils.js';
-
-/**
- * 📊 메인 SS 계산 함수 (기존 + 확장)
- */
-export const calculateSS = (chartData, options = {}) => {
+  // 📋 옵션 파라미터 추출
   const {
-    customRange = false,
-    startVG = null,
-    endVG = null,
-    method = 'auto'
+    customRange = false,    // 사용자 정의 범위 사용 여부
+    startVG = null,        // 시작 VG 값
+    endVG = null,          // 끝 VG 값  
+    method = 'auto'        // 자동 범위 선택 방법
   } = options;
 
-  // 입력 데이터 유효성 검사 (최소 10개 점 필요)
-  if (!chartData || chartData.length < 10) return 0;
+  // ✅ 1단계: 입력 데이터 유효성 검사
+  if (!chartData || chartData.length < 10) {
+    console.warn('SS 계산 실패: 데이터 부족 (최소 10개 점 필요)');
+    return 0;
+  }
   
-  // 📊 Step 1: log₁₀(ID) 변환
+  // 🔄 2단계: 로그 변환 (핵심!)
+  // 왜? TFT subthreshold 영역에서 ID는 지수함수적으로 변하므로
+  // log(ID) vs VG로 변환하면 선형 관계가 됨
   const logData = chartData.map(d => ({
-    VG: d.VG,
-    logID: Math.log10(Math.abs(d.ID))  // 절대값 사용 (음수 방지)
-  })).filter(d => isFinite(d.logID));  // NaN, Infinity 제거
+    VG: d.VG,                           // 게이트 전압 그대로 유지
+    logID: Math.log10(Math.abs(d.ID))   // 전류를 log10으로 변환 (절대값 사용)
+  })).filter(d => isFinite(d.logID));   // NaN, Infinity 등 유효하지 않은 값 제거
   
-  if (logData.length < 5) return 0;  // 최소 데이터 확보
+  // 로그 변환 후에도 충분한 데이터 확인
+  if (logData.length < 5) {
+    console.warn('SS 계산 실패: 로그 변환 후 유효 데이터 부족');
+    return 0;
+  }
 
+  // 🎯 3단계: 분석할 데이터 범위 선택
   let selectedData;
 
-  // 🎯 Step 2: 데이터 선택 방법
   if (customRange && startVG !== null && endVG !== null) {
-    // 🆕 사용자 정의 범위 사용
+    // 🆕 사용자가 직접 범위를 지정한 경우
     selectedData = logData.filter(d => d.VG >= startVG && d.VG <= endVG);
     
     if (selectedData.length < 3) {
-      console.warn(`Custom range ${startVG}V ~ ${endVG}V contains insufficient data points: ${selectedData.length}`);
+      console.warn(`사용자 정의 범위 ${startVG}V ~ ${endVG}V에 데이터 부족: ${selectedData.length}개`);
       return 0;
     }
   } else {
-    // 🔄 기존 자동 범위 선택 로직
+    // 🔄 자동 범위 선택 (기존 로직)
     selectedData = selectOptimalRange(logData, method);
   }
 
-  if (selectedData.length < 3) return 0;
+  // 선택된 데이터가 충분한지 확인
+  if (selectedData.length < 3) {
+    console.warn('선택된 범위에 데이터 부족 (최소 3개 점 필요)');
+    return 0;
+  }
 
-  // 📐 Step 3: 선형 회귀로 기울기 계산
-  const x = selectedData.map(d => d.VG);      // 게이트 전압 (독립변수)
-  const y = selectedData.map(d => d.logID);   // log₁₀(ID) (종속변수)
+  // 📐 4단계: 선형 회귀 분석 수행
+  const x = selectedData.map(d => d.VG);      // 독립변수: 게이트 전압
+  const y = selectedData.map(d => d.logID);   // 종속변수: log10(드레인 전류)
+  
+  // utils.js의 linearRegression 함수 호출
   const { slope } = linearRegression(x, y);
   
-  // 🧮 Step 4: SS 계산
-  // SS = 1/slope (V/decade) → mV/decade 변환
+  // 🧮 5단계: SS 값 계산
+  // 물리적 의미: SS = dVG/d(log₁₀ID) = 1/slope
+  // slope는 decade/V 단위이므로, 1/slope는 V/decade
+  // mV/decade로 변환하기 위해 1000을 곱함
   return slope > 0 ? (1 / slope) * 1000 : 0;
 };
 
