@@ -16,7 +16,7 @@ const DynamicFormulaInspector = () => {
   const [sourceCodeCache, setSourceCodeCache] = useState({}); // 캐시
   const [loadingStates, setLoadingStates] = useState({}); // 로딩 상태
 
-  // 🔥 **GitHub Raw URL로 소스코드 불러오기** - 압축되지 않은 원본
+  // 🔥 **GitHub Raw URL로 소스코드 불러오기** - 실제 파일명 매핑
   const fetchSourceCodeFromGitHub = useCallback(async (fileName) => {
     // 캐시에 있으면 바로 반환
     if (sourceCodeCache[fileName]) {
@@ -25,13 +25,47 @@ const DynamicFormulaInspector = () => {
 
     setLoadingStates(prev => ({ ...prev, [fileName]: true }));
 
+    // 🔥 **실제 파일명 매핑** - 코드의 fileName과 실제 GitHub 파일명이 다를 수 있음
+    const fileNameMapping = {
+      'gm.js': 'gm.js',
+      'gm_max.js': 'gm_max.js', // 실제 파일명 확인 필요
+      'gm_sat.js': 'gm_sat.js',
+      'field_effect_mobility.js': 'field_effect_mobility.js',
+      'low_field_field_effect_mobility.js': 'low_field_field_effect_mobility.js',
+      'effective_mobility.js': 'effective_mobility.js',
+      'mobility_degradation_factor.js': 'mobility_degradation_factor.js',
+      'vth.js': 'vth.js',
+      'ss.js': 'ss.js',
+      'dit.js': 'dit.js',
+      'on_off_ratio.js': 'on_off_ratio.js',
+      'ron.js': 'ron.js',
+      'ID_sat.js': 'ID_sat.js',
+      'dvth.js': 'dvth.js',
+      'utils.js': 'utils.js'
+    };
+
+    const actualFileName = fileNameMapping[fileName] || fileName;
+
     try {
-      // GitHub Raw URL 사용 - 이렇게 하면 압축되지 않은 원본 코드를 바로 가져옴
+      // GitHub Raw URL 사용 - 실제 파일명으로 시도
       const response = await fetch(
-        `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/src/pages/parameters/${fileName}`
+        `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/src/pages/parameters/${actualFileName}`
       );
 
       if (!response.ok) {
+        // 첫 번째 시도 실패 시, index.js에서 모든 함수 가져오기 시도
+        const indexResponse = await fetch(
+          `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/src/pages/parameters/index.js`
+        );
+        
+        if (indexResponse.ok) {
+          const indexContent = await indexResponse.text();
+          return `// ⚠️ ${fileName} 파일을 찾을 수 없어서 index.js에서 가져왔습니다.
+// 🔗 실제 파일 확인: https://github.com/cosmosalad/hightech_tft/tree/main/src/pages/parameters
+
+${indexContent}`;
+        }
+        
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
@@ -44,9 +78,15 @@ const DynamicFormulaInspector = () => {
     } catch (error) {
       console.error(`Failed to fetch ${fileName}:`, error);
       return `// ❌ GitHub에서 소스코드를 불러오는데 실패했습니다.
-// 🔗 직접 확인: https://github.com/cosmosalad/hightech_tft/blob/main/src/pages/parameters/${fileName}
+// 🔗 파일명 확인 필요: https://github.com/cosmosalad/hightech_tft/tree/main/src/pages/parameters
+// 📋 예상 파일명: ${actualFileName}
 
-// Error: ${error.message}`;
+// Error: ${error.message}
+
+// 💡 해결방법:
+// 1. GitHub에서 실제 파일명 확인
+// 2. FormulaCodeInspector.js의 fileName 수정
+// 3. 또는 실제 파일이 존재하는지 확인`;
     } finally {
       setLoadingStates(prev => ({ ...prev, [fileName]: false }));
     }
