@@ -117,6 +117,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       handleGitHubFilesLoaded={handleGitHubFilesLoaded}
       setShowParamInput={setShowParamInput}
       setDeviceParams={setDeviceParams}
+      setUploadedFiles={setUploadedFiles}
       startAnalysis={startAnalysis}
       handleGoToMainHome={handleGoToMainHome}
     />

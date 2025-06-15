@@ -397,6 +397,7 @@ const HomePage = ({
   updateFileAlias,
   setShowParamInput,
   setDeviceParams,
+  setUploadedFiles,
   startAnalysis,
   handleGoToMainHome,
   handleGitHubFilesLoaded
@@ -487,6 +488,8 @@ const HomePage = ({
           deviceParams={deviceParams}
           setDeviceParams={setDeviceParams}
           showParamInput={showParamInput}
+          uploadedFiles={uploadedFiles}
+          setUploadedFiles={setUploadedFiles}
         />
 
         {/* 수식 및 코드 점검 컴포넌트 */}

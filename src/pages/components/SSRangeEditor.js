@@ -260,7 +260,7 @@ const SSRangeEditor = ({
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold text-gray-800 mb-2">현재 SS 값</h3>
             <div className="text-lg font-mono text-blue-600">
-              {currentSS} mV/decade (자동 계산)
+              {currentSS} mV/decade
             </div>
           </div>
 
