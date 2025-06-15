@@ -3,6 +3,16 @@ import { ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download, 
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
 
+// 설정 파일에서 import
+import {
+  GITHUB_CONFIG,
+  FOLDER_FILES,
+  detectFileType,
+  generateSampleName,
+  getFileTypeIcon,
+  getFileTypeColor
+} from './fileConfig';
+
 // Simplified FileUploadSection with GitHub integration
 const EnhancedFileUploadSection = ({ 
   uploadedFiles, 
@@ -15,66 +25,6 @@ const EnhancedFileUploadSection = ({
   const [selectedFolder, setSelectedFolder] = useState('공통');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
-
-  // GitHub 기본 설정
-  const GITHUB_CONFIG = {
-    username: 'cosmosalad',
-    repo: 'hightech_tft',
-    branch: 'main'
-  };
-
-  // 폴더별 파일 목록
-  const FOLDER_FILES = {
-    '공통': [
-      '0614_IDVG_Linear_0sccm_300.xls',
-      '0614_IDVG_Linear_0sccm_350.xls',
-      '0614_IDVG_Linear_1sccm_0.xls',
-      '0614_IDVG_Linear_1sccm_50.xls',
-      '0614_IDVG_Linear_1sccm_100.xls',
-      '0614_IDVG_Linear_1sccm_150.xls',
-      '0614_IDVG_Linear_1sccm_200.xls',
-      '0614_IDVG_Linear_1sccm_300.xls'
-    ],
-    '1조': []
-  };
-
-  // 파일 타입 감지
-  const detectFileType = (filename) => {
-    const name = filename.toLowerCase();
-    
-    if (name.includes('idvd')) {
-      return 'IDVD';
-    }
-    
-    if (name.includes('idvg') && 
-        (name.includes('linear') || name.includes('lin')) && 
-        (name.includes('hys') || name.includes('hysteresis'))) {
-      return 'IDVG-Hysteresis';
-    }
-    
-    if (name.includes('idvg') && 
-        (name.includes('linear') || name.includes('lin'))) {
-      return 'IDVG-Linear';
-    }
-    
-    if (name.includes('idvg') && 
-        (name.includes('sat') || name.includes('saturation'))) {
-      return 'IDVG-Saturation';
-    }
-    
-    return 'Unknown';
-  };
-
-  // 샘플명 자동 생성
-  const generateSampleName = (filename) => {
-    const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
-    const parts = nameWithoutExt.split('_');
-    if (parts.length >= 4) {
-      const conditions = parts.slice(3).join('_');
-      return conditions;
-    }
-    return nameWithoutExt;
-  };
 
   // GitHub에서 파일 다운로드
   const loadFileFromGitHub = async (filename, folder) => {
@@ -168,28 +118,6 @@ const EnhancedFileUploadSection = ({
     setSelectedFiles(new Set());
   };
 
-  // 파일 타입별 아이콘
-  const getFileTypeIcon = (fileType) => {
-    switch (fileType) {
-      case 'IDVD': return '📊';
-      case 'IDVG-Linear': return '📈';
-      case 'IDVG-Saturation': return '📉';
-      case 'IDVG-Hysteresis': return '🔄';
-      default: return '📄';
-    }
-  };
-
-  // 파일 타입별 색상
-  const getFileTypeColor = (fileType) => {
-    switch (fileType) {
-      case 'IDVD': return 'bg-purple-100 text-purple-800';
-      case 'IDVG-Linear': return 'bg-blue-100 text-blue-800';
-      case 'IDVG-Saturation': return 'bg-green-100 text-green-800';
-      case 'IDVG-Hysteresis': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   return (
     <div className="bg-white p-8 rounded-xl shadow-lg">
       <div className="flex items-center mb-4">
@@ -265,8 +193,11 @@ const EnhancedFileUploadSection = ({
               onChange={(e) => handleFolderChange(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="공통">📁 공통</option>
-              <option value="1조">📁 1조</option>
+              {Object.keys(FOLDER_FILES).map(folderName => (
+                <option key={folderName} value={folderName}>
+                  📁 {folderName}
+                </option>
+              ))}
             </select>
           </div>
 
@@ -343,39 +274,43 @@ const EnhancedFileUploadSection = ({
           <div className="space-y-3">
             {uploadedFiles.map((file) => (
               <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center">
-                    <span className="text-lg mr-2">{getFileTypeIcon(file.type)}</span>
-                    <div>
-                      <div className="flex items-center space-x-2">
-                        <span className="font-medium text-sm">{file.name}</span>
-                        {file.source === 'github' && (
-                          <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                            <Github className="w-3 h-3 inline mr-1" />
-                            {file.folder}
-                          </span>
-                        )}
-                      </div>
-                      <span className={`inline-block mt-1 px-2 py-1 text-xs rounded ${getFileTypeColor(file.type)}`}>
-                        {file.type}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => removeFile(file.id)}
-                    className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <div className="flex items-start justify-between mb-2 gap-3">
+                  <div className="flex items-start flex-1 min-w-0">
+                    <span className="text-lg mr-2 flex-shrink-0">{getFileTypeIcon(file.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-sm truncate max-w-full" title={file.name}>
+                          {file.name}
+                       </span>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       <span className={`inline-block px-2 py-1 text-xs rounded ${getFileTypeColor(file.type)}`}>
+                         {file.type}
+                       </span>
+                       {file.source === 'github' && (
+                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                           <Github className="w-3 h-3 inline mr-1" />
+                           {file.folder}
+                         </span>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+                 <button
+                   onClick={() => removeFile(file.id)}
+                   className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors flex-shrink-0"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
+               </div>
                 <div className="flex items-center space-x-2">
-                  <label className="text-sm text-gray-600 whitespace-nowrap">샘플명:</label>
+                  <label className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">샘플명:</label>
                   <input
                     type="text"
                     value={file.alias}
                     onChange={(e) => updateFileAlias(file.id, e.target.value)}
-                    placeholder="샘플명 (예: 0sccm_300, 1sccm_100) - 같은 샘플명끼리 묶여서 분석됩니다"
-                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="샘플명 (예: IZO25nm, condition_A)"
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent min-w-0"
                   />
                 </div>
               </div>
