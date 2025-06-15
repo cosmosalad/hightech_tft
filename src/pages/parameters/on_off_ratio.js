@@ -13,7 +13,7 @@ export const calculateOnOffRatio = (chartData) => {
  * 
  * 🧮 계산 방법:
  * - Ion: 가장 높은 VG에서의 전류 (ON 상태)
- * - Ioff: 가장 낮은 VG에서의 전류 (OFF 상태)
+ * - Ioff: 가장 낮은 VG 근처 3개 점의 평균 (OFF 상태, 노이즈 고려)
  * - Ratio = Ion / Ioff
  * 
  * 📊 성능 기준:
@@ -36,9 +36,11 @@ export const calculateOnOffRatio = (chartData) => {
   // 따라서 전체 데이터에서 절대 최대값을 찾음
   const ion = Math.max(...sortedData.map(d => Math.abs(d.ID)));
   
-  // 🔒 Ioff: 가장 낮은 VG에서의 전류 (OFF 상태)
+  // 🔒 Ioff: 가장 낮은 VG에서의 전류값 3개의 평균 (OFF 상태, 노이즈 고려함)
   // 일반적으로 VG가 가장 낮을 때가 OFF 상태
-  const ioff = Math.abs(sortedData[0].ID);
+  const allCurrents = sortedData.map(d => Math.abs(d.ID)).sort((a, b) => a - b);
+  const smallestThree = allCurrents.slice(0, 3);
+  const ioff = smallestThree.reduce((sum, current) => sum + current, 0) / smallestThree.length;
   
   // 📈 On/Off 비율 계산
   const ratio = ioff > 0 ? ion / ioff : 0;
