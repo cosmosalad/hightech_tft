@@ -589,7 +589,7 @@ const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
             </h4>
           )}
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
               <LineChart data={result.chartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -654,7 +654,7 @@ const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
             </h4>
           )}
           <div className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
               <LineChart data={combinedData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis 
@@ -718,7 +718,7 @@ const IDVGCharts = ({ resultArray, type, sortByValue }) => {
 
   return (
     <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
         <LineChart data={combinedData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
@@ -777,7 +777,7 @@ const GmCharts = ({ resultArray, sortByValue }) => {
   
   return (
     <div className="h-60">
-      <ResponsiveContainer width="100%" height="100%">
+      <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
         <LineChart data={combinedGmData}>
           <CartesianGrid strokeDasharray="3 3" />
           <XAxis 
