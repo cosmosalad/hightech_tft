@@ -1,8 +1,76 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SSRangeEditor from './SSRangeEditor';
 import { evaluateSSQuality, calculateDit } from '../parameters/index.js';
+
+const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue }) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-white p-4 border-2 border-gray-400 rounded-lg shadow-xl min-w-[250px]" style={{ backgroundColor: '#ffffff', opacity: 1, zIndex: 9999 }}>
+        <p className="font-bold text-gray-800 mb-3 text-center border-b pb-2">
+          {xAxisLabel}: {typeof label === 'number' ? label.toFixed(3) : label} V
+        </p>
+        <div className="space-y-2">
+          {(sortByValue ? 
+            [...payload].sort((a, b) => (b.value || 0) - (a.value || 0)) : 
+            payload
+          ).map((entry, index) => {
+            if (entry.value === null || entry.value === undefined) return null;
+            
+            let sampleName = entry.dataKey;
+            let measurementInfo = '';
+            
+            if (entry.dataKey.includes('_gm')) {
+              sampleName = entry.dataKey.replace('_gm', '');
+              measurementInfo = ' - gm';
+            } else if (entry.dataKey.includes('VG_')) {
+              const vgMatch = entry.dataKey.match(/VG_(.+)V/);
+              if (vgMatch) {
+                sampleName = entry.name ? entry.name.split(' ')[0] : entry.dataKey;
+                measurementInfo = ` - VG=${vgMatch[1]}V`;
+              }
+            } else if (entry.dataKey === 'Forward' || entry.dataKey === 'Backward') {
+              sampleName = entry.name ? entry.name.replace(` ${entry.dataKey}`, '') : 'Sample';
+              measurementInfo = ` - ${entry.dataKey}`;
+            } else {
+              const nameMatch = entry.name ? entry.name.match(/(.+?)\s*\((.+?)\)/) : null;
+              if (nameMatch) {
+                sampleName = nameMatch[1];
+                measurementInfo = ` - ${nameMatch[2]}`;
+              }
+            }
+            
+            return (
+              <div key={index} className="flex items-center justify-between p-2 rounded">
+                <div className="flex items-center flex-1">
+                  <div 
+                    className="w-4 h-4 rounded-full mr-3" 
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800">
+                      {sampleName || 'Unknown Sample'}
+                    </div>
+                    {measurementInfo && (
+                      <div className="text-xs text-gray-500">
+                        {measurementInfo}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="font-mono text-sm text-gray-900 ml-3">
+                  {entry.value.toExponential(2)} {yAxisUnit}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
 
 const AnalysisResultsDisplay = ({
   analysisResults,
@@ -16,6 +84,7 @@ const AnalysisResultsDisplay = ({
   setCompleteAnalysisResults
 }) => {
   // 🆕 SS Editor용 state
+  const [sortByValue, setSortByValue] = useState(false);
   const [ssEditorState, setSSEditorState] = useState({
     isOpen: false,
     currentSample: null,
@@ -122,6 +191,17 @@ const handleSSUpdate = (result) => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-800">TFT 완벽 통합 분석 결과</h1>
+          <button
+            onClick={() => setSortByValue(!sortByValue)}
+            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
+              sortByValue 
+                ? 'bg-green-600 text-white hover:bg-green-700' 
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+            title="Tooltip에서 값 크기순으로 정렬"
+          >
+            📊 {sortByValue ? '정렬ON' : '정렬OFF'}
+          </button>
           <div className="flex space-x-4">
             <button
               onClick={() => setCurrentPage('home')}
@@ -163,6 +243,7 @@ const handleSSUpdate = (result) => {
               resultArray={resultArray}
               openSSEditor={openSSEditor}
               getSSQualityIcon={getSSQualityIcon}
+              sortByValue={sortByValue}
             />
           );
         })}
@@ -365,7 +446,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 );
 
 // 개별 분석 섹션
-const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon }) => {
+const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
   return (
@@ -380,23 +461,23 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
 
           {/* IDVD 차트 */}
           {type === 'IDVD' && (
-            <IDVDCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} />
+            <IDVDCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} sortByValue={sortByValue} />
           )}
 
           {/* IDVG-Hysteresis 차트 */}
           {type === 'IDVG-Hysteresis' && (
-            <HysteresisCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} />
+            <HysteresisCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} sortByValue={sortByValue} />
           )}
 
           {/* IDVG-Linear, IDVG-Saturation 차트 */}
           {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
             <>
-              <IDVGCharts resultArray={resultArray} type={type} />
+              <IDVGCharts resultArray={resultArray} type={type} sortByValue={sortByValue} />
               {/* gm 차트 */}
               {resultArray.some(result => result.gmData) && (
                 <div className="mt-8">
                   <h3 className="text-lg font-semibold mb-4">gm (Transconductance) 그래프</h3>
-                  <GmCharts resultArray={resultArray} />
+                  <GmCharts resultArray={resultArray} sortByValue={sortByValue} />
                 </div>
               )}
             </>
@@ -451,7 +532,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
 };
 
 // IDVD 차트 컴포넌트
-const IDVDCharts = ({ resultArray, hasMultipleFiles }) => (
+const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
   <div className="space-y-8">
     {resultArray.map((result, fileIndex) => {
       if (!result || !result.chartData) return null;
@@ -478,7 +559,7 @@ const IDVDCharts = ({ resultArray, hasMultipleFiles }) => (
                   label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
                   tickFormatter={(value) => value.toExponential(0)}
                 />
-                <Tooltip formatter={(value) => [value.toExponential(2) + ' A', 'ID']} />
+                <Tooltip content={<SampleNameTooltip xAxisLabel="VD" yAxisUnit="A" sortByValue={sortByValue} />} />
                 <Legend wrapperStyle={{ paddingTop: '10px' }}/>
                 {result.gateVoltages && result.gateVoltages.map((vg, vgIndex) => (
                   <Line
@@ -488,7 +569,7 @@ const IDVDCharts = ({ resultArray, hasMultipleFiles }) => (
                     stroke={`hsl(${(vgIndex * 60) % 360}, 70%, 50%)`}
                     strokeWidth={2}
                     dot={false}
-                    name={`VG=${vg}V`}
+                    name={`${result.displayName} VG=${vg}V`}
                   />
                 ))}
               </LineChart>
@@ -501,7 +582,7 @@ const IDVDCharts = ({ resultArray, hasMultipleFiles }) => (
 );
 
 // Hysteresis 차트 컴포넌트
-const HysteresisCharts = ({ resultArray, hasMultipleFiles }) => (
+const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
   <div className="space-y-8">
     {resultArray.map((result, index) => {
       if (!result.forwardData || !result.backwardData) return null;
@@ -542,13 +623,13 @@ const HysteresisCharts = ({ resultArray, hasMultipleFiles }) => (
                   label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 15 }}
                   tickFormatter={(value) => value.toExponential(0)}
                 />
-                <Tooltip formatter={(value) => [value ? value.toExponential(2) + ' A' : 'N/A', '']} />
+                <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
                 <Legend wrapperStyle={{ paddingTop: '10px' }}/>
                 <Line 
                   type="monotone" 
                   dataKey="Forward" 
                   stroke="#2563eb" 
-                  name="Forward" 
+                  name={`${result.displayName} Forward`}
                   strokeWidth={2} 
                   dot={false}
                   connectNulls={false}
@@ -557,7 +638,7 @@ const HysteresisCharts = ({ resultArray, hasMultipleFiles }) => (
                   type="monotone" 
                   dataKey="Backward" 
                   stroke="#dc2626" 
-                  name="Backward" 
+                  name={`${result.displayName} Backward`}
                   strokeWidth={2} 
                   dot={false}
                   connectNulls={false}
@@ -572,7 +653,7 @@ const HysteresisCharts = ({ resultArray, hasMultipleFiles }) => (
 );
 
 // IDVG 차트 컴포넌트
-const IDVGCharts = ({ resultArray, type }) => {
+const IDVGCharts = ({ resultArray, type, sortByValue }) => {
   const allVGValues = [...new Set(
     resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : [])
   )].sort((a, b) => a - b);
@@ -606,7 +687,7 @@ const IDVGCharts = ({ resultArray, type }) => {
             label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
             tickFormatter={(value) => value.toExponential(0)}
           />
-          <Tooltip formatter={(value) => [value ? value.toExponential(2) + ' A' : 'N/A', 'ID']} />
+          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
           <Legend wrapperStyle={{ paddingTop: '10px' }}/>
           {resultArray.map((result, index) => {
             const key = result.displayName || `File${index + 1}`;
@@ -618,7 +699,7 @@ const IDVGCharts = ({ resultArray, type }) => {
                 stroke={`hsl(${index * 120}, 70%, 50%)`} 
                 strokeWidth={2} 
                 dot={false}
-                name={key}
+                name={`${key} (${type})`}
                 connectNulls={false}
               />
             );
@@ -630,7 +711,7 @@ const IDVGCharts = ({ resultArray, type }) => {
 };
 
 // gm 차트 컴포넌트
-const GmCharts = ({ resultArray }) => {
+const GmCharts = ({ resultArray, sortByValue }) => {
   const allVGValues = [...new Set(
     resultArray.filter(result => result.gmData)
       .flatMap(result => result.gmData.map(d => d.VG))
@@ -663,7 +744,7 @@ const GmCharts = ({ resultArray }) => {
             label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5 }}
             tickFormatter={(value) => value.toExponential(0)}
           />
-          <Tooltip formatter={(value) => [value ? value.toExponential(2) + ' S' : 'N/A', 'gm']} />
+          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} />} />
           <Legend wrapperStyle={{ paddingTop: '10px' }}/>
           {resultArray.map((result, index) => {
             if (!result.gmData) return null;
@@ -676,7 +757,7 @@ const GmCharts = ({ resultArray }) => {
                 stroke={`hsl(${index * 120 + 30}, 70%, 50%)`} 
                 strokeWidth={2} 
                 dot={false}
-                name={`${result.displayName || `File${index + 1}`} gm`}
+                name={`${result.displayName || `File${index + 1}`} - gm`}
                 connectNulls={false}
               />
             );
