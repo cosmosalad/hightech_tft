@@ -4,7 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsi
 import SSRangeEditor from './SSRangeEditor';
 import { evaluateSSQuality, calculateDit } from '../parameters/index.js';
 
-const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue }) => {
+const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue, showLogScale, formatLinearCurrent }) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-4 border-2 border-gray-400 rounded-lg shadow-xl min-w-[250px]" style={{ backgroundColor: '#ffffff', opacity: 1, zIndex: 9999 }}>
@@ -60,7 +60,10 @@ const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sort
                   </div>
                 </div>
                 <div className="font-mono text-sm text-gray-900 ml-3">
-                  {entry.value.toExponential(2)} {yAxisUnit}
+                  {showLogScale ? 
+                    entry.value.toExponential(2) : 
+                    formatLinearCurrent ? formatLinearCurrent(entry.value) : entry.value.toExponential(2)
+                  } {yAxisUnit}
                 </div>
               </div>
             );
@@ -83,7 +86,16 @@ const AnalysisResultsDisplay = ({
   setAnalysisResults,
   setCompleteAnalysisResults
 }) => {
-  // 🆕 SS Editor용 state
+  // 로그 스케일 기본값
+  const [showLogScale, setShowLogScale] = useState(true);
+  const formatLinearCurrent = (value) => {
+    if (value >= 1e-3) return `${(value * 1000).toFixed(1)}m`;
+    if (value >= 1e-6) return `${(value * 1000000).toFixed(1)}μ`;
+    if (value >= 1e-9) return `${(value * 1000000000).toFixed(1)}n`;
+    if (value >= 1e-12) return `${(value * 1000000000000).toFixed(1)}p`;
+    return `${value.toExponential(1)}`;
+  };
+  // SS Editor용 state
   const [sortByValue, setSortByValue] = useState(false);
   const [ssEditorState, setSSEditorState] = useState({
     isOpen: false,
@@ -93,7 +105,7 @@ const AnalysisResultsDisplay = ({
     currentSS: null
   });
 
-  // 🆕 SS 수정기 열기 함수
+  // SS 수정기 열기 함수
   const openSSEditor = (sampleName, measurementType, chartData, currentSS) => {
     setSSEditorState({
       isOpen: true,
@@ -288,6 +300,9 @@ const handleSSUpdate = async (result) => {
               openSSEditor={openSSEditor}
               getSSQualityIcon={getSSQualityIcon}
               sortByValue={sortByValue}
+              showLogScale={showLogScale}
+              setShowLogScale={setShowLogScale}
+              formatLinearCurrent={formatLinearCurrent}
             />
           );
         })}
@@ -490,7 +505,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 );
 
 // 개별 분석 섹션
-const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue }) => {
+const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
   return (
@@ -516,7 +531,14 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
           {/* IDVG-Linear, IDVG-Saturation 차트 */}
           {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
             <>
-              <IDVGCharts resultArray={resultArray} type={type} sortByValue={sortByValue} />
+              <IDVGCharts 
+                resultArray={resultArray} 
+                type={type} 
+                sortByValue={sortByValue} 
+                showLogScale={showLogScale}
+                setShowLogScale={setShowLogScale}
+                formatLinearCurrent={formatLinearCurrent}
+              />
               {/* gm 차트 */}
               {resultArray.some(result => result.gmData) && (
                 <div className="mt-8">
@@ -697,9 +719,10 @@ const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
 );
 
 // IDVG 차트 컴포넌트
-const IDVGCharts = ({ resultArray, type, sortByValue }) => {
+const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
   const allVGValues = [...new Set(
-    resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : [])
+    resultArray.flatMap(result => result.chartData ? 
+      result.chartData.map(d => d.VG) : [])
   )].sort((a, b) => a - b);
   
   if (allVGValues.length === 0) return null;
@@ -717,39 +740,76 @@ const IDVGCharts = ({ resultArray, type, sortByValue }) => {
   });
 
   return (
-    <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-        <LineChart data={combinedData}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis 
-            dataKey="VG" 
-            label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+    <div>
+      {/* 🆕 토글 버튼 추가 */}
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-lg font-semibold">ID-VG 특성 그래프</h3>
+        <div className="flex items-center gap-2">
+          <input
+            type="checkbox"
+            id="logScale"
+            checked={showLogScale}
+            onChange={(e) => setShowLogScale(e.target.checked)} // 🆕 상위 컴포넌트의 setState 함수 필요
+            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
           />
-          <YAxis 
-            scale="log"
-            domain={[1e-12, 1e-3]}
-            label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
-            tickFormatter={(value) => value.toExponential(0)}
-          />
-          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-          <Legend wrapperStyle={{ paddingTop: '10px' }}/>
-          {resultArray.map((result, index) => {
-            const key = result.displayName || `File${index + 1}`;
-            return (
-              <Line 
-                key={index}
-                type="monotone" 
-                dataKey={key}
-                stroke={`hsl(${index * 120}, 70%, 50%)`} 
-                strokeWidth={2} 
-                dot={false}
-                name={`${key} (${type})`}
-                connectNulls={false}
+          <label htmlFor="logScale" className="text-sm font-medium text-gray-700">
+            로그 스케일 표시
+          </label>
+        </div>
+      </div>
+      
+      {/* 🆕 차트 부분 수정 */}
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={combinedData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis 
+              dataKey="VG" 
+              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+            />
+            {/* 🆕 Y축 동적 설정 */}
+            <YAxis 
+              scale={showLogScale ? "log" : "linear"}
+              domain={showLogScale ? [1e-12, 1e-3] : ['auto', 'auto']}
+              label={{ 
+                value: showLogScale ? 'ID (A)' : 'ID (A)', 
+                angle: -90, 
+                position: 'insideLeft', 
+                offset: 5 
+              }}
+              tickFormatter={(value) => showLogScale ? 
+                value.toExponential(0) : 
+                formatLinearCurrent(value)
+              }
+            />
+            <Tooltip content={
+              <SampleNameTooltip 
+                xAxisLabel="VG" 
+                yAxisUnit="A" 
+                sortByValue={sortByValue}
+                showLogScale={showLogScale}
+                formatLinearCurrent={formatLinearCurrent}
               />
-            );
-          })}
-        </LineChart>
-      </ResponsiveContainer>
+            } />
+            <Legend wrapperStyle={{ paddingTop: '10px' }}/>
+            {resultArray.map((result, index) => {
+              const key = result.displayName || `File${index + 1}`;
+              return (
+                <Line 
+                  key={index}
+                  type="monotone" 
+                  dataKey={key}
+                  stroke={`hsl(${index * 120}, 70%, 50%)`} 
+                  strokeWidth={2} 
+                  dot={false}
+                  name={key}
+                  connectNulls={false}
+                />
+              );
+            })}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 };
