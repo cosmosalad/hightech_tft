@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
-import { ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download, CheckCircle, AlertTriangle } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { 
+  ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download, 
+  CheckCircle, AlertTriangle, Search
+} from 'lucide-react';
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
 
@@ -25,6 +28,29 @@ const EnhancedFileUploadSection = ({
   const [selectedFolder, setSelectedFolder] = useState('공통');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+
+  // 🔍 검색 필터링된 파일 목록 계산
+  const filteredFiles = useMemo(() => {
+    const files = FOLDER_FILES[selectedFolder] || [];
+    
+    if (!searchTerm.trim()) {
+      return files; // 검색어가 없으면 전체 파일 반환
+    }
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    
+    return files.filter(filename => {
+      const filenameLower = filename.toLowerCase();
+      const sampleName = generateSampleName(filename).toLowerCase();
+      const fileType = detectFileType(filename).toLowerCase();
+      
+      // 파일명, 샘플명, 파일타입에서 검색
+      return filenameLower.includes(searchLower) || 
+            sampleName.includes(searchLower) ||
+            fileType.includes(searchLower);
+    });
+  }, [selectedFolder, searchTerm]);
 
   // GitHub에서 파일 다운로드
   const loadFileFromGitHub = async (filename, folder) => {
@@ -104,11 +130,10 @@ const EnhancedFileUploadSection = ({
 
   // 전체 선택/해제
   const toggleSelectAll = () => {
-    const files = FOLDER_FILES[selectedFolder] || [];
-    if (selectedFiles.size === files.length) {
+    if (selectedFiles.size === filteredFiles.length && filteredFiles.length > 0) {
       setSelectedFiles(new Set()); // 전체 해제
     } else {
-      setSelectedFiles(new Set(files)); // 전체 선택
+      setSelectedFiles(new Set(filteredFiles)); // 필터링된 파일 전체 선택
     }
   };
 
@@ -116,6 +141,7 @@ const EnhancedFileUploadSection = ({
   const handleFolderChange = (folder) => {
     setSelectedFolder(folder);
     setSelectedFiles(new Set());
+    setSearchTerm('');
   };
 
   return (
@@ -200,16 +226,47 @@ const EnhancedFileUploadSection = ({
               ))}
             </select>
           </div>
-
-          {/* 파일 선택 영역 */}
-          {FOLDER_FILES[selectedFolder]?.length > 0 ? (
+          {/* 🔍 검색창 추가 */}
+          <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  파일 검색:
+                </label>
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-5 w-5 text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="파일명, 샘플명, 타입으로 검색..."
+                    className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                    >
+                      <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    </button>
+                  )}
+                </div>
+                {/* 검색 결과 수 표시 */}
+                {searchTerm && (
+                  <p className="text-sm text-gray-500 mt-1">
+                    "{searchTerm}" 검색 결과: {filteredFiles.length}개 파일
+                  </p>
+                )}
+              </div>
+              {/* 파일 선택 영역 */}
+              {filteredFiles.length > 0 ? (
             <div className="mb-4">
               {/* 전체 선택 및 선택 개수 */}
               <div className="flex items-center justify-between mb-3">
                 <label className="flex items-center cursor-pointer">
                   <input
                     type="checkbox"
-                    checked={selectedFiles.size === FOLDER_FILES[selectedFolder].length && FOLDER_FILES[selectedFolder].length > 0}
+                    checked={selectedFiles.size === filteredFiles.length && filteredFiles.length > 0}
                     onChange={toggleSelectAll}
                     className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                   />
@@ -222,7 +279,7 @@ const EnhancedFileUploadSection = ({
 
               {/* 파일 목록 */}
               <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-                {FOLDER_FILES[selectedFolder].map((filename) => {
+                {filteredFiles.map((filename) => {
                   const fileType = detectFileType(filename);
                   const sampleName = generateSampleName(filename);
                   const isSelected = selectedFiles.has(filename);

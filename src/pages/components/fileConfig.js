@@ -1,4 +1,4 @@
-// fileConfig.js - GitHub 파일 목록 설정 파일
+// fileConfig.js - GitHub 파일 목록 설정 파일 (최종 수정 버전)
 
 // GitHub 기본 설정
 export const GITHUB_CONFIG = {
@@ -23,7 +23,23 @@ export const FOLDER_FILES = {
     '0614_IDVG_Linear_1sccm_100.xls',
     '0614_IDVG_Linear_1sccm_150.xls',
     '0614_IDVG_Linear_1sccm_200.xls',
-    '0614_IDVG_Linear_1sccm_300.xls'
+    '0614_IDVG_Linear_1sccm_300.xls',
+    '0616_IDVD_1sccm_0.xls',
+    '0616_IDVD_1sccm_100.xls',
+    '0616_IDVD_1sccm_200.xls',
+    '0616_IDVD_1sccm_300.xls',
+    '0616_IDVG_Lin_1sccm_0.xls',
+    '0616_IDVG_Lin_1sccm_100.xls',
+    '0616_IDVG_Lin_1sccm_200.xls',
+    '0616_IDVG_Lin_1sccm_300.xls',
+    '0616_IDVG_Lin_Hys_1sccm_0.xls',
+    '0616_IDVG_Lin_Hys_1sccm_100.xls',
+    '0616_IDVG_Lin_Hys_1sccm_200.xls',
+    '0616_IDVG_Lin_Hys_1sccm_300.xls',
+    '0616_IDVG_Sat_1sccm_anneal0.xls',
+    '0616_IDVG_Sat_1sccm_anneal100.xls',
+    '0616_IDVG_Sat_1sccm_anneal200.xls',
+    '0616_IDVG_Sat_1sccm_anneal300.xls'
   ],
   '1조': [
   ],
