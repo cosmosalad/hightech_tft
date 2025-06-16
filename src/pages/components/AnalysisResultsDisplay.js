@@ -89,10 +89,10 @@ const AnalysisResultsDisplay = ({
   // 로그 스케일 기본값
   const [showLogScale, setShowLogScale] = useState(true);
   const formatLinearCurrent = (value) => {
-    if (value >= 1e-3) return `${(value * 1000).toFixed(1)}m`;
-    if (value >= 1e-6) return `${(value * 1000000).toFixed(1)}μ`;
-    if (value >= 1e-9) return `${(value * 1000000000).toFixed(1)}n`;
-    if (value >= 1e-12) return `${(value * 1000000000000).toFixed(1)}p`;
+    if (value >= 1e-3) return `${parseFloat((value * 1000).toFixed(1))}m`;
+    if (value >= 1e-6) return `${parseFloat((value * 1000000).toFixed(1))}μ`;
+    if (value >= 1e-9) return `${parseFloat((value * 1000000000).toFixed(1))}n`;
+    if (value >= 1e-12) return `${parseFloat((value * 1000000000000).toFixed(1))}p`;
     return `${value.toExponential(1)}`;
   };
   // SS Editor용 state
