@@ -209,28 +209,54 @@ const handleSSUpdate = async (result) => {
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-3xl font-bold text-gray-800">TFT 완벽 통합 분석 결과</h1>
-          <button
-            onClick={() => setSortByValue(!sortByValue)}
-            className={`flex items-center px-4 py-2 rounded-lg transition-colors ${
-              sortByValue 
-                ? 'bg-green-600 text-white hover:bg-green-700' 
-                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-            }`}
-            title="Tooltip에서 값 크기순으로 정렬"
-          >
-            📊 {sortByValue ? '정렬ON' : '정렬OFF'}
-          </button>
-          <div className="flex space-x-4">
+          
+          <div className="flex items-center space-x-4">
+            {/* 고급스러운 정렬 토글 버튼 */}
+            <div className="relative">
+              <button
+                onClick={() => setSortByValue(!sortByValue)}
+                className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  sortByValue 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' 
+                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                }`}
+                title="Tooltip에서 값 크기순으로 정렬"
+              >
+                <div className="flex items-center space-x-2">
+                  <BarChart3 className={`w-4 h-4 transition-all duration-300 ${
+                    sortByValue ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'
+                  }`} />
+                  <span className="font-medium text-sm">
+                    {sortByValue ? '값 정렬 활성' : '값 정렬 비활성'}
+                  </span>
+                </div>
+                
+                {/* 활성 상태 표시 점 */}
+                {sortByValue && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
+                )}
+                
+                {/* 호버 시 배경 효과 */}
+                <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${
+                  sortByValue 
+                    ? 'bg-white/10 group-hover:opacity-100' 
+                    : 'bg-gradient-to-r from-emerald-50 to-teal-50 group-hover:opacity-100'
+                }`}></div>
+              </button>
+            </div>
+
+            {/* 네비게이션 버튼들 */}
             <button
               onClick={() => setCurrentPage('home')}
-              className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               분석기 홈으로
             </button>
+            
             <button
               onClick={handleGoToMainHome}
-              className="flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-gray-600 to-slate-600 text-white rounded-xl hover:from-gray-700 hover:to-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
             >
               <Home className="w-4 h-4 mr-2" />
               메인 홈으로
