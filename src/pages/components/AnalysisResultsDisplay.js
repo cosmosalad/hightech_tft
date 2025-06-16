@@ -744,20 +744,45 @@ const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setShowLogSc
       {/* 🆕 토글 버튼 추가 */}
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold">ID-VG 특성 그래프</h3>
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            id="logScale"
-            checked={showLogScale}
-            onChange={(e) => setShowLogScale(e.target.checked)} // 🆕 상위 컴포넌트의 setState 함수 필요
-            className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-          />
-          <label htmlFor="logScale" className="text-sm font-medium text-gray-700">
-            로그 스케일 표시
-          </label>
-        </div>
+
+
+<div className="flex items-center space-x-4">
+  <span className={`text-sm font-medium transition-colors duration-300 ${
+    !showLogScale ? 'text-gray-900' : 'text-gray-400'
+  }`}>
+    실제값
+  </span>
+  
+  <button
+    onClick={() => setShowLogScale(!showLogScale)}
+    className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+      showLogScale ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-300'
+    }`}
+  >
+    <span
+      className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+        showLogScale ? 'translate-x-9' : 'translate-x-1'
+      }`}
+    >
+      <div className="flex items-center justify-center h-full">
+        {showLogScale ? (
+          <span className="text-xs text-blue-600 font-bold">log</span>
+        ) : (
+          <span className="text-xs text-gray-600 font-bold">lin</span>
+        )}
       </div>
-      
+    </span>
+  </button>
+  
+  <span className={`text-sm font-medium transition-colors duration-300 ${
+    showLogScale ? 'text-gray-900' : 'text-gray-400'
+  }`}>
+    로그값
+  </span>
+</div>
+
+
+      </div>
       {/* 🆕 차트 부분 수정 */}
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
