@@ -636,8 +636,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
               )}
               <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-                  <LineChart data={result.chartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
+                  <LineChart data={result.chartData} margin={{ top: 10, right: 20, left: 18, bottom: 10 }}>
                     <XAxis
                       dataKey="VD"
                       label={{ value: 'VD (V)', position: 'insideBottom', offset: -10 }}
@@ -646,7 +645,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                     <YAxis
                       scale="linear"
                       domain={[0, 'dataMax']}
-                      label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
+                      label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', dx: -10 }}
                       tickFormatter={(value) => value.toExponential(0)}
                     />
                     <Tooltip content={<SampleNameTooltip xAxisLabel="VD" yAxisUnit="A" sortByValue={sortByValue} />} />
@@ -709,7 +708,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
             )}
             <div className="h-80">
               <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-                <LineChart data={combinedData}>
+                <LineChart data={combinedData} margin={{ left: 18 }}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
                     dataKey="VG"
@@ -718,7 +717,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                   <YAxis
                     scale="log"
                     domain={[1e-12, 1e-3]}
-                    label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 15 }}
+                    label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', dx: -10 }}
                     tickFormatter={(value) => value.toExponential(0)}
                   />
                   <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
@@ -881,8 +880,8 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
     return (
       <div>
         {/* 토글 버튼들 */}
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold">ID-VG 특성 그래프</h3>
+        <div className="flex items-center justify-end mb-4">
+
           
           <div className="flex items-center space-x-6">
             {/* Vth 접선 토글 버튼 (IDVG-Linear인 경우만 표시) */}
@@ -965,7 +964,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
         {/* 차트 */}
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedData}>
+            <LineChart data={combinedData} margin={{ left: 18 }}>
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="VG"
@@ -1229,7 +1228,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
     return (
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={combinedGmData}>
+          <LineChart data={combinedGmData} margin={{ left: 18 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="VG"
@@ -1242,7 +1241,8 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                 value: 'gm (S)',
                 angle: -90,
                 position: 'insideLeft',
-                offset: 5
+                offset: 5,
+                dx: -15
               }}
               tickFormatter={(value) => value.toExponential(1)}
             />
