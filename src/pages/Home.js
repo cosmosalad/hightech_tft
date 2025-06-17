@@ -92,7 +92,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
               className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:from-green-600 hover:to-blue-600 transform hover:scale-105"
             >
               <Play className="w-5 h-5 mr-2" />
-              공정 과정
+              공정 시뮬레이션
             </button>
             <button
               onClick={() => setShowMaskViewer(true)}
