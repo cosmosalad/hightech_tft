@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, Eye, EyeOff } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 import SSRangeEditor from './SSRangeEditor';
 import { evaluateSSQuality, calculateDit } from '../parameters/index.js';
 
@@ -17,6 +17,9 @@ const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sort
             payload
           ).map((entry, index) => {
             if (entry.value === null || entry.value === undefined) return null;
+            
+            // 🆕 접선 데이터는 Tooltip에서 제외
+            if (entry.dataKey && entry.dataKey.includes('_tangent')) return null;
 
             let sampleName = entry.dataKey;
             let measurementInfo = '';
@@ -601,55 +604,81 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
   };
 
   // IDVD 차트 컴포넌트
-  const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
-    <div className="space-y-8">
-      {resultArray.map((result, fileIndex) => {
-        if (!result || !result.chartData) return null;
+  const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
+    // 🆕 라인 표시/숨김 state 추가
+    const [hiddenLines, setHiddenLines] = useState(new Set());
+    
+    // 🆕 Legend 클릭 핸들러
+    const handleLegendClick = (data) => {
+      const { dataKey } = data;
+      setHiddenLines(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(dataKey)) {
+          newSet.delete(dataKey);
+        } else {
+          newSet.add(dataKey);
+        }
+        return newSet;
+      });
+    };
 
-        return (
-          <div key={fileIndex} className="relative">
-            {hasMultipleFiles && (
-              <h4 className="text-md font-medium mb-3 text-gray-700 bg-gray-100 p-2 rounded">
-                {result.displayName}
-              </h4>
-            )}
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-                <LineChart data={result.chartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="VD"
-                    label={{ value: 'VD (V)', position: 'insideBottom', offset: -10 }}
-                    domain={[0, 'dataMax']}
-                  />
-                  <YAxis
-                    scale="linear"
-                    domain={[0, 'dataMax']}
-                    label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
-                    tickFormatter={(value) => value.toExponential(0)}
-                  />
-                  <Tooltip content={<SampleNameTooltip xAxisLabel="VD" yAxisUnit="A" sortByValue={sortByValue} />} />
-                  <Legend wrapperStyle={{ paddingTop: '10px' }}/>
-                  {result.gateVoltages && result.gateVoltages.map((vg, vgIndex) => (
-                    <Line
-                      key={vg}
-                      type="monotone"
-                      dataKey={`VG_${vg}V`}
-                      stroke={`hsl(${(vgIndex * 60) % 360}, 70%, 50%)`}
-                      strokeWidth={2}
-                      dot={false}
-                      name={`${result.displayName} VG=${vg}V`}
+    return (
+      <div className="space-y-8">
+        {resultArray.map((result, fileIndex) => {
+          if (!result || !result.chartData) return null;
+
+          return (
+            <div key={fileIndex} className="relative">
+              {hasMultipleFiles && (
+                <h4 className="text-md font-medium mb-3 text-gray-700 bg-gray-100 p-2 rounded">
+                  {result.displayName}
+                </h4>
+              )}
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
+                  <LineChart data={result.chartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="VD"
+                      label={{ value: 'VD (V)', position: 'insideBottom', offset: -10 }}
+                      domain={[0, 'dataMax']}
                     />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
+                    <YAxis
+                      scale="linear"
+                      domain={[0, 'dataMax']}
+                      label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }}
+                      tickFormatter={(value) => value.toExponential(0)}
+                    />
+                    <Tooltip content={<SampleNameTooltip xAxisLabel="VD" yAxisUnit="A" sortByValue={sortByValue} />} />
+                    <Legend 
+                      wrapperStyle={{ paddingTop: '10px' }}
+                      onClick={handleLegendClick}
+                      iconType="line"
+                    />
+                    {result.gateVoltages && result.gateVoltages.map((vg, vgIndex) => {
+                      const lineKey = `VG_${vg}V`;
+                      return (
+                        <Line
+                          key={vg}
+                          type="monotone"
+                          dataKey={lineKey}
+                          stroke={`hsl(${(vgIndex * 60) % 360}, 70%, 50%)`}
+                          strokeWidth={2}
+                          dot={false}
+                          name={`${result.displayName} VG=${vg}V`}
+                          hide={hiddenLines.has(lineKey)}  // 숨김 상태 적용
+                        />
+                      );
+                    })}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-
+          );
+        })}
+      </div>
+    );
+  };
   // Hysteresis 차트 컴포넌트
   const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => (
     <div className="space-y-8">
@@ -720,73 +749,220 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
       })}
     </div>
   );
-
-  // IDVG 차트 컴포넌트
+  // IDVG 차트 컴포넌트 - Vth 접선 기능 추가
   const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
+    // Vth 접선 표시 토글 state 추가
+  const [showVthTangent, setShowVthTangent] = useState(false);
+  
+  // 🆕 라인 표시/숨김 state 추가
+  const [hiddenLines, setHiddenLines] = useState(new Set());
+  
+  // 🆕 Legend 클릭 핸들러
+  const handleLegendClick = (data) => {
+    const { dataKey } = data;
+    setHiddenLines(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dataKey)) {
+        newSet.delete(dataKey);
+      } else {
+        newSet.add(dataKey);
+      }
+      return newSet;
+    });
+  };
+
+    // Vth 접선 계산 함수
+    const calculateVthTangentInfo = (chartData, parameters) => {
+      if (!chartData || !parameters || type !== 'IDVG-Linear') return null;
+      
+      const vthStr = parameters.Vth;
+      const gmMaxStr = parameters.gm_max;
+      
+      if (!vthStr || !gmMaxStr) return null;
+      
+      const vth = parseFloat(vthStr.split(' ')[0]);
+      const gmMax = parseFloat(gmMaxStr.split(' ')[0]);
+      
+      if (isNaN(vth) || isNaN(gmMax)) return null;
+      
+      // gm_max 지점의 VG 추정 (일반적으로 Vth + 1~3V)
+      let gmMaxVG = vth + 2;
+      let gmMaxID = 0;
+      
+      // chartData에서 해당 지점 찾기
+      const gmMaxPoint = chartData.find(d => Math.abs(d.VG - gmMaxVG) < 0.5);
+      if (gmMaxPoint) {
+        gmMaxID = gmMaxPoint.ID;
+        gmMaxVG = gmMaxPoint.VG;
+      } else {
+        const candidatePoints = chartData.filter(d => d.VG >= vth + 1 && d.VG <= vth + 3);
+        if (candidatePoints.length > 0) {
+          const selectedPoint = candidatePoints[Math.floor(candidatePoints.length / 2)];
+          gmMaxVG = selectedPoint.VG;
+          gmMaxID = selectedPoint.ID;
+        }
+      }
+      
+      // 접선 데이터 생성: ID = gm_max × (VG - vth)
+      const vgMin = Math.min(...chartData.map(d => d.VG));
+      const vgMax = Math.max(...chartData.map(d => d.VG));
+      
+      const tangentData = [];
+      for (let vg = vgMin; vg <= vgMax; vg += 0.1) {
+        const idTangent = gmMax * (vg - vth);
+        tangentData.push({ 
+          VG: parseFloat(vg.toFixed(1)), 
+          ID_tangent: idTangent > 0 ? idTangent : null 
+        });
+      }
+      
+      return { vth, gmMax, gmMaxVG, gmMaxID, tangentData };
+    };
+
     const allVGValues = [...new Set(
-      resultArray.flatMap(result => result.chartData ?
+      resultArray.flatMap(result => result.chartData ? 
         result.chartData.map(d => d.VG) : [])
     )].sort((a, b) => a - b);
 
     if (allVGValues.length === 0) return null;
 
+    // 차트 데이터 합성
     const combinedData = allVGValues.map(vg => {
       const dataPoint = { VG: vg };
+      
       resultArray.forEach((result, index) => {
         if (result.chartData) {
           const point = result.chartData.find(d => Math.abs(d.VG - vg) < 0.01);
           const key = result.displayName || `File${index + 1}`;
           dataPoint[key] = point?.ID || null;
+          
+          // 접선 데이터 추가 (IDVG-Linear인 경우만)
+          if (showVthTangent && type === 'IDVG-Linear') {
+            const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
+            if (tangentInfo) {
+              const tangentPoint = tangentInfo.tangentData.find(d => Math.abs(d.VG - vg) < 0.05);
+              dataPoint[`${key}_tangent`] = tangentPoint?.ID_tangent || null;
+            }
+          }
         }
       });
       return dataPoint;
     });
-
+  const renderCustomLegend = ({ payload, onClick }) => {
+        return (
+          <div style={{ textAlign: 'center', paddingTop: '10px' }}>
+            {payload.map((entry, index) => {
+              // dataKey에 '_tangent'가 포함된 항목은 완전히 건너뜀
+              if (entry.dataKey && entry.dataKey.includes('_tangent')) {
+                return null;
+              }
+              
+              return (
+                <span 
+                  key={`item-${index}`} 
+                  onClick={() => onClick(entry)}
+                  style={{ 
+                    margin: '0 10px', 
+                    cursor: 'pointer',
+                    color: entry.inactive ? '#ccc' : entry.color, // 비활성화 시 회색 처리
+                    textDecoration: entry.inactive ? 'line-through' : 'none'
+                  }}
+                >
+                  <svg width="14" height="14" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: '4px' }}>
+                    <line x1="0" y1="7" x2="14" y2="7" stroke={entry.color} strokeWidth="2" />
+                  </svg>
+                  {entry.value}
+                </span>
+              );
+            })}
+          </div>
+        );
+      };
     return (
       <div>
-        {/* 🆕 토글 버튼 추가 */}
+        {/* 토글 버튼들 */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold">ID-VG 특성 그래프</h3>
+          
+          <div className="flex items-center space-x-6">
+            {/* Vth 접선 토글 버튼 (IDVG-Linear인 경우만 표시) */}
+            {type === 'IDVG-Linear' && (
+              <div className="flex items-center space-x-3">
+                <span className={`text-sm font-medium transition-colors duration-300 ${
+                  !showVthTangent ? 'text-gray-900' : 'text-gray-400'
+                }`}>
+                  접선 숨김
+                </span>
+                
+                <button
+                  onClick={() => setShowVthTangent(!showVthTangent)}
+                  className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 ${
+                    showVthTangent ? 'bg-gradient-to-r from-orange-500 to-red-600' : 'bg-gray-300'
+                  }`}
+                  title="Vth 계산용 접선 표시/숨김"
+                >
+                  <span
+                    className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                      showVthTangent ? 'translate-x-9' : 'translate-x-1'
+                    }`}
+                  >
+                    <div className="flex items-center justify-center h-full">
+                      {showVthTangent ? (
+                        <Eye className="w-3 h-3 text-orange-600" />
+                      ) : (
+                        <EyeOff className="w-3 h-3 text-gray-600" />
+                      )}
+                    </div>
+                  </span>
+                </button>
+                
+                <span className={`text-sm font-medium transition-colors duration-300 ${
+                  showVthTangent ? 'text-gray-900' : 'text-gray-400'
+                }`}>
+                  접선 표시
+                </span>
+              </div>
+            )}
 
+            {/* 기존 로그/선형 토글 */}
+            <div className="flex items-center space-x-4">
+              <span className={`text-sm font-medium transition-colors duration-300 ${
+                !showLogScale ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+                실제값
+              </span>
 
-  <div className="flex items-center space-x-4">
-    <span className={`text-sm font-medium transition-colors duration-300 ${
-      !showLogScale ? 'text-gray-900' : 'text-gray-400'
-    }`}>
-      실제값
-    </span>
+              <button
+                onClick={() => setShowLogScale(!showLogScale)}
+                className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                  showLogScale ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
+                    showLogScale ? 'translate-x-9' : 'translate-x-1'
+                  }`}
+                >
+                  <div className="flex items-center justify-center h-full">
+                    {showLogScale ? (
+                      <span className="text-xs text-blue-600 font-bold">log</span>
+                    ) : (
+                      <span className="text-xs text-gray-600 font-bold">lin</span>
+                    )}
+                  </div>
+                </span>
+              </button>
 
-    <button
-      onClick={() => setShowLogScale(!showLogScale)}
-      className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-        showLogScale ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-300'
-      }`}
-    >
-      <span
-        className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-lg transition-transform duration-300 ${
-          showLogScale ? 'translate-x-9' : 'translate-x-1'
-        }`}
-      >
-        <div className="flex items-center justify-center h-full">
-          {showLogScale ? (
-            <span className="text-xs text-blue-600 font-bold">log</span>
-          ) : (
-            <span className="text-xs text-gray-600 font-bold">lin</span>
-          )}
+              <span className={`text-sm font-medium transition-colors duration-300 ${
+                showLogScale ? 'text-gray-900' : 'text-gray-400'
+              }`}>
+                로그값
+              </span>
+            </div>
+          </div>
         </div>
-      </span>
-    </button>
 
-    <span className={`text-sm font-medium transition-colors duration-300 ${
-      showLogScale ? 'text-gray-900' : 'text-gray-400'
-    }`}>
-      로그값
-    </span>
-  </div>
-
-
-        </div>
-        {/* 🆕 차트 부분 수정 */}
+        {/* 차트 */}
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={combinedData}>
@@ -795,7 +971,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                 dataKey="VG"
                 label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }}
               />
-              {/* 🆕 Y축 동적 설정 */}
               <YAxis
                 scale={showLogScale ? "log" : "linear"}
                 domain={showLogScale ? [1e-12, 1e-3] : ['auto', 'auto']}
@@ -806,20 +981,32 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                   offset: 5
                 }}
                 tickFormatter={(value) => showLogScale ?
-                  value.toExponential(0) :
-                  formatLinearCurrent(value)
+                  value.toExponential(0) : formatLinearCurrent(value)
                 }
               />
-              <Tooltip content={
-                <SampleNameTooltip
-                  xAxisLabel="VG"
-                  yAxisUnit="A"
-                  sortByValue={sortByValue}
-                  showLogScale={showLogScale}
-                  formatLinearCurrent={formatLinearCurrent}
-                />
-              } />
-              <Legend wrapperStyle={{ paddingTop: '10px' }}/>
+              <Tooltip 
+                content={<SampleNameTooltip 
+                  xAxisLabel="VG" 
+                  yAxisUnit="A" 
+                  sortByValue={sortByValue} 
+                  showLogScale={showLogScale} 
+                  formatLinearCurrent={formatLinearCurrent} 
+                />} 
+              />
+              <Legend 
+                wrapperStyle={{ paddingTop: '10px' }}
+                onClick={handleLegendClick}
+                iconType="line"
+                formatter={(value) => {
+                  // "_tangent"가 포함된 이름의 범례 항목은 숨깁니다.
+                  if (value && value.includes('_tangent')) {
+                    return null;
+                  }
+                  return value;
+                }}
+              />
+              
+              {/* 원본 데이터 라인들 */}
               {resultArray.map((result, index) => {
                 const key = result.displayName || `File${index + 1}`;
                 return (
@@ -832,70 +1019,85 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                     dot={false}
                     name={key}
                     connectNulls={false}
+                    hide={hiddenLines.has(key)}  // 🆕 숨김 상태 적용
                   />
                 );
               })}
+              
+              {/* 접선 라인들 (IDVG-Linear이고 토글이 켜진 경우) */}
+              {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
+                const key = result.displayName || `File${index + 1}`;
+                const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
+                
+                if (!tangentInfo) return null;
+                
+                return (
+                  <Line
+                    key={`tangent-${index}`}
+                    type="monotone"
+                    dataKey={`${key}_tangent`}
+                    stroke={`hsl(${index * 120 + 30}, 80%, 45%)`}
+                    strokeWidth={2}
+                    strokeDasharray="8 4"  // 점선
+                    dot={false}
+                    legendType="none"      // Legend에서 완전히 제거
+                    connectNulls={false}
+                    hide={hiddenLines.has(key)}  // 🆕 원본 라인이 숨겨지면 접선도 같이 숨김
+                  />
+                );
+              })}
+                            
+              {/* Reference Lines (IDVG-Linear이고 토글이 켜진 경우) */}
+                {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
+                  const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
+                  if (!tangentInfo) return null;
+                  
+                  return (
+                    <React.Fragment key={`ref-${index}`}>
+                      {/* gm_max VG 수직선 */}
+                      <ReferenceLine 
+                        x={tangentInfo.gmMaxVG} 
+                        stroke={`hsl(${index * 120}, 60%, 40%)`} 
+                        strokeDasharray="4 4"
+                        strokeWidth={1}
+                        label={{ 
+                          value: `gm_max VG`, 
+                          position: "topLeft",
+                          style: { fontSize: '10px' }
+                        }}
+                      />
+                      
+                      {/* Vth 수직선 */}
+                      <ReferenceLine 
+                        x={tangentInfo.vth} 
+                        stroke={`hsl(${index * 120 + 60}, 70%, 35%)`} 
+                        strokeDasharray="4 4"
+                        strokeWidth={2}
+                        label={{ 
+                          value: `Vth=${tangentInfo.vth.toFixed(2)}V`, 
+                          position: "bottomRight",
+                          style: { fontSize: '11px', fontWeight: 'bold' }
+                        }}
+                      />
+                      
+                      {/* 🆕 Vth 포인트 표시 */}
+                      <ReferenceLine 
+                        x={tangentInfo.vth} 
+                        y={0}
+                        stroke="transparent"
+                        dot={{
+                          fill: `hsl(${index * 120 + 60}, 80%, 40%)`,
+                          stroke: `hsl(${index * 120 + 60}, 90%, 20%)`,
+                          strokeWidth: 2,
+                          r: 6
+                        }}
+                      />
+                    </React.Fragment>
+                  );
+                })}
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
-    );
-  };
-
-  // gm 차트 컴포넌트
-  const GmCharts = ({ resultArray, sortByValue }) => {
-    const allVGValues = [...new Set(
-      resultArray.filter(result => result.gmData)
-        .flatMap(result => result.gmData.map(d => d.VG))
-    )].sort((a, b) => a - b);
-
-    if (allVGValues.length === 0) return null;
-
-    const combinedGmData = allVGValues.map(vg => {
-      const dataPoint = { VG: vg };
-      resultArray.forEach((result, index) => {
-        if (result.gmData) {
-          const point = result.gmData.find(d => Math.abs(d.VG - vg) < 0.05);
-          const key = `${result.displayName || `File${index + 1}`}_gm`;
-          dataPoint[key] = point?.gm || null;
-        }
-      });
-      return dataPoint;
-    });
-
-    return (
-      <div className="h-60">
-        <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-          <LineChart data={combinedGmData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="VG"
-              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }}
-            />
-            <YAxis
-              label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5 }}
-              tickFormatter={(value) => value.toExponential(0)}
-            />
-            <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} />} />
-            <Legend wrapperStyle={{ paddingTop: '10px' }}/>
-            {resultArray.map((result, index) => {
-              if (!result.gmData) return null;
-              const key = `${result.displayName || `File${index + 1}`}_gm`;
-              return (
-                <Line
-                  key={index}
-                  type="monotone"
-                  dataKey={key}
-                  stroke={`hsl(${index * 120 + 30}, 70%, 50%)`}
-                  strokeWidth={2}
-                  dot={false}
-                  name={`${result.displayName || `File${index + 1}`} - gm`}
-                  connectNulls={false}
-                />
-              );
-            })}
-          </LineChart>
-        </ResponsiveContainer>
       </div>
     );
   };
@@ -988,5 +1190,98 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
       </div>
     </div>
   );
+
+  const GmCharts = ({ resultArray, sortByValue }) => {
+  // 라인 표시/숨김 state 추가
+  const [hiddenLines, setHiddenLines] = useState(new Set());
+  
+  // Legend 클릭 핸들러
+  const handleLegendClick = (data) => {
+    const { dataKey } = data;
+    setHiddenLines(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(dataKey)) {
+        newSet.delete(dataKey);
+      } else {
+        newSet.add(dataKey);
+      }
+      return newSet;
+    });
+  };
+    const allVGValues = [...new Set(
+      resultArray.flatMap(result => result.gmData ? result.gmData.map(d => d.VG) : [])
+    )].sort((a, b) => a - b);
+
+    if (allVGValues.length === 0) return null;
+
+    const combinedGmData = allVGValues.map(vg => {
+      const dataPoint = { VG: vg };
+      resultArray.forEach((result, index) => {
+        if (result.gmData) {
+          const point = result.gmData.find(d => Math.abs(d.VG - vg) < 0.01);
+          const key = result.displayName || `File${index + 1}`;
+          dataPoint[`${key}_gm`] = point?.gm || null;
+        }
+      });
+      return dataPoint;
+    });
+
+    return (
+      <div className="h-80">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={combinedGmData}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="VG"
+              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }}
+            />
+            <YAxis
+              scale="linear"
+              domain={['auto', 'auto']}
+              label={{
+                value: 'gm (S)',
+                angle: -90,
+                position: 'insideLeft',
+                offset: 5
+              }}
+              tickFormatter={(value) => value.toExponential(1)}
+            />
+            <Tooltip 
+              content={<SampleNameTooltip 
+                xAxisLabel="VG" 
+                yAxisUnit="S" 
+                sortByValue={sortByValue} 
+                showLogScale={false}
+                formatLinearCurrent={(value) => value.toExponential(2)}
+              />} 
+            />
+            <Legend 
+              wrapperStyle={{ paddingTop: '10px' }}
+              onClick={handleLegendClick}
+              iconType="line"
+            />
+            
+            {resultArray.map((result, index) => {
+              if (!result.gmData) return null;
+              const key = result.displayName || `File${index + 1}`;
+              return (
+                <Line
+                  key={index}
+                  type="monotone"
+                  dataKey={`${key}_gm`}
+                  stroke={`hsl(${index * 120 + 180}, 70%, 50%)`}
+                  strokeWidth={2}
+                  dot={false}
+                  name={`${key} - gm`}
+                  connectNulls={false}
+                  hide={hiddenLines.has(`${key}_gm`)}
+                />
+              );
+            })}
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    );
+  };
 
   export default AnalysisResultsDisplay;
