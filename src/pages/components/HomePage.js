@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+// HomePage.js
+import React, { useState, useMemo } from 'react';
 import {
   ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download,
   CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText
@@ -9,7 +10,6 @@ import FormulaCodeInspector from './FormulaCodeInspector';
 // 설정 파일에서 import
 import {
   GITHUB_CONFIG,
-  loadFolderStructure, // loadFolderStructure 함수 import
   getFilesFromPath,
   searchFiles,
   detectFileType,
@@ -42,22 +42,19 @@ const FileTreeItem = ({ item, level = 0, onSelectFolder, selectedFolder }) => {
           className={`flex items-center cursor-pointer py-1 px-2 rounded hover:bg-gray-100 ${selectedFolder === item.path ? 'bg-blue-100 text-blue-800' : ''}`}
           style={indentStyle}
           onClick={handleFolderClick}
-          onMouseEnter={() => item.description && setShowTooltip(true)} // 마우스 진입 시 툴팁 표시 (설명이 있을 경우만)
-          onMouseLeave={() => setShowTooltip(false)} // 마우스 이탈 시 툴팁 숨김
+          onMouseEnter={() => item.description && setShowTooltip(true)} // 설명이 있을 때만 툴팁 표시
+          onMouseLeave={() => setShowTooltip(false)}
         >
           {isOpen ? <FolderOpen className="w-4 h-4 mr-2 text-blue-600" /> : <Folder className="w-4 h-4 mr-2 text-gray-500" />}
           <span className="font-medium text-sm">{item.name}</span>
         </div>
       )}
 
-      {/* 폴더 설명 툴팁 (마우스 오버 시 표시) */}
+      {/* 폴더 설명 툴팁 */}
       {isFolder && item.description && showTooltip && (
         <div
-          // pointer-events-none: 이 요소가 마우스 이벤트를 받지 않도록 하여 뒤에 있는 요소에 이벤트가 전달되게 함
-          className="absolute z-10 bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg pointer-events-none"
-          style={{ left: `calc(100% + 10px)`, top: '50%', transform: 'translateY(-50%)', whiteSpace: 'pre-wrap', minWidth: '150px' }}
-          // left를 100% + 10px로 하여 폴더 이름 오른쪽으로 10px 떨어뜨림.
-          // minWidth를 줘서 내용이 짧아도 일정한 크기 유지
+          className="absolute z-10 bg-gray-800 text-white text-xs p-2 rounded-md shadow-lg"
+          style={{ left: `${level * 20 + 200}px`, top: '50%', transform: 'translateY(-50%)', whiteSpace: 'pre-wrap' }}
         >
           {item.description}
         </div>
@@ -113,35 +110,15 @@ const EnhancedFileUploadSection = ({
   const [searchTerm, setSearchTerm] = useState('');
   const [showGlobalResults, setShowGlobalResults] = useState(false);
 
-  // 폴더 트리 데이터 및 로딩 상태 관리
-  const [folderTreeData, setFolderTreeData] = useState([]);
-  const [isLoadingTree, setIsLoadingTree] = useState(true);
+  const folderTreeData = useMemo(() => getFolderTree(), []);
 
-  // 컴포넌트 마운트 시 폴더 구조 데이터 로드
-  useEffect(() => {
-    const fetchFolderData = async () => {
-      setIsLoadingTree(true);
-      await loadFolderStructure(); // fileConfig에서 데이터 로드
-      setFolderTreeData(getFolderTree()); // 로드된 데이터를 기반으로 트리 구조 생성
-      setIsLoadingTree(false);
-    };
-    fetchFolderData();
-  }, []); // 빈 배열 의존성으로 컴포넌트 마운트 시 한 번만 실행
-
-
-  // 현재 선택된 폴더의 파일 목록을 가져옴 (검색어 필터링 없이)
-  // 이 목록이 하단 파일 목록 UI의 기본 소스가 됩니다.
   const currentFolderFiles = useMemo(() => {
-    if (isLoadingTree) return []; // 트리가 로딩 중이면 빈 배열 반환
     return getFilesFromPath(selectedFolder) || [];
-  }, [selectedFolder, isLoadingTree]); // isLoadingTree 의존성 추가
+  }, [selectedFolder]);
 
-  // 🔍 검색 필터링된 파일 목록 계산
-  // 이 filteredFiles는 currentFolderFiles에 검색어를 적용한 결과입니다.
   const filteredFiles = useMemo(() => {
-    if (isLoadingTree) return []; // 트리가 로딩 중이면 빈 배열 반환
     if (!searchTerm.trim()) {
-      return currentFolderFiles; // 검색어가 없으면 현재 폴더의 모든 파일 반환
+      return currentFolderFiles;
     }
 
     const searchLower = searchTerm.toLowerCase().trim();
@@ -155,16 +132,13 @@ const EnhancedFileUploadSection = ({
             sampleName.includes(searchLower) ||
             fileType.includes(searchLower);
     });
-  }, [currentFolderFiles, searchTerm, isLoadingTree]); // isLoadingTree 의존성 추가
+  }, [currentFolderFiles, searchTerm]);
 
-  // 전역 검색 결과도 함께 표시
   const globalSearchResults = useMemo(() => {
-    if (isLoadingTree) return []; // 트리가 로딩 중이면 빈 배열 반환
     if (!searchTerm.trim()) return [];
     return searchFiles(searchTerm);
-  }, [searchTerm, isLoadingTree]); // isLoadingTree 의존성 추가
+  }, [searchTerm]);
 
-  // GitHub에서 파일 다운로드
   const loadFileFromGitHub = async (filename, folder) => {
     const folderPath = folder.split('/').map(part => encodeURIComponent(part)).join('/');
     const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/excel/${folderPath}/${encodeURIComponent(filename)}`;
@@ -194,15 +168,10 @@ const EnhancedFileUploadSection = ({
     return fileInfo;
   };
 
-  // 선택된 파일들 불러오기 (메인 기능)
   const loadSelectedFiles = async () => {
     if (selectedFiles.size === 0) {
       alert('불러올 파일을 선택해주세요.');
       return;
-    }
-    if (isLoadingTree) { // 트리가 로딩 중이면 파일 로드 방지
-        alert('폴더 구조를 불러오는 중입니다. 잠시 후 다시 시도해주세요.');
-        return;
     }
 
     setIsLoading(true);
@@ -231,7 +200,6 @@ const EnhancedFileUploadSection = ({
     }
   };
 
-  // 파일 선택 토글
   const toggleFileSelection = (filename) => {
     setSelectedFiles(prev => {
       const newSet = new Set(prev);
@@ -244,7 +212,6 @@ const EnhancedFileUploadSection = ({
     });
   };
 
-  // 전체 선택/해제
   const toggleSelectAll = () => {
     if (selectedFiles.size === filteredFiles.length && filteredFiles.length > 0) {
       setSelectedFiles(new Set());
@@ -253,7 +220,6 @@ const EnhancedFileUploadSection = ({
     }
   };
 
-  // 폴더 변경 시 선택 초기화
   const handleFolderChange = (folder) => {
     setSelectedFolder(folder);
     setSelectedFiles(new Set());
@@ -331,18 +297,13 @@ const EnhancedFileUploadSection = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               폴더 선택:
             </label>
-            {isLoadingTree ? ( // 로딩 중일 때 로딩 스피너 표시
-              <div className="text-center py-8 text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-500 mx-auto mb-2"></div>
-                폴더 구조를 불러오는 중...
-              </div>
-            ) : (
-              <FileTree
-                folderStructure={folderTreeData} // 로드된 데이터 사용
-                onSelectFolder={handleFolderChange}
-                selectedFolder={selectedFolder}
-              />
-            )}
+            <FileTree
+              folderStructure={folderTreeData}
+              onSelectFolder={handleFolderChange}
+              selectedFiles={selectedFiles}
+              toggleFileSelection={toggleFileSelection}
+              selectedFolder={selectedFolder}
+            />
           </div>
 
           {/* 🔍 검색창 추가 */}
@@ -578,7 +539,7 @@ const HomePage = ({
             메인 홈으로
           </button>
         </div>
-
+        
         <div className="text-center mb-12">
           <h1 className="text-5xl font-bold text-gray-800 mb-4">
             TFT Electrical Characterization Analyzer
@@ -624,7 +585,7 @@ const HomePage = ({
                 <p><strong>품질 평가:</strong> 데이터 완성도와 신뢰도 자동 평가</p>
               </div>
             </div>
-
+            
             <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
               <h4 className="font-semibold text-yellow-800 mb-2">📁 파일명 규칙</h4>
               <div className="text-sm text-yellow-700 space-y-1">
@@ -635,7 +596,7 @@ const HomePage = ({
                 <p className="text-xs text-yellow-600 mt-2">💡 같은 샘플명의 파일들이 하나로 통합 분석됩니다</p>
               </div>
             </div>
-
+            
             <button
               onClick={() => setShowParamInput(!showParamInput)}
               className="w-full mt-6 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center"
@@ -660,7 +621,7 @@ const HomePage = ({
             <FormulaCodeInspector />
           </div>
         )}
-
+        
         {/* 통합 분석 시작 버튼 */}
         {uploadedFiles.length > 0 && (
           <div className="text-center">
