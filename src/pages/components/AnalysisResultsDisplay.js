@@ -3,8 +3,6 @@ import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarCha
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import SSRangeEditor from './SSRangeEditor';
 import { evaluateSSQuality, calculateDit } from '../parameters/index.js';
-import { Settings, ArrowUpDown } from 'lucide-react';
-import VthSettingsModal from './VthSettingsModal';
 
 const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue, showLogScale, formatLinearCurrent }) => {
   if (active && payload && payload.length) {
@@ -106,14 +104,6 @@ const AnalysisResultsDisplay = ({
     chartData: null,
     currentSS: null
   });
-
-  const [showVthSettings, setShowVthSettings] = useState(false);
-  const [vthMethod, setVthMethod] = useState('linear_extrapolation_linear');
-
-  const handleVthMethodChange = (options) => {
-    setVthMethod(options.method);
-    console.log('Vth 방법 변경:', options);
-  };
 
   // SS 수정기 열기 함수
   const openSSEditor = (sampleName, measurementType, chartData, currentSS) => {
@@ -233,16 +223,8 @@ const handleSSUpdate = async (result) => {
           <h1 className="text-3xl font-bold text-gray-800">TFT 완벽 통합 분석 결과</h1>
 
           <div className="flex items-center space-x-4">
-          {/* 고급스러운 정렬 토글 버튼 */}
+          {/* 정렬 토글 버튼 */}
             <div className="relative flex items-center space-x-2">
-              <button
-                onClick={() => setShowVthSettings(true)}
-                className="flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-100 to-blue-200 text-blue-700 rounded-xl hover:from-blue-200 hover:to-blue-300 transition-all duration-300 font-medium shadow-lg hover:shadow-xl"
-                title="Vth 계산 방법 설정"
-              >
-                <Settings className="w-4 h-4" />
-                <span>Vth 설정</span>
-              </button>
               <button
                 onClick={() => setSortByValue(!sortByValue)}
                 className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
@@ -354,14 +336,6 @@ const handleSSUpdate = async (result) => {
           currentSS={ssEditorState.currentSS}
           sampleName={ssEditorState.currentSample}
           onApplyResult={handleSSUpdate}
-        />
-
-        {/* Vth 설정 모달 - 메인 컴포넌트 안에 추가 */}
-        <VthSettingsModal
-          isOpen={showVthSettings}
-          onClose={() => setShowVthSettings(false)}
-          currentMethod={vthMethod}
-          onMethodChange={handleVthMethodChange}
         />
       </div>
     </div>
