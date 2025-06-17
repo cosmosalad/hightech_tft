@@ -779,7 +779,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
     <span className={`text-sm font-medium transition-colors duration-300 ${
       !showLogScale ? 'text-gray-900' : 'text-gray-400'
     }`}>
-      로그값
+      실제값
     </span>
 
     <button
@@ -795,9 +795,9 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
       >
         <div className="flex items-center justify-center h-full">
           {showLogScale ? (
-            <span className="text-xs text-blue-600 font-bold">lin</span>
+            <span className="text-xs text-blue-600 font-bold">log</span>
           ) : (
-            <span className="text-xs text-gray-600 font-bold">log</span>
+            <span className="text-xs text-gray-600 font-bold">lin</span>
           )}
         </div>
       </span>
@@ -806,7 +806,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
     <span className={`text-sm font-medium transition-colors duration-300 ${
       showLogScale ? 'text-gray-900' : 'text-gray-400'
     }`}>
-      실제값
+      로그값
     </span>
   </div>
 

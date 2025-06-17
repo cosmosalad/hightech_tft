@@ -18,28 +18,28 @@ export const FOLDER_FILES = {
   '공통': [
     '0614_IDVG_Lin_0sccm_300.xls',
     '0614_IDVG_Lin_0sccm_350.xls',
-    '0614_IDVG_Lin_1sccm_0.xls',
-    '0614_IDVG_Lin_1sccm_50.xls',
+    '0614_IDVG_Lin_1sccm_000.xls',
+    '0614_IDVG_Lin_1sccm_050.xls',
     '0614_IDVG_Lin_1sccm_100.xls',
     '0614_IDVG_Lin_1sccm_150.xls',
     '0614_IDVG_Lin_1sccm_200.xls',
     '0614_IDVG_Lin_1sccm_300.xls',
-    '0616_IDVD_1sccm_0.xls',
+    '0616_IDVD_1sccm_000.xls',
     '0616_IDVD_1sccm_100.xls',
     '0616_IDVD_1sccm_200.xls',
     '0616_IDVD_1sccm_300.xls',
-    '0616_IDVG_Lin_1sccm_0.xls',
+    '0616_IDVG_Lin_1sccm_000.xls',
     '0616_IDVG_Lin_1sccm_100.xls',
     '0616_IDVG_Lin_1sccm_200.xls',
     '0616_IDVG_Lin_1sccm_300.xls',
-    '0616_IDVG_Lin_Hys_1sccm_0.xls',
+    '0616_IDVG_Lin_Hys_1sccm_000.xls',
     '0616_IDVG_Lin_Hys_1sccm_100.xls',
     '0616_IDVG_Lin_Hys_1sccm_200.xls',
     '0616_IDVG_Lin_Hys_1sccm_300.xls',
-    '0616_IDVG_Sat_1sccm_anneal0.xls',
-    '0616_IDVG_Sat_1sccm_anneal100.xls',
-    '0616_IDVG_Sat_1sccm_anneal200.xls',
-    '0616_IDVG_Sat_1sccm_anneal300.xls'
+    '0616_IDVG_Sat_1sccm_000.xls',
+    '0616_IDVG_Sat_1sccm_100.xls',
+    '0616_IDVG_Sat_1sccm_200.xls',
+    '0616_IDVG_Sat_1sccm_300.xls'
   ],
   '1조': [
   ],
@@ -74,77 +74,35 @@ export const detectFileType = (filename) => {
   return 'Unknown';
 };
 
-// 샘플명 자동 생성 함수 - 파일 타입 패턴 이후 부분을 샘플명으로 추출
+// 샘플명 자동 생성 함수 - 파일명에서 타입 키워드를 제거하여 샘플명 생성
 export const generateSampleName = (filename) => {
-  const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
-  const nameLower = nameWithoutExt.toLowerCase();
+  // 1. 파일명에서 확장자를 제거합니다.
+  let sampleName = filename.replace(/\.[^/.]+$/, "");
   
-  // 파일 타입별 패턴 정의 (우선순위 순서: 더 구체적인 것부터)
-  const patterns = [
-    {
-      // IDVG-Hysteresis: IDVG + Linear + Hys 모두 포함
-      type: 'IDVG-Hysteresis',
-      keywords: ['idvg', 'linear', 'hys'],
-      regex: /^(.+?)_idvg.*?linear.*?hys_(.+)$/i
-    },
-    {
-      // IDVG-Linear: IDVG + (Linear 또는 Lin) 포함 (Hys 제외)
-      type: 'IDVG-Linear', 
-      keywords: ['idvg', 'linear'],
-      regex: /^(.+?)_idvg.*?(?:linear|lin)_(.+)$/i,
-      exclude: ['hys']
-    },
-    {
-      // IDVG-Saturation: IDVG + Sat 포함
-      type: 'IDVG-Saturation',
-      keywords: ['idvg', 'sat'],
-      regex: /^(.+?)_idvg.*?sat.*?_(.+)$/i
-    },
-    {
-      // IDVD: IDVD 포함
-      type: 'IDVD',
-      keywords: ['idvd'],
-      regex: /^(.+?)_idvd_(.+)$/i
-    }
+  // 2. 제거할 측정 타입 관련 키워드 목록을 정의합니다.
+  const keywords = [
+    'IDVG', 'Linear', 'Lin', 
+    'Saturation', 'Sat', 
+    'Hysteresis', 'Hys', 
+    'IDVD'
   ];
+
+  // 3. 각 키워드를 파일명에서 찾아 제거합니다.
+  //    대소문자 구분을 하지 않고, 키워드 앞이나 뒤의 언더스코어(_)를 포함하여 처리합니다.
+  //    예: "0616_IDVG_Lin_1sccm_100" -> "0616__1sccm_100"
+  keywords.forEach(keyword => {
+    const regex = new RegExp(`_?${keyword}_?`, 'ig');
+    sampleName = sampleName.replace(regex, '_');
+  });
   
-  // 각 패턴을 순서대로 확인
-  for (const pattern of patterns) {
-    // 필수 키워드가 모두 포함되어 있는지 확인
-    const hasAllKeywords = pattern.keywords.every(keyword => 
-      nameLower.includes(keyword)
-    );
-    
-    // 제외 키워드가 있는지 확인
-    const hasExcludeKeywords = pattern.exclude ? 
-      pattern.exclude.some(keyword => nameLower.includes(keyword)) : false;
-    
-    if (hasAllKeywords && !hasExcludeKeywords) {
-      // 정규식으로 샘플명 추출 시도
-      const match = nameWithoutExt.match(pattern.regex);
-      if (match && match[2]) {
-        return match[2]; // 샘플명 부분 반환
-      }
-      
-      // 정규식 매치 실패 시 키워드 기반 추출
-      const parts = nameWithoutExt.split('_');
-      const lastKeywordIndex = Math.max(
-        ...pattern.keywords.map(keyword => {
-          const index = parts.findIndex(part => 
-            part.toLowerCase().includes(keyword)
-          );
-          return index;
-        })
-      );
-      
-      if (lastKeywordIndex >= 0 && lastKeywordIndex < parts.length - 1) {
-        return parts.slice(lastKeywordIndex + 1).join('_');
-      }
-    }
-  }
+  // 4. 키워드 제거 후 발생할 수 있는 연속된 언더스코어("__")를 하나로 합칩니다.
+  //    예: "0616__1sccm_100" -> "0616_1sccm_100"
+  sampleName = sampleName.replace(/__+/g, '_');
   
-  // 패턴 매치 실패 시 전체 파일명 반환
-  return nameWithoutExt;
+  // 5. 파일명의 시작이나 끝에 언더스코어가 남았다면 제거합니다.
+  sampleName = sampleName.replace(/^_|_$/g, '');
+
+  return sampleName;
 };
 
 // 파일 타입별 아이콘

@@ -377,7 +377,7 @@ const VthSettingsModal = ({ isOpen, onClose, currentMethod, onMethodChange }) =>
                     <div className="text-sm text-yellow-800">
                       <p className="font-medium mb-1">권장사항:</p>
                       <ul className="list-disc list-inside space-y-1">
-                        <li>연구/개발: <strong>Constant Current Method</strong> (가장 정확)</li>
+                        <li>연구/개발: <strong>Constant Current Method</strong></li>
                         <li>기존 방법 유지: <strong>Linear Extrapolation</strong></li>
                         <li>물리적 분석: <strong>Subthreshold Extrapolation</strong></li>
                       </ul>
