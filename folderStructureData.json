@@ -1,0 +1,114 @@
+{
+  "2023sample": {
+    "type": "folder",
+    "description": "sample",
+    "files": [
+      "0711_TFT_IDVD_IZO25nm.xls",
+      "0711_TFT_IDVG_Linear_Hys_IZO25nm.xls",
+      "0711_TFT_IDVG_Linear_IZO25nm.xls",
+      "0711_TFT_IDVG_Sat_IZO25nm.xls"
+    ]
+  },
+  "공통": {
+    "type": "folder",
+    "children": {
+      "0613": {
+        "type": "folder",
+        "description": "사용자: 사용자들\nPressure: 7mTorr\nPower: 70W\nsputtering time: 8m15s\nMesured\nTHickness: 28nm",
+        "files": [
+          "0614_IDVG_Lin_0sccm_300.xls",
+          "0614_IDVG_Lin_0sccm_350.xls"
+        ]
+      },
+      "0614": {
+        "type": "folder",
+        "description": "사용자: 담당자들\nPressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 38nm",
+        "files": [
+          "0614_IDVG_Lin_0sccm_300.xls",
+          "0614_IDVG_Lin_0sccm_350.xls",
+          "0614_IDVG_Lin_1sccm_000.xls",
+          "0614_IDVG_Lin_1sccm_050.xls",
+          "0614_IDVG_Lin_1sccm_100.xls",
+          "0614_IDVG_Lin_1sccm_150.xls",
+          "0614_IDVG_Lin_1sccm_200.xls",
+          "0614_IDVG_Lin_1sccm_300.xls"
+        ]
+      },
+      "0616": {
+        "type": "folder",
+        "description": "사용자: 담당자들\nPressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 36nm",
+        "files": [
+          "0616_IDVD_1sccm_000.xls",
+          "0616_IDVD_1sccm_100.xls",
+          "0616_IDVD_1sccm_200.xls",
+          "0616_IDVD_1sccm_300.xls",
+          "0616_IDVG_Lin_1sccm_000.xls",
+          "0616_IDVG_Lin_1sccm_100.xls",
+          "0616_IDVG_Lin_1sccm_200.xls",
+          "0616_IDVG_Lin_1sccm_300.xls",
+          "0616_IDVG_Lin_Hys_1sccm_000.xls",
+          "0616_IDVG_Lin_Hys_1sccm_100.xls",
+          "0616_IDVG_Lin_Hys_1sccm_200.xls",
+          "0616_IDVG_Lin_Hys_1sccm_300.xls",
+          "0616_IDVG_Sat_1sccm_000.xls",
+          "0616_IDVG_Sat_1sccm_100.xls",
+          "0616_IDVG_Sat_1sccm_200.xls",
+          "0616_IDVG_Sat_1sccm_300.xls"
+        ]
+      }
+    }
+  },
+  "1team": {
+    "type": "folder",
+    "description": "1팀 프로젝트 폴더 (설명 없음)",
+    "children": {
+      "IDVG": {
+        "type": "folder",
+        "files": []
+      },
+      "IDVD": {
+        "type": "folder",
+        "files": []
+      }
+    }
+  },
+  "2team": {
+    "type": "folder",
+    "children": {
+      "linear": {
+        "type": "folder",
+        "files": []
+      },
+      "saturation": {
+        "type": "folder",
+        "files": []
+      }
+    }
+  },
+  "3team": {
+    "type": "folder",
+    "children": {
+      "linear": {
+        "type": "folder",
+        "files": []
+      },
+      "saturation": {
+        "type": "folder",
+        "files": []
+      }
+    }
+  },
+  "4team": {
+    "type": "folder",
+    "children": {
+      "linear": {
+        "type": "folder",
+        "files": []
+      },
+      "saturation": {
+        "type": "folder",
+        "files": []
+      }
+    }
+  }
+}
