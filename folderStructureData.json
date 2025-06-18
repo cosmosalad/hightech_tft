@@ -14,7 +14,7 @@
     "children": {
       "0613": {
         "type": "folder",
-        "description": "Pressure: 7mTorr\nPower: 70W\nsputtering time: 8m15s\nMesured\nTHickness: 28nm",
+        "description": "\nPressure: 7mTorr\nPower: 70W",
         "files": [
           "0614_IDVG_Lin_0sccm_300.xls",
           "0614_IDVG_Lin_0sccm_350.xls"
@@ -22,7 +22,7 @@
       },
       "0614": {
         "type": "folder",
-        "description": "Pressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 38nm",
+        "description": "\nPressure: 5mTorr\nPower: 100W",
         "files": [
           "0614_IDVG_Lin_0sccm_300.xls",
           "0614_IDVG_Lin_0sccm_350.xls",
@@ -36,7 +36,7 @@
       },
       "0616": {
         "type": "folder",
-        "description": "Pressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 36nm",
+        "description": "\nPressure: 5mTorr\nPower: 100W",
         "files": [
           "0616_IDVD_1sccm_000.xls",
           "0616_IDVD_1sccm_100.xls",
@@ -60,10 +60,83 @@
   },
   "1team": {
     "type": "folder",
+    "description": "1팀 프로젝트 폴더",
     "children": {
-      "folder": {
+      "0618": {
         "type": "folder",
-        "files": []
+        "description": "\nPressure: 7mTorr\nPower: 70W",
+        "children": {
+          "1sccm": {
+            "type": "folder",
+            "children": {
+              "after_annealing": {
+                "type": "folder",
+                "files": []
+              },
+              "before_annealing": {
+                "type": "folder",
+                "files": [
+                  "T1_IDVG_Sat_1cc_000_1.xls",
+                  "T1_IDVG_Sat_1cc_000_2.xls",
+                  "T1_IDVG_Sat_1cc_000_3.xls",
+                  "T1_IDVD_1cc_000_1.xls",
+                  "T1_IDVD_1cc_000_2.xls",
+                  "T1_IDVD_1cc_000_3.xls",
+                  "T1_IDVG_Lin_1cc_000_1.xls",
+                  "T1_IDVG_Lin_1cc_000_2.xls",
+                  "T1_IDVG_Lin_1cc_000_3.xls",
+                  "T1_IDVG_Lin_Hys_1cc_000_1.xls",
+                  "T1_IDVG_Lin_Hys_1cc_000_2.xls",
+                  "T1_IDVG_Lin_Hys_1cc_000_3.xls"
+                ]
+              }
+            }
+          },
+          "2sccm": {
+            "type": "folder",
+            "children": {
+              "after_annealing": {
+                "type": "folder",
+                "files": []
+              },
+              "before_annealing": {
+                "type": "folder",
+                "files": [
+                  "T1_IDVG_Lin_Hys_2cc_000_2.xls",
+                  "T1_IDVG_Lin_Hys_2cc_000_3.xls",
+                  "T1_IDVG_Sat_2cc_000_1.xls",
+                  "T1_IDVG_Sat_2cc_000_2.xls",
+                  "T1_IDVG_Sat_2cc_000_3.xls",
+                  "T1_IDVD_2cc_000_1.xls",
+                  "T1_IDVD_2cc_000_2.xls",
+                  "T1_IDVD_2cc_000_3.xls",
+                  "T1_IDVG_Lin_2cc_000_1.xls",
+                  "T1_IDVG_Lin_2cc_000_2.xls",
+                  "T1_IDVG_Lin_2cc_000_3.xls",
+                  "T1_IDVG_Lin_Hys_2cc_000_1.xls"
+                ]
+              }
+            }
+          },
+          "3sccm": {
+            "type": "folder",
+            "children": {
+              "after_annealing": {
+                "type": "folder",
+                "files": []
+              },
+              "before_annealing": {
+                "type": "folder",
+                "files": [
+                  "T1_IDVG_Sat_3cc_000_2.xls",
+                  "T1_IDVD_3cc_000_2.xls",
+                  "T1_IDVG_Lin_3cc_000_2.xls",
+                  "T1_IDVG_Lin_Hys_3cc_000_2.xls"
+                ]
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -73,13 +146,21 @@
       "linear": {
         "type": "folder",
         "files": []
+      },
+      "saturation": {
+        "type": "folder",
+        "files": []
       }
     }
   },
   "3team": {
     "type": "folder",
     "children": {
-      "folder": {
+      "linear": {
+        "type": "folder",
+        "files": []
+      },
+      "saturation": {
         "type": "folder",
         "files": []
       }
@@ -88,7 +169,11 @@
   "4team": {
     "type": "folder",
     "children": {
-      "folder": {
+      "linear": {
+        "type": "folder",
+        "files": []
+      },
+      "saturation": {
         "type": "folder",
         "files": []
       }
