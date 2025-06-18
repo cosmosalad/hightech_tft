@@ -14,7 +14,7 @@
     "children": {
       "0613": {
         "type": "folder",
-        "description": "\nPressure: 7mTorr\nPower: 70W",
+        "description": "Pressure: 7mTorr\nPower: 70W\nsputtering time: 8m15s\nMesured\nTHickness: 28nm",
         "files": [
           "0614_IDVG_Lin_0sccm_300.xls",
           "0614_IDVG_Lin_0sccm_350.xls"
@@ -22,7 +22,7 @@
       },
       "0614": {
         "type": "folder",
-        "description": "\nPressure: 5mTorr\nPower: 100W",
+        "description": "Pressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 38nm",
         "files": [
           "0614_IDVG_Lin_0sccm_300.xls",
           "0614_IDVG_Lin_0sccm_350.xls",
@@ -36,7 +36,7 @@
       },
       "0616": {
         "type": "folder",
-        "description": "\nPressure: 5mTorr\nPower: 100W",
+        "description": "Pressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 36nm",
         "files": [
           "0616_IDVD_1sccm_000.xls",
           "0616_IDVD_1sccm_100.xls",
@@ -60,11 +60,11 @@
   },
   "1team": {
     "type": "folder",
-    "description": "1팀 프로젝트 폴더",
+    "description": "1팀 프로젝트 폴더 (설명 없음)",
     "children": {
       "0618": {
         "type": "folder",
-        "description": "\nPressure: 7mTorr\nPower: 70W",
+        "description": null,
         "children": {
           "1sccm": {
             "type": "folder",
@@ -131,7 +131,15 @@
                   "T1_IDVG_Sat_3cc_000_2.xls",
                   "T1_IDVD_3cc_000_2.xls",
                   "T1_IDVG_Lin_3cc_000_2.xls",
-                  "T1_IDVG_Lin_Hys_3cc_000_2.xls"
+                  "T1_IDVG_Lin_Hys_3cc_000_2.xls",
+                  "T1_IDVD_3cc_000_1.xls",
+                  "T1_IDVD_3cc_000_3.xls",
+                  "T1_IDVG_Lin_3cc_000_1.xls",
+                  "T1_IDVG_Lin_3cc_000_3.xls",
+                  "T1_IDVG_Lin_Hys_3cc_000_1.xls",
+                  "T1_IDVG_Lin_Hys_3cc_000_3.xls",
+                  "T1_IDVG_Sat_3cc_000_1.xls",
+                  "T1_IDVG_Sat_3cc_000_3.xls"
                 ]
               }
             }
