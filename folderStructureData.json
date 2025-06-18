@@ -16,16 +16,14 @@
         "type": "folder",
         "description": "Pressure: 7mTorr\nPower: 70W\nsputtering time: 8m15s\nMesured\nTHickness: 28nm",
         "files": [
-          "0614_IDVG_Lin_0sccm_300.xls",
-          "0614_IDVG_Lin_0sccm_350.xls"
+          "0613_IDVG_Lin_0sccm_300.xls",
+          "0613_IDVG_Lin_0sccm_350.xls"
         ]
       },
       "0614": {
         "type": "folder",
         "description": "Pressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMesured\nTHickness: 38nm",
         "files": [
-          "0614_IDVG_Lin_0sccm_300.xls",
-          "0614_IDVG_Lin_0sccm_350.xls",
           "0614_IDVG_Lin_1sccm_000.xls",
           "0614_IDVG_Lin_1sccm_050.xls",
           "0614_IDVG_Lin_1sccm_100.xls",
