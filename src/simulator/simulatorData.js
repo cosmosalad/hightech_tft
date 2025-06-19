@@ -46,18 +46,18 @@ export const getParameterFields = (equipment) => {
       return [
         { key: 'power', label: 'RF 파워 (W)', min: 50, max: 500, default: 150, unit: 'W' },
         { key: 'pressure', label: '압력 (mTorr)', min: 1, max: 20, default: 5, unit: 'mTorr', step: 0.1 },
-        { key: 'temperature', label: '온도 (°C)', min: 25, max: 300, default: 100, unit: '°C' },
         { key: 'time', label: '시간 (분)', min: 5, max: 120, default: 30, unit: 'min' },
         { key: 'material', label: '타겟 재료', type: 'select', options: ['IZO', 'ITO', 'AZO'], default: 'IZO' },
+        // ### 마스크 선택 옵션 삭제 ###
         { key: 'targetThickness', label: '목표 두께 (nm)', min: 10, max: 100, default: 30, unit: 'nm' }
       ];
     case 'evaporation':
       return [
         { key: 'power', label: 'E-beam 파워 (kW)', min: 1, max: 10, default: 3, unit: 'kW', step: 0.1 },
         { key: 'pressure', label: '진공도 (Torr)', min: 1e-7, max: 1e-5, default: 1e-6, unit: 'Torr', step: 1e-7 },
-        { key: 'temperature', label: '온도 (°C)', min: 25, max: 100, default: 25, unit: '°C' },
-        { key: 'rate', label: '증착 속도 (Å/s)', min: 0.5, max: 10, default: 2, unit: 'Å/s', step: 0.1 },
+        { key: 'time', label: '시간 (분)', min: 5, max: 60, default: 20, unit: 'min'},
         { key: 'material', label: '재료', type: 'select', options: ['Al', 'Au', 'Ti', 'Cr'], default: 'Al' },
+        // ### 마스크 선택 옵션 삭제 ###
         { key: 'targetThickness', label: '목표 두께 (nm)', min: 50, max: 500, default: 100, unit: 'nm' }
       ];
     default:

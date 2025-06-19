@@ -4,7 +4,7 @@ import { Play, Pause, RotateCcw, Settings, Eye, Download, BarChart3, Zap, Thermo
 const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
-  const [speed, setSpeed] = useState(1);
+  const [speed, setSpeed] = useState(2);
   const [animationPhase, setAnimationPhase] = useState(0);
   const [layerThickness, setLayerThickness] = useState([]);
   const [currentParams, setCurrentParams] = useState({});
@@ -70,46 +70,145 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
   const currentEquipment = selectedEquipments[currentStep];
   const currentRecipe = recipes[currentStep] || {};
 
-  const CrossSectionView = () => (
-    <div className="absolute bottom-4 right-4 w-52 h-36 bg-white/95 rounded-lg border-2 border-gray-300 shadow-lg z-10">
-      <div className="text-xs font-bold text-center py-1 bg-gray-100 rounded-t-lg">실시간 단면도</div>
-      <div className="relative p-4 h-28">
-        <div className="absolute bottom-0 left-4 right-4 h-8 bg-gray-600 rounded-b flex items-center justify-center"><span className="text-xs text-white font-bold">Si 기판</span></div>
-        {selectedEquipments.map((equipment, index) => {
-          const thickness = layerThickness[index] || 0;
-          if (thickness === 0) return null;
-          const previousThickness = selectedEquipments.slice(0, index).reduce((total, _, prevIndex) => total + Math.max(2, (layerThickness[prevIndex] || 0) / 10), 0);
-          let layerHeight, layerColor, layerName, layerWidth = '100%', layerLeft = '0%';
-          switch (equipment.id) {
-            case 'oxidation': layerHeight = Math.max(2, thickness / 10); layerColor = 'bg-blue-400'; layerName = 'SiO₂'; break;
-            case 'sputtering': layerHeight = Math.max(2, thickness / 8); layerColor = 'bg-purple-400'; layerName = recipes[index]?.material || 'IZO'; layerWidth = '40%'; layerLeft = '30%'; break;
-            case 'evaporation':
-              layerHeight = Math.max(2, thickness / 6); layerColor = 'bg-gray-400';
-              return (<React.Fragment key={`layer-${index}`}>
-                  <div className={`absolute ${layerColor} transition-all duration-500 flex items-center justify-center text-xs text-white font-bold`} style={{ left: '16px', width: '32px', bottom: `${32 + previousThickness}px`, height: `${layerHeight}px` }}>{layerHeight > 6 && 'S'}</div>
-                  <div className={`absolute ${layerColor} transition-all duration-500 flex items-center justify-center text-xs text-white font-bold`} style={{ right: '16px', width: '32px', bottom: `${32 + previousThickness}px`, height: `${layerHeight}px` }}>{layerHeight > 6 && 'D'}</div>
-              </React.Fragment>);
-            default: layerHeight = Math.max(2, thickness / 10); layerColor = 'bg-gray-400'; layerName = '기타';
-          }
-          return (<div key={`layer-${index}`} className={`absolute ${layerColor} transition-all duration-500 flex items-center justify-center text-xs text-white font-bold`} style={{ left: layerLeft, width: layerWidth, bottom: `${32 + previousThickness}px`, height: `${layerHeight}px` }}>{layerHeight > 6 && layerName}</div>);
-        })}
-        <div className="absolute right-1 bottom-0 text-xs space-y-1 flex flex-col justify-end h-full pb-2">
+  // ### CrossSectionView 수정 ###
+  const CrossSectionView = () => {
+    const scale = 1.4;
+    const substrateHeight = 32;
+
+    const visualHeights = recipes.map(recipe => (recipe.targetThickness || 50) * 0.2);
+    const cumulativeHeights = visualHeights.reduce((acc, height, i) => {
+      acc.push((acc[i-1] || 0) + height);
+      return acc;
+    }, []);
+
+    const fillingStyle = (color, thickness) => ({
+      background: `linear-gradient(to top, ${color} ${thickness}%, transparent ${thickness}%)`
+    });
+
+    return (
+      <div 
+        className="absolute bottom-4 right-4 w-52 h-36 bg-white/95 rounded-lg border-2 border-gray-300 shadow-lg z-10"
+        style={{
+          transform: `scale(${scale})`,
+          transformOrigin: 'bottom right'
+        }}
+      >
+        <div className="text-xs font-bold text-center py-1 bg-gray-100 rounded-t-lg">실시간 단면도</div>
+        <div className="relative p-4 h-28">
+          <div className="absolute bottom-0 left-4 right-4 flex items-center justify-center bg-gray-600 rounded-b" style={{ height: `${substrateHeight}px` }}>
+            <span className="text-xs text-white font-bold">Si 기판</span>
+          </div>
+          
           {selectedEquipments.map((equipment, index) => {
-            if ((layerThickness[index] || 0) === 0) return null;
-            let layerName, layerColor;
+            const thickness = layerThickness[index] || 0;
+            if (thickness === 0) return null;
+
+            const maxLayerHeight = visualHeights[index];
+            const bottomBase = substrateHeight + (cumulativeHeights[index-1] || 0);
+            
+            const recipe = recipes[index] || {};
+            let layerColor, layerName;
+            
             switch (equipment.id) {
-              case 'oxidation': layerName = 'SiO₂'; layerColor = 'text-blue-600'; break;
-              case 'sputtering': layerName = recipes[index]?.material || 'IZO'; layerColor = 'text-purple-600'; break;
-              case 'evaporation': layerName = `${recipes[index]?.material || 'Al'} (S/D)`; layerColor = 'text-gray-600'; break;
-              default: layerName = '기타'; layerColor = 'text-gray-600';
-            }
-            return (<div key={`label-${index}`} className={`${layerColor} text-right text-xs`}>{layerName}</div>);
-          })}
-          <div className="text-gray-800 text-right">Si</div>
-        </div>
+              case 'oxidation':
+                layerColor = '#60a5fa'; layerName = 'SiO₂';
+                return (
+                  <div key={`layer-${index}`} className="absolute" style={{ left: '1rem', right: '1rem', bottom: `${bottomBase}px`, height: `${maxLayerHeight}px`, ...fillingStyle(layerColor, thickness) }}>
+                    <div className="w-full h-full flex items-center justify-center text-xs text-white font-bold">{thickness > 50 && layerName}</div>
+                  </div>
+                );
+
+case 'sputtering':
+  layerColor = '#a855f7';
+  layerName = recipe.material || 'IZO';
+  
+  if (thickness === 0) return null; // thickness가 0이면 아예 렌더링 안함
+  
+  return (
+    <div key={`layer-${index}`} className="absolute" style={{ 
+      left: '30%', 
+      width: '40%', 
+      bottom: `${bottomBase}px`, 
+      height: `${maxLayerHeight * thickness / 100}px`, // 실제 두께만큼만
+      backgroundColor: layerColor, // 연한 배경 제거
+      transition: 'height 0.3s ease-in-out'
+    }}>
+      <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">
+        {thickness > 30 && layerName}
       </div>
     </div>
   );
+
+case 'evaporation':
+  layerColor = '#9ca3af';
+  layerName = recipe.material || 'Al';
+  
+  if (thickness === 0) return null;
+  
+  const sputteringIndex = selectedEquipments.findIndex(eq => eq.id === 'sputtering');
+  const sputteringBottomBase = substrateHeight + (cumulativeHeights[sputteringIndex-1] || 0);
+  const actualHeight = maxLayerHeight * thickness / 100;
+  
+  return (
+    <React.Fragment key={`layer-${index}`}>
+      {/* 2층: IZO 채널 양옆 - 기존 그대로 */}
+      <div className="absolute" style={{ 
+        left: '15%', 
+        width: '15%', 
+        bottom: `${sputteringBottomBase}px`, 
+        height: `${visualHeights[sputteringIndex] * (thickness * 1.2) / 100}px`,
+        backgroundColor: layerColor,
+        transition: 'height 0.3s ease-in-out'
+      }} />
+      
+      <div className="absolute" style={{ 
+        right: '15%', 
+        width: '15%', 
+        bottom: `${sputteringBottomBase}px`, 
+        height: `${visualHeights[sputteringIndex] * thickness / 100}px`,
+        backgroundColor: layerColor,
+        transition: 'height 0.3s ease-in-out'
+      }} />
+      
+    {/* 3층: 상단 전극 - IZO와 같은 범위, 중앙 뚫림 */}
+    <div className="absolute" style={{ 
+      left: '30%',  // IZO 시작점과 동일
+      width: '15%', // IZO 왼쪽 절반
+      bottom: `${bottomBase}px`, 
+      height: `${actualHeight}px`,
+      backgroundColor: layerColor,
+      transition: 'height 0.3s ease-in-out'
+    }}>
+      <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">
+        {thickness > 30 && 'S'}
+      </div>
+    </div>
+
+    {/* 중앙 10% (45%~55%)는 비워둠 - 채널 */}
+
+    <div className="absolute" style={{ 
+      left: '55%',  // IZO 오른쪽 절반 시작
+      width: '15%', // IZO 끝점까지 (30%+40%=70%)
+      bottom: `${bottomBase}px`, 
+      height: `${actualHeight}px`,
+      backgroundColor: layerColor,
+      transition: 'height 0.3s ease-in-out'
+    }}>
+      <div className="absolute inset-0 flex items-center justify-center text-xs text-white font-bold">
+        {thickness > 30 && 'D'}
+      </div>
+    </div>
+    </React.Fragment>
+  );
+
+              default:
+                return null;
+            }
+          })}
+        </div>
+      </div>
+    );
+  };
   
   const ParameterMonitor = () => (
     <div className="absolute top-4 left-4 space-y-2 z-10">
@@ -125,9 +224,9 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
     const { id } = currentEquipment;
     const thickness = layerThickness[currentStep] || 0;
     switch (id) {
-        case 'oxidation': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-red-700 via-orange-500 to-yellow-400 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-yellow-300 via-orange-400 to-red-400 rounded-t-[3rem] animate-pulse opacity-90" />{showParticles && [...Array(8)].map((_, i) => (<div key={`o2-${i}`} className="absolute w-2 h-2 bg-blue-400 rounded-full opacity-70" style={{left: `${20 + (i % 4) * 15}%`, top: `${15 + (i % 2) * 10}%`, animation: `float ${2 + (i % 3) * 0.5}s ease-in-out infinite`, animationDelay: `${i * 0.3}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg"><div className="absolute top-0 left-0 h-2 bg-gradient-to-r from-blue-300 via-blue-400 to-blue-600 rounded-t-lg transition-all duration-1000" style={{ width: `${thickness}%` }}/></div></div></div><div className="absolute top-6 left-6 text-yellow-300 font-mono text-sm bg-black/60 px-3 py-2 rounded-lg">🌡️ {currentRecipe.temperature || 1000}°C</div></div></div>);
-        case 'sputtering': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-gray-900 via-gray-700 to-gray-500 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-purple-900 via-purple-700 to-purple-500 rounded-t-[3rem]" /><div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-24 h-6 bg-gradient-to-r from-green-400 via-green-500 to-green-600 rounded-lg shadow-lg"><div className="text-xs text-center text-white font-bold py-1">{currentRecipe.material || 'IZO'} Target</div></div><div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-20 h-12 bg-purple-400 rounded-full opacity-60 animate-pulse"><div className="w-full h-full bg-gradient-to-r from-purple-300 via-white to-purple-300 rounded-full animate-spin opacity-50" /></div>{showParticles && [...Array(12)].map((_, i) => (<div key={`sput-${i}`} className="absolute w-1 h-1 bg-green-300 rounded-full" style={{left: `${40 + (i % 4) * 5}%`, top: `${25 + (i % 3) * 8}%`, animation: `sputter ${1.5 + (i % 3) * 0.5}s ease-out infinite`, animationDelay: `${i * 0.2}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg"><div className="absolute top-1 left-0 h-1 bg-gradient-to-r from-green-300 via-green-400 to-green-500 transition-all duration-1000" style={{ width: `${thickness}%` }}/></div></div></div><div className="absolute top-6 right-6 bg-purple-600 text-white px-3 py-2 rounded-lg font-mono text-sm animate-pulse">⚡ RF: {currentRecipe.power || 150}W</div></div></div>);
-        case 'evaporation': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-black via-gray-800 to-gray-600 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-black via-gray-900 to-gray-700 rounded-t-[3rem]" /><div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-16 bg-gradient-to-b from-gray-300 via-gray-500 to-gray-700 rounded-b-lg shadow-lg"><div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full animate-ping" /><div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-cyan-400 to-transparent animate-pulse" /></div><div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400 rounded-lg shadow-lg"><div className="text-xs text-center text-gray-800 font-bold py-2">{currentRecipe.material || 'Al'} Source</div></div>{showParticles && [...Array(10)].map((_, i) => (<div key={`evap-${i}`} className="absolute w-1 h-1 bg-gray-400 rounded-full" style={{left: `${42 + (i % 3) * 4}%`, top: `${30 + (i % 4) * 6}%`, animation: `evaporate ${2 + (i % 3) * 0.5}s ease-out infinite`, animationDelay: `${i * 0.3}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg">{thickness > 0 && (<><div className="absolute top-0.5 left-0 h-1 bg-gradient-to-r from-gray-300 to-gray-400 transition-all duration-1000" style={{ width: `${Math.min(35, thickness * 0.35)}%` }}/><div className="absolute top-0.5 right-0 h-1 bg-gradient-to-l from-gray-300 to-gray-400 transition-all duration-1000" style={{ width: `${Math.min(35, thickness * 0.35)}%` }}/></>)}</div></div></div><div className="absolute top-6 right-6 text-cyan-300 font-mono text-sm bg-black/70 px-3 py-2 rounded-lg">🔬 E-Beam: {currentRecipe.power || 3}kW</div></div></div>);
+        case 'oxidation': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-red-700 via-orange-500 to-yellow-400 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-yellow-300 via-orange-400 to-red-400 rounded-t-[3rem] animate-pulse opacity-90" />{showParticles && [...Array(8)].map((_, i) => (<div key={`o2-${i}`} className="absolute w-2 h-2 bg-blue-400 rounded-full opacity-70" style={{left: `${20 + (i % 4) * 15}%`, top: `${15 + (i % 2) * 10}%`, animation: `float ${2 + (i % 3) * 0.5}s ease-in-out infinite`, animationDelay: `${i * 0.3}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg"><div className="absolute top-0 left-0 h-2 bg-gradient-to-r from-blue-300 via-blue-400 to-blue-600 rounded-t-lg transition-all duration-1000" style={{ width: `${thickness}%` }}/></div></div></div>{/* 온도 표시 삭제 */}</div></div>);
+        case 'sputtering': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-gray-900 via-gray-700 to-gray-500 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-purple-900 via-purple-700 to-purple-500 rounded-t-[3rem]" /><div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-24 h-6 bg-gradient-to-r from-green-400 via-green-500 to-green-600 rounded-lg shadow-lg"><div className="text-xs text-center text-white font-bold py-1">{currentRecipe.material || 'IZO'} Target</div></div><div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-20 h-12 bg-purple-400 rounded-full opacity-60 animate-pulse"><div className="w-full h-full bg-gradient-to-r from-purple-300 via-white to-purple-300 rounded-full animate-spin opacity-50" /></div>{showParticles && [...Array(12)].map((_, i) => (<div key={`sput-${i}`} className="absolute w-1 h-1 bg-green-300 rounded-full" style={{left: `${40 + (i % 4) * 5}%`, top: `${25 + (i % 3) * 8}%`, animation: `sputter ${1.5 + (i % 3) * 0.5}s ease-out infinite`, animationDelay: `${i * 0.2}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg"><div className="absolute top-1 left-0 h-1 bg-gradient-to-r from-green-300 via-green-400 to-green-500 transition-all duration-1000" style={{ width: `${thickness}%` }}/></div></div></div>{/* 파워 표시 삭제 */}</div></div>);
+        case 'evaporation': return (<div className="absolute inset-0"><div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 bg-gradient-to-t from-black via-gray-800 to-gray-600 rounded-t-[3rem] shadow-2xl"><div className="absolute inset-3 bg-gradient-to-t from-black via-gray-900 to-gray-700 rounded-t-[3rem]" /><div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-16 bg-gradient-to-b from-gray-300 via-gray-500 to-gray-700 rounded-b-lg shadow-lg"><div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-cyan-400 rounded-full animate-ping" /><div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 h-16 bg-gradient-to-b from-cyan-400 to-transparent animate-pulse" /></div><div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-16 h-8 bg-gradient-to-r from-gray-200 via-gray-300 to-gray-400 rounded-lg shadow-lg"><div className="text-xs text-center text-gray-800 font-bold py-2">{currentRecipe.material || 'Al'} Source</div></div>{showParticles && [...Array(10)].map((_, i) => (<div key={`evap-${i}`} className="absolute w-1 h-1 bg-gray-400 rounded-full" style={{left: `${42 + (i % 3) * 4}%`, top: `${30 + (i % 4) * 6}%`, animation: `evaporate ${2 + (i % 3) * 0.5}s ease-out infinite`, animationDelay: `${i * 0.3}s`}}/>))}<div className="absolute bottom-12 left-1/2 transform -translate-x-1/2"><div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative"><div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg">{thickness > 0 && (<><div className="absolute top-0.5 left-0 h-1 bg-gradient-to-r from-gray-300 to-gray-400 transition-all duration-1000" style={{ width: `${Math.min(35, thickness * 0.35)}%` }}/><div className="absolute top-0.5 right-0 h-1 bg-gradient-to-l from-gray-300 to-gray-400 transition-all duration-1000" style={{ width: `${Math.min(35, thickness * 0.35)}%` }}/></>)}</div></div></div>{/* 파워 표시 삭제 */}</div></div>);
         default: return <div className="flex items-center justify-center h-full text-gray-500">Unknown Equipment</div>;
     }
   };
@@ -148,10 +247,22 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
       </div>
       <div className="relative mx-auto w-full h-[400px] bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
         <div className="absolute inset-0 opacity-5"><div className="w-full h-full" style={{backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)', backgroundSize: '20px 20px'}} /></div>
-        <ParameterMonitor />
-        {currentEquipment && (<div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-xl border border-blue-200 max-w-xs"><div className={`text-lg font-bold mb-2 flex items-center ${currentEquipment.color === 'red' ? 'text-red-600' : currentEquipment.color === 'purple' ? 'text-purple-600' : 'text-blue-600'}`}>{currentEquipment.name}<div className={`ml-2 w-2 h-2 rounded-full animate-pulse ${currentEquipment.color === 'red' ? 'bg-red-500' : currentEquipment.color === 'purple' ? 'bg-purple-500' : 'bg-blue-500'}`} /></div><div className="space-y-1 text-sm"><div className="text-gray-600">재료: {currentRecipe.material || '기본'}</div><div className="text-gray-600">목표: {currentRecipe.targetThickness || 100}nm</div><div className={`${currentEquipment.color === 'red' ? 'text-red-600' : currentEquipment.color === 'purple' ? 'text-purple-600' : 'text-blue-600'}`}>{currentEquipment.description}</div><div className="text-xs text-gray-500 bg-gray-100 rounded px-2 py-1">진행률: {Math.round(layerThickness[currentStep] || 0)}%</div></div></div>)}
-        <CrossSectionView />
-        <EquipmentAnimation />
+<ParameterMonitor />
+{currentEquipment && (
+ <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-xl border border-blue-200 max-w-xs">
+   <div className={`text-lg font-bold mb-2 flex items-center ${currentEquipment.color === 'red' ? 'text-red-600' : currentEquipment.color === 'purple' ? 'text-purple-600' : 'text-blue-600'}`}>
+     {currentEquipment.name}
+     <div className={`ml-2 w-2 h-2 rounded-full animate-pulse ${currentEquipment.color === 'red' ? 'bg-red-500' : currentEquipment.color === 'purple' ? 'bg-purple-500' : 'bg-blue-500'}`} />
+   </div>
+   <div className="text-center">
+     <div className="text-sm text-gray-500 bg-gray-100 rounded px-2 py-1">
+       진행률: {Math.round(layerThickness[currentStep] || 0)}%
+     </div>
+   </div>
+ </div>
+)}
+<CrossSectionView />
+<EquipmentAnimation />
       </div>
       <div className="mt-6 space-y-4">
         <div className="space-y-2"><div className="flex justify-between items-center"><span className="text-sm font-medium text-gray-700">전체 공정 진행률</span><span className="text-sm text-gray-500">{Math.round((currentStep + (layerThickness[currentStep] || 0) / 100) / selectedEquipments.length * 100)}%</span></div><div className="w-full bg-gray-200 rounded-full h-3 shadow-inner"><div className="bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 h-3 rounded-full transition-all duration-1000 shadow-lg" style={{ width: `${(currentStep + (layerThickness[currentStep] || 0) / 100) / selectedEquipments.length * 100}%` }}/></div></div>
