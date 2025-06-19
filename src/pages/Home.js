@@ -88,11 +88,21 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </div>
             
             <button
-              onClick={openProcessModal}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-500 to-blue-500 text-white rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:from-green-600 hover:to-blue-600 transform hover:scale-105"
+              onClick={() => onNavigate('simulator-intro')}
+              className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <Play className="w-5 h-5 mr-2" />
-              공정 시뮬레이션
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10">
+                <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-xl mb-4 mx-auto group-hover:bg-white/30 transition-colors">
+                  <Zap className="w-8 h-8" />
+                </div>
+                <h3 className="text-xl font-bold mb-2">공정 시뮬레이터</h3>
+                <p className="text-purple-100 text-sm mb-4">TFT 제조 공정을 3D로 체험</p>
+                <div className="flex items-center justify-center text-sm font-medium">
+                  <span>시뮬레이션 체험</span>
+                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </div>
+              </div>
             </button>
             <button
               onClick={() => setShowMaskViewer(true)}

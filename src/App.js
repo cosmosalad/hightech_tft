@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import Home from './pages/Home';
 import TFTAnalyze01 from './pages/TFTAnalyze01';
 import TFTAnalyzer02 from './pages/TFTAnalyzer02';
-import ProcessSimulator from './pages/ProcessSimulator'; // 이 줄 추가
+import SimulatorIntro from './pages/SimulatorIntro';
+import ProcessSimulator from './pages/ProcessSimulator';
 import './styles/App.css';
 
 function App() {
@@ -30,11 +31,18 @@ function App() {
             onNavigateBack={() => navigateTo('home')}
           />
         );
-      case 'simulator':
+      case 'simulator-intro':
+        return (
+          <SimulatorIntro 
+            onNavigateHome={() => navigateTo('home')}
+            onNavigateToSimulator={() => navigateTo('simulator-main')}
+          />
+        );
+      case 'simulator-main':
         return (
           <ProcessSimulator 
             onNavigateHome={() => navigateTo('home')}
-            onNavigateBack={() => navigateTo('home')}
+            onNavigateBack={() => navigateTo('simulator-intro')}
           />
         );
       default:

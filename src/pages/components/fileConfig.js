@@ -283,11 +283,18 @@ export const detectFileType = (filename) => {
     return 'IDVD';
   }
 
-  if (name.includes('idvg') &&
+  if (
+  name.includes('idvg') &&
+  (
     (name.includes('linear') || name.includes('lin')) &&
-    (name.includes('hys') || name.includes('hysteresis'))) {
-    return 'IDVG-Hysteresis';
-  }
+    (name.includes('hys') || name.includes('hysteresis'))
+  ) || (
+    name.includes('idvg') &&
+    (name.includes('hys') || name.includes('hysteresis'))
+  )
+) {
+  return 'IDVG-Hysteresis';
+}
 
   if (name.includes('idvg') &&
     (name.includes('linear') || name.includes('lin'))) {
