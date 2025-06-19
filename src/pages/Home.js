@@ -81,38 +81,50 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
           </p>
 
+          {/* 공정 시뮬레이터와 Mask Viewer - 크기 맞춤 */}
           <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
-            <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-800 rounded-full text-lg font-medium shadow-lg border border-white/50">
-              <Zap className="w-5 h-5 mr-2 text-yellow-500" />
-              두 가지 분석 모드를 제공합니다
-            </div>
-            
             <button
               onClick={() => onNavigate('simulator-intro')}
-              className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 text-white p-8 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+              className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="relative z-10">
-                <div className="flex items-center justify-center w-16 h-16 bg-white/20 rounded-xl mb-4 mx-auto group-hover:bg-white/30 transition-colors">
-                  <Zap className="w-8 h-8" />
+              <div className="relative z-10 flex items-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
+                  <Zap className="w-6 h-6" />
                 </div>
-                <h3 className="text-xl font-bold mb-2">공정 시뮬레이터</h3>
-                <p className="text-purple-100 text-sm mb-4">TFT 제조 공정을 3D로 체험</p>
-                <div className="flex items-center justify-center text-sm font-medium">
-                  <span>시뮬레이션 체험</span>
-                  <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                <div className="text-left">
+                  <h3 className="text-lg font-bold mb-1">공정 시뮬레이터</h3>
+                  <p className="text-purple-100 text-sm">TFT 제조 공정을 시각화로 학습</p>
                 </div>
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </div>
             </button>
+            
             <button
               onClick={() => setShowMaskViewer(true)}
-              className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-full text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-300 hover:from-teal-600 hover:to-cyan-600 transform hover:scale-105"
+              className="group relative overflow-hidden bg-gradient-to-br from-teal-500 to-cyan-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
             >
-              <Eye className="w-5 h-5 mr-2" />
-              Mask/Image Viewer
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
+                  <Eye className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-bold mb-1">Mask/Image Viewer</h3>
+                  <p className="text-cyan-100 text-sm">마스크 및 이미지 뷰어</p>
+                </div>
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              </div>
             </button>
           </div>
+
+          {/* 두 가지 분석 모드 안내 - 아래로 이동 */}
+          <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-800 rounded-full text-lg font-medium shadow-lg border border-white/50">
+            <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
+            두 가지 분석 모드를 제공합니다
+          </div>
         </header>
+
         {/* 버전 선택 카드 */}
         <section className="grid md:grid-cols-2 gap-8 mb-12">
           {/* 기본 분석 버전 */}
@@ -554,6 +566,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </div>
       )}
+      
       {/* 마스크/픽처 뷰어 */}
       {showMaskViewer && (
         <MaskPictureViewer onClose={() => setShowMaskViewer(false)} />
