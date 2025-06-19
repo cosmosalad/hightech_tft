@@ -58,7 +58,7 @@
   },
   "1team": {
     "type": "folder",
-    "description": "1팀 프로젝트 폴더 (설명 없음)",
+    "description": "1팀 프로젝트",
     "children": {
       "0618": {
         "type": "folder",
@@ -121,7 +121,9 @@
             "children": {
               "after_annealing": {
                 "type": "folder",
-                "files": []
+                "files": [
+                  "T1_IDVG_Lin_1cc_300_3.xls"
+                ]
               },
               "before_annealing": {
                 "type": "folder",
