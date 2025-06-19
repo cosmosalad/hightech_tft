@@ -48,14 +48,6 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
       details: '전자빔을 이용하여 Source/Drain 전극용 금속 박막을 고순도로 증착합니다.',
       color: 'from-blue-400 to-cyan-500'
     },
-    {
-      id: 'pecvd',
-      icon: <Layers className="w-8 h-8" />,
-      title: 'PECVD',
-      description: 'SiNx 보호층 증착',
-      details: '플라즈마 화학기상증착으로 패시베이션층 및 절연층을 형성합니다.',
-      color: 'from-green-400 to-emerald-500'
-    }
   ];
 
   const features = [
@@ -179,7 +171,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
             🔬 TFT 제조 공정 플로우
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {processSteps.map((step, index) => (
               <div key={step.id} className="relative">
                 <div className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100">
@@ -198,7 +190,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
                 
                 {/* 화살표 */}
                 {index < processSteps.length - 1 && (
-                  <div className="hidden lg:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
+                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
                     <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
                       <ChevronRight className="w-4 h-4 text-white" />
                     </div>
