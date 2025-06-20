@@ -115,10 +115,7 @@ export const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
 
 // Hysteresis 차트 컴포넌트 (범례 클릭 기능 제거됨)
 export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
-    // Hysteresis 차트만의 독립적인 showIG 상태만 남깁니다.
     const [showIG, setShowIG] = useState(false);
-    
-    // handleLegendClick 함수와 hiddenLines 상태가 제거되었습니다.
     
     return (
     <div>
@@ -153,7 +150,8 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                     <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
                                     <YAxis scale="log" domain={[1e-12, 1e-3]} label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                     <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-                                    <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line"/>
+                                    {/* 👇 [수정] 아무 동작도 하지 않는 onClick 핸들러를 명시적으로 추가하여 기본 동작을 막음 */}
+                                    <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line" onClick={() => {}}/>
                                     <Line type="monotone" dataKey="Forward" stroke="#2563eb" name={`${result.displayName} Forward`} strokeWidth={2} dot={false} connectNulls={false} />
                                     <Line type="monotone" dataKey="Backward" stroke="#dc2626" name={`${result.displayName} Backward`} strokeWidth={2} dot={false} connectNulls={false} />
                                 </LineChart>
@@ -169,7 +167,7 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                         <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
                                         <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                         <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-                                        <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line"/>
+                                        <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line" onClick={() => {}}/>
                                         <Line type="monotone" dataKey="Forward_IG" stroke="#2563eb" name={`${result.displayName} Forward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
                                         <Line type="monotone" dataKey="Backward_IG" stroke="#dc2626" name={`${result.displayName} Backward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
                                     </LineChart>
