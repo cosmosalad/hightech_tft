@@ -51,7 +51,7 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
 
 // IDVG Linear 분석
 export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => {
-  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
+  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1, igIndex = -1;
 
   // 헤더 분석
   headers.forEach((header, idx) => {
@@ -65,6 +65,9 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
       }
       if (headerLower.includes('drainv') || headerLower.includes('vd')) {
         vdIndex = idx;
+      }
+      if (headerLower.includes('gatei') || headerLower.includes('ig')) {
+        igIndex = idx;
       }
       if (headerLower.includes('gm') || headerLower.includes('transconductance')) {
         gmIndex = idx;
@@ -81,17 +84,19 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
 
   // 차트 데이터 생성
   const uniqueVGPoints = new Map();
-  
+
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
     const row = dataRows[rowIdx];
     const vg = row[vgIndex] || 0;
     const id = Math.abs(row[idIndex]) || 1e-12;
+    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12; // 🆕 IG 데이터 추가
     const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
     
     if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
       uniqueVGPoints.set(vg, {
         VG: vg,
         ID: id,
+        IG: ig, // IG 데이터 포함
         VD: Math.abs(row[vdIndex]) || 0,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id),
@@ -147,7 +152,7 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
 
 // IDVG Saturation 분석
 export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams) => {
-  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1;
+  let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1, igIndex = -1;
   
   // 헤더 분석 (Linear와 동일)
   headers.forEach((header, idx) => {
@@ -176,17 +181,19 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
 
   // 차트 데이터 생성
   const uniqueVGPoints = new Map();
-  
+
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
     const row = dataRows[rowIdx];
     const vg = row[vgIndex] || 0;
     const id = Math.abs(row[idIndex]) || 1e-12;
+    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12; // 🆕 IG 데이터 추가
     const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
     
     if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
       uniqueVGPoints.set(vg, {
         VG: vg,
         ID: id,
+        IG: ig, // IG 데이터 포함
         VD: Math.abs(row[vdIndex]) || 0,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id),
@@ -230,7 +237,7 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
 
 // IDVG Hysteresis 분석
 export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams) => {
-  let vgIndex = -1, idIndex = -1;
+  let vgIndex = -1, idIndex = -1, igIndex = -1;
   
   headers.forEach((header, idx) => {
     if (header && typeof header === 'string') {
@@ -240,6 +247,9 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
       }
       if (headerLower.includes('draini') || headerLower.includes('id')) {
         idIndex = idx;
+      }
+      if (headerLower.includes('gatei') || headerLower.includes('ig')) {
+        igIndex = idx;
       }
     }
   });
@@ -261,10 +271,12 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
   for (let i = 0; i <= maxVgIndex; i++) {
     const vg = dataRows[i][vgIndex] || 0;
     const id = Math.abs(dataRows[i][idIndex]) || 1e-12;
+    const ig = igIndex !== -1 ? Math.abs(dataRows[i][igIndex]) || 1e-12 : 1e-12; // 🆕
     if (!forwardVGMap.has(vg)) {
       forwardVGMap.set(vg, {
         VG: vg,
         ID: id,
+        IG: ig,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id)
       });
@@ -277,10 +289,12 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
   for (let i = maxVgIndex; i < dataRows.length; i++) {
     const vg = dataRows[i][vgIndex] || 0;
     const id = Math.abs(dataRows[i][idIndex]) || 1e-12;
+    const ig = igIndex !== -1 ? Math.abs(dataRows[i][igIndex]) || 1e-12 : 1e-12;
     if (!backwardVGMap.has(vg)) {
       backwardVGMap.set(vg, {
         VG: vg,
         ID: id,
+        IG: ig,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id)
       });
