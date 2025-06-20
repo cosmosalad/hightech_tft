@@ -113,20 +113,12 @@ export const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
   );
 };
 
-// Hysteresis 차트 컴포넌트
+// Hysteresis 차트 컴포넌트 (범례 클릭 기능 제거됨)
 export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
+    // Hysteresis 차트만의 독립적인 showIG 상태만 남깁니다.
     const [showIG, setShowIG] = useState(false);
-    const [hiddenLines, setHiddenLines] = useState(new Set());
     
-    const handleLegendClick = (data) => {
-        const { dataKey } = data;
-        setHiddenLines(prev => {
-            const newSet = new Set(prev);
-            if (newSet.has(dataKey)) newSet.delete(dataKey);
-            else newSet.add(dataKey);
-            return newSet;
-        });
-    };
+    // handleLegendClick 함수와 hiddenLines 상태가 제거되었습니다.
     
     return (
     <div>
@@ -153,6 +145,7 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
 
                 return (
                     <div key={index} className="relative">
+                        {hasMultipleFiles && (<h4 className="text-md font-medium mb-3 text-gray-700 bg-gray-100 p-2 rounded">{result.displayName}</h4>)}
                         <div className="h-80">
                             <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
                                 <LineChart data={combinedData} margin={{ left: 18 }}>
@@ -160,9 +153,9 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                     <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
                                     <YAxis scale="log" domain={[1e-12, 1e-3]} label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                     <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-                                    <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line"/>
-                                    <Line type="monotone" dataKey="Forward" stroke="#2563eb" name={`${result.displayName} Forward`} strokeWidth={2} dot={false} connectNulls={false} hide={hiddenLines.has('Forward')}/>
-                                    <Line type="monotone" dataKey="Backward" stroke="#dc2626" name={`${result.displayName} Backward`} strokeWidth={2} dot={false} connectNulls={false} hide={hiddenLines.has('Backward')}/>
+                                    <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line"/>
+                                    <Line type="monotone" dataKey="Forward" stroke="#2563eb" name={`${result.displayName} Forward`} strokeWidth={2} dot={false} connectNulls={false} />
+                                    <Line type="monotone" dataKey="Backward" stroke="#dc2626" name={`${result.displayName} Backward`} strokeWidth={2} dot={false} connectNulls={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -176,9 +169,9 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                         <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
                                         <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                         <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-                                        <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line"/>
-                                        <Line type="monotone" dataKey="Forward_IG" stroke="#2563eb" name={`${result.displayName} Forward - IG`} strokeWidth={2} dot={false} connectNulls={false} hide={hiddenLines.has('Forward_IG')}/>
-                                        <Line type="monotone" dataKey="Backward_IG" stroke="#dc2626" name={`${result.displayName} Backward - IG`} strokeWidth={2} dot={false} connectNulls={false} hide={hiddenLines.has('Backward_IG')}/>
+                                        <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line"/>
+                                        <Line type="monotone" dataKey="Forward_IG" stroke="#2563eb" name={`${result.displayName} Forward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
+                                        <Line type="monotone" dataKey="Backward_IG" stroke="#dc2626" name={`${result.displayName} Backward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -188,8 +181,9 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
             })}
         </div>
     </div>
-    )
+    );
 };
+
 
 // IDVG 차트 컴포넌트
 export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
@@ -309,6 +303,7 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             <span className={`text-sm font-medium transition-colors duration-300 ${showVthTangent ? 'text-gray-900' : 'text-gray-400'}`}>접선 표시</span>
           </div>
         )}
+
         <div className="flex items-center space-x-4">
             <span className={`text-sm font-medium transition-colors duration-300 ${!showLogScale ? 'text-gray-900' : 'text-gray-400'}`}>실제값</span>
             <button onClick={() => setShowLogScale(!showLogScale)} className={`relative inline-flex h-8 w-16 items-center rounded-full transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${showLogScale ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-300'}`}>
