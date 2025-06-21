@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Play, Calculator, Search, X, ExternalLink, Eye } from 'lucide-react';
+import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye } from 'lucide-react';
+// ✨ framer-motion 라이브러리 import
+import { motion, AnimatePresence } from 'framer-motion';
 import FormulaCodeInspector from './components/FormulaCodeInspector';
 import MaskPictureViewer from './components/MaskPictureViewer';
 
@@ -16,10 +18,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
     }
   };
 
-  const openProcessModal = () => {
-    onNavigate('simulator');
-  };
-
   const openSearchModal = () => {
     setIsSearchModalOpen(true);
   };
@@ -33,7 +31,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
     closeSearchModal();
   };
 
-  // 테이블 데이터를 useMemo로 최적화
   const comparisonData = useMemo(() => [
     { feature: "파일별 독립 분석", basic: "✅", advanced: "✅" },
     { feature: "샘플명 기반 데이터 융합", basic: "❌", advanced: "✅" },
@@ -45,10 +42,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
     { feature: "정확도", basic: "📊 기본", advanced: "🎯 연구급" }
   ], []);
 
-  // 기본 분석 파라미터
   const basicParams = useMemo(() => ['gm', 'Vth', 'μFE', 'SS', 'Ion/Ioff', 'Ron'], []);
-  
-  // 고급 분석 파라미터
   const advancedParams = useMemo(() => ['μFE (통합)', 'μeff (정확)', 'θ (실측)', 'Dit (계산)', '품질등급', '경고시스템'], []);
 
   return (
@@ -81,7 +75,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
           </p>
 
-          {/* 공정 시뮬레이터와 Mask Viewer - 크기 맞춤 */}
           <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
             <button
               onClick={() => onNavigate('simulator-intro')}
@@ -118,7 +111,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </button>
           </div>
 
-          {/* 두 가지 분석 모드 안내 - 아래로 이동 */}
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-800 rounded-full text-lg font-medium shadow-lg border border-white/50">
             <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
             두 가지 분석 모드를 제공합니다
@@ -146,22 +138,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-800 mb-3">✨ 특징</h3>
                   <ul className="space-y-3 text-gray-600 text-sm">
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      각 파일을 독립적으로 분석
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      빠르고 간단한 분석
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      기본적인 TFT 파라미터 계산
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      학습용 및 빠른 확인에 적합
-                    </li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>각 파일을 독립적으로 분석</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>빠르고 간단한 분석</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>기본적인 TFT 파라미터 계산</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>학습용 및 빠른 확인에 적합</li>
                   </ul>
                 </div>
 
@@ -169,12 +149,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                   <h3 className="font-semibold text-gray-800 mb-3">📊 분석 항목</h3>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {basicParams.map((param) => (
-                      <span 
-                        key={param}
-                        className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-center"
-                      >
-                        {param}
-                      </span>
+                      <span key={param} className="bg-blue-50 text-blue-700 px-2 py-1 rounded text-center">{param}</span>
                     ))}
                   </div>
                 </div>
@@ -193,7 +168,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           {/* 통합 분석 버전 */}
           <article className="group relative transform hover:scale-105 transition-transform duration-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-purple-200 hover:border-purple-300 relative overflow-hidden transition-all duration-300">
-              {/* 추천 배지 */}
               <div className="absolute top-4 right-4 z-20">
                 <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full flex items-center shadow-lg">
                   <Star className="w-3 h-3 mr-1" />
@@ -217,22 +191,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-800 mb-3">🎯 고급 특징</h3>
                   <ul className="space-y-3 text-gray-600 text-sm">
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <strong>샘플명별 데이터 그룹화</strong> - 같은 샘플의 다양한 측정 통합
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <strong>정확한 μFE 계산</strong> - 각 측정의 최적 파라미터 융합
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <strong>실제 θ 값 계산</strong> - 측정 데이터 기반
-                    </li>
-                    <li className="flex items-start">
-                      <span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span>
-                      <strong>품질 평가 시스템</strong> - 데이터 신뢰도 자동 평가
-                    </li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span><strong>샘플명별 데이터 그룹화</strong> - 같은 샘플의 다양한 측정 통합</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span><strong>정확한 μFE 계산</strong> - 각 측정의 최적 파라미터 융합</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span><strong>실제 θ 값 계산</strong> - 측정 데이터 기반</li>
+                    <li className="flex items-start"><span className="w-2 h-2 bg-purple-500 rounded-full mt-2 mr-3 flex-shrink-0"></span><strong>품질 평가 시스템</strong> - 데이터 신뢰도 자동 평가</li>
                   </ul>
                 </div>
 
@@ -240,12 +202,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                   <h3 className="font-semibold text-gray-800 mb-3">🔬 연구급 파라미터</h3>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     {advancedParams.map((param) => (
-                      <span 
-                        key={param}
-                        className="bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-2 py-1 rounded text-center"
-                      >
-                        {param}
-                      </span>
+                      <span key={param} className="bg-gradient-to-r from-purple-50 to-pink-50 text-purple-700 px-2 py-1 rounded text-center">{param}</span>
                     ))}
                   </div>
                 </div>
@@ -293,55 +250,24 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
         {/* 사용 가이드 */}
         <section className="grid md:grid-cols-2 gap-8 mb-12">
           <div className="bg-blue-50/80 backdrop-blur-sm rounded-xl p-6 border border-blue-100/50">
-            <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center">
-              <Users className="w-5 h-5 mr-2" />
-              기본 분석 모드 추천 대상
-            </h3>
+            <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center"><Users className="w-5 h-5 mr-2" />기본 분석 모드 추천 대상</h3>
             <ul className="space-y-3 text-blue-700 text-sm">
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
-                TFT 특성 분석을 처음 접하는 사용자
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
-                빠른 결과 확인이 필요한 경우
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
-                교육 및 학습 목적
-              </li>
-              <li className="flex items-start">
-                <span className="text-blue-500 mr-2">•</span>
-                간단한 품질 체크
-              </li>
+              <li className="flex items-start"><span className="text-blue-500 mr-2">•</span>TFT 특성 분석을 처음 접하는 사용자</li>
+              <li className="flex items-start"><span className="text-blue-500 mr-2">•</span>빠른 결과 확인이 필요한 경우</li>
+              <li className="flex items-start"><span className="text-blue-500 mr-2">•</span>교육 및 학습 목적</li>
+              <li className="flex items-start"><span className="text-blue-500 mr-2">•</span>간단한 품질 체크</li>
             </ul>
           </div>
 
           <div className="bg-purple-50/80 backdrop-blur-sm rounded-xl p-6 border border-purple-100/50">
-            <h3 className="text-lg font-bold text-purple-800 mb-4 flex items-center">
-              <Settings className="w-5 h-5 mr-2" />
-              통합 분석 모드 추천 대상
-            </h3>
+            <h3 className="text-lg font-bold text-purple-800 mb-4 flex items-center"><Settings className="w-5 h-5 mr-2" />통합 분석 모드 추천 대상</h3>
             <ul className="space-y-3 text-purple-700 text-sm mb-4">
-              <li className="flex items-start">
-                <span className="text-purple-500 mr-2">•</span>
-                연구 및 개발 프로젝트
-              </li>
-              <li className="flex items-start">
-                <span className="text-purple-500 mr-2">•</span>
-                정확한 mobility 특성 분석 필요
-              </li>
-              <li className="flex items-start">
-                <span className="text-purple-500 mr-2">•</span>
-                논문 작성 및 발표용 데이터
-              </li>
-              <li className="flex items-start">
-                <span className="text-purple-500 mr-2">•</span>
-                상세한 품질 평가 및 검증
-              </li>
+              <li className="flex items-start"><span className="text-purple-500 mr-2">•</span>연구 및 개발 프로젝트</li>
+              <li className="flex items-start"><span className="text-purple-500 mr-2">•</span>정확한 mobility 특성 분석 필요</li>
+              <li className="flex items-start"><span className="text-purple-500 mr-2">•</span>논문 작성 및 발표용 데이터</li>
+              <li className="flex items-start"><span className="text-purple-500 mr-2">•</span>상세한 품질 평가 및 검증</li>
             </ul>
 
-            {/* 수식 점검 버튼을 추천 대상 아래로 이동 */}
             <div className="pt-3 border-t border-purple-200">
               <button
                 onClick={() => setShowFormulaInspector(!showFormulaInspector)}
@@ -354,14 +280,22 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* 수식 및 코드 점검 컴포넌트 */}
-        {showFormulaInspector && (
-          <div className="mb-12">
-            <FormulaCodeInspector />
-          </div>
-        )}        
+        {/* ✨ 수식 및 코드 점검 컴포넌트 - AnimatePresence로 감싸고 motion.div로 변경 */}
+        <AnimatePresence>
+          {showFormulaInspector && (
+            <motion.div
+              className="mb-12"
+              initial={{ height: 0, opacity: 0, overflow: 'hidden' }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.5, ease: 'easeInOut' }}
+            >
+              <FormulaCodeInspector />
+            </motion.div>
+          )}
+        </AnimatePresence>       
 
-        {/* 검색창 섹션 - 푸터 바로 위에 추가 */}
+        {/* 검색창 섹션 */}
         <section className="mb-8">
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20">
@@ -390,11 +324,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
         </footer>
       </div>
 
-      {/* 검색 모달 */}
+      {/* 검색 모달 (기존과 동일) */}
       {isSearchModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden">
-            {/* 모달 헤더 */}
             <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
@@ -410,8 +343,8 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
               </div>
             </div>
             
-            {/* 모달 컨텐츠 - 스크롤 가능 */}
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
+              {/* 모달 컨텐츠 (기존과 동일) */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">📚 TFT 전기적 특성 분석 완벽 가이드</h3>
                 <p className="text-gray-600 text-sm mb-4">
@@ -419,13 +352,11 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 </p>
               </div>
 
-              {/* 측정 방법 섹션 */}
               <div className="mb-8">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <div className="w-8 h-8 bg-blue-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">1</div>
                   주요 측정 방법
                 </h4>
-                
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                     <h5 className="font-semibold text-blue-800 mb-2">IDVG-Linear 측정</h5>
@@ -436,7 +367,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                       <li>• 선형 영역에서의 기본 특성 분석</li>
                     </ul>
                   </div>
-                  
                   <div className="bg-purple-50 p-4 rounded-lg border border-purple-100">
                     <h5 className="font-semibold text-purple-800 mb-2">IDVG-Saturation 측정</h5>
                     <ul className="text-sm text-purple-700 space-y-1">
@@ -446,7 +376,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                       <li>• 포화 영역에서의 특성 분석</li>
                     </ul>
                   </div>
-                  
                   <div className="bg-green-50 p-4 rounded-lg border border-green-100">
                     <h5 className="font-semibold text-green-800 mb-2">IDVD 측정</h5>
                     <ul className="text-sm text-green-700 space-y-1">
@@ -456,7 +385,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                       <li>• 전류-전압 특성 곡선 분석</li>
                     </ul>
                   </div>
-                  
                   <div className="bg-orange-50 p-4 rounded-lg border border-orange-100">
                     <h5 className="font-semibold text-orange-800 mb-2">IDVG-Hysteresis 측정</h5>
                     <ul className="text-sm text-orange-700 space-y-1">
@@ -469,63 +397,40 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* 핵심 파라미터 섹션 */}
               <div className="mb-8">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <div className="w-8 h-8 bg-purple-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">2</div>
                   핵심 분석 파라미터
                 </h4>
-                
                 <div className="space-y-4">
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border border-blue-100">
                     <h5 className="font-semibold text-gray-800 mb-2">🔬 Field-Effect Mobility (μFE)</h5>
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>공식:</strong> μFE = (L/W) × (1/Cox) × (1/VD) × (∂ID/∂VG)
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      선형 영역에서 계산되는 기본적인 이동도로, 소자의 전하 수송 능력을 나타냅니다.
-                    </p>
+                    <p className="text-sm text-gray-600 mb-2"><strong>공식:</strong> μFE = (L/W) × (1/Cox) × (1/VD) × (∂ID/∂VG)</p>
+                    <p className="text-sm text-gray-600">선형 영역에서 계산되는 기본적인 이동도로, 소자의 전하 수송 능력을 나타냅니다.</p>
                   </div>
-                  
                   <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-4 rounded-lg border border-purple-100">
                     <h5 className="font-semibold text-gray-800 mb-2">⚡ Effective Mobility (μeff)</h5>
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>공식:</strong> μeff = μ0 / (1 + θ × (VG - Vth))
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      실제 소자에서 게이트 전압에 따른 이동도 감소 효과를 고려한 정확한 이동도입니다.
-                    </p>
+                    <p className="text-sm text-gray-600 mb-2"><strong>공식:</strong> μeff = μ0 / (1 + θ × (VG - Vth))</p>
+                    <p className="text-sm text-gray-600">실제 소자에서 게이트 전압에 따른 이동도 감소 효과를 고려한 정확한 이동도입니다.</p>
                   </div>
-                  
                   <div className="bg-gradient-to-r from-green-50 to-teal-50 p-4 rounded-lg border border-green-100">
                     <h5 className="font-semibold text-gray-800 mb-2">🎯 Threshold Voltage (Vth)</h5>
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>추출 방법:</strong> Linear extrapolation, Maximum gm 방법
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      소자가 도통되기 시작하는 게이트 전압으로, 소자의 동작 특성을 결정하는 핵심 파라미터입니다.
-                    </p>
+                    <p className="text-sm text-gray-600 mb-2"><strong>추출 방법:</strong> Linear extrapolation, Maximum gm 방법</p>
+                    <p className="text-sm text-gray-600">소자가 도통되기 시작하는 게이트 전압으로, 소자의 동작 특성을 결정하는 핵심 파라미터입니다.</p>
                   </div>
-                  
                   <div className="bg-gradient-to-r from-orange-50 to-red-50 p-4 rounded-lg border border-orange-100">
                     <h5 className="font-semibold text-gray-800 mb-2">📐 Subthreshold Swing (SS)</h5>
-                    <p className="text-sm text-gray-600 mb-2">
-                      <strong>공식:</strong> SS = dVG/d(log ID) [V/decade]
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      전류가 한 자릿수 변하는데 필요한 게이트 전압으로, 소자의 스위칭 특성을 나타냅니다.
-                    </p>
+                    <p className="text-sm text-gray-600 mb-2"><strong>공식:</strong> SS = dVG/d(log ID) [V/decade]</p>
+                    <p className="text-sm text-gray-600">전류가 한 자릿수 변하는데 필요한 게이트 전압으로, 소자의 스위칭 특성을 나타냅니다.</p>
                   </div>
                 </div>
               </div>
 
-              {/* 분석 팁 섹션 */}
               <div className="mb-6">
                 <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                   <div className="w-8 h-8 bg-green-500 text-white rounded-lg flex items-center justify-center mr-3 text-sm font-bold">3</div>
                   데이터 분석 핵심 팁
                 </h4>
-                
                 <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border border-yellow-100 mb-4">
                   <h5 className="font-semibold text-gray-800 mb-2">⚠️ 주의사항</h5>
                   <ul className="text-sm text-gray-700 space-y-1">
@@ -535,7 +440,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                     <li>• 여러 번의 측정을 통한 재현성 확인</li>
                   </ul>
                 </div>
-                
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-100">
                   <h5 className="font-semibold text-gray-800 mb-2">💡 고급 분석 기법</h5>
                   <ul className="text-sm text-gray-700 space-y-1">
@@ -547,7 +451,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 </div>
               </div>
 
-              {/* 외부 링크 버튼 */}
               <div className="border-t border-gray-200 pt-6">
                 <button
                   onClick={handlePerplexityClick}
@@ -557,7 +460,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                   더 상세한 가이드 보러가기 (Perplexity AI)
                   <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
-                
                 <p className="text-xs text-gray-500 text-center mt-4">
                   클릭하면 새 창에서 Perplexity AI 컬렉션이 열립니다
                 </p>
@@ -567,7 +469,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
         </div>
       )}
       
-      {/* 마스크/픽처 뷰어 */}
       {showMaskViewer && (
         <MaskPictureViewer onClose={() => setShowMaskViewer(false)} />
       )}
