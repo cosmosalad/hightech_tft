@@ -1,8 +1,3 @@
-// fileConfig.js - 중첩 폴더 구조 지원 버전 (수정 제안 반영)
-
-// lucide-react 아이콘 임포트는 HomePage.js로 옮겨질 예정 (주석 유지)
-
-// GitHub 기본 설정 (여기서는 직접 사용되지 않지만, 다른 곳에서 사용될 수 있으므로 유지)
 export const GITHUB_CONFIG = {
   username: 'cosmosalad',
   repo: 'hightech_tft',

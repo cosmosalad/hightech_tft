@@ -139,6 +139,39 @@ const EnhancedFileUploadSection = ({
   const [isFolderStructureLoading, setIsFolderStructureLoading] = useState(true); // 폴더 구조 자체 로딩 상태
   const [hasFolderLoadError, setHasFolderLoadError] = useState(false); // 폴더 구조 로딩 오류 상태
   const [folderTreeData, setFolderTreeData] = useState([]); // 폴더 트리 데이터 상태
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragging(false);
+  };
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files);
+    const excelFiles = files.filter(file =>
+      file.name.toLowerCase().endsWith('.xls') ||
+      file.name.toLowerCase().endsWith('.xlsx')
+    );
+    if (excelFiles.length > 0) {
+      const event = { target: { files: excelFiles } };
+      handleFileUpload(event);
+    } else {
+      alert('엑셀 파일(.xls, .xlsx)만 업로드 가능합니다.');
+    }
+  };
 
   // 컴포넌트 마운트 시 폴더 구조를 비동기적으로 불러옴
   useEffect(() => {
@@ -376,7 +409,6 @@ const EnhancedFileUploadSection = ({
           <p className="text-gray-600 mb-6">
             컴퓨터에서 엑셀 파일을 직접 업로드하세요
           </p>
-
           <input
             type="file"
             accept=".xls,.xlsx"
@@ -385,15 +417,46 @@ const EnhancedFileUploadSection = ({
             className="hidden"
             id="file-upload"
           />
+          {/* 파일 선택 버튼 */}
           <label
             htmlFor="file-upload"
-            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center"
+            className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center mb-4"
           >
             <Upload className="w-5 h-5 mr-2" />
             엑셀 파일 선택
           </label>
+          {/* 드래그 앤 드롭 영역 */}
+          <div
+            onDragEnter={handleDragEnter}
+            onDragLeave={handleDragLeave}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            className={`
+              w-full border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
+              ${isDragging
+                ? 'border-blue-500 bg-blue-50 scale-105'
+                : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+              }
+            `}
+          >
+            <div className={`flex flex-col items-center space-y-3 ${isDragging ? 'text-blue-600' : 'text-gray-500'}`}>
+              <Upload className={`w-12 h-12 ${isDragging ? 'animate-bounce' : ''}`} />
+              <div className="space-y-1">
+                <p className="text-lg font-medium">
+                  {isDragging ? '파일을 놓아주세요!' : '파일을 여기로 드래그하세요'}
+                </p>
+                <p className="text-sm">
+                  또는 위의 버튼을 클릭하여 파일을 선택하세요
+                </p>
+                <p className="text-xs text-gray-400">
+                  지원 형식: .xls, .xlsx
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
+
 
       {/* GitHub 파일 불러오기 */}
       {activeTab === 'github' && (
