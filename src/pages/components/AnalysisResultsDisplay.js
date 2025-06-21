@@ -113,7 +113,7 @@ const AnalysisResultsDisplay = ({
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">TFT 완벽 통합 분석 결과</h1>
+          <h1 className="text-3xl font-bold text-gray-800">TFT 통합 분석 결과</h1>
           <div className="flex items-center space-x-4">
             <div className="relative flex items-center space-x-2">
               <button onClick={() => setSortByValue(!sortByValue)} className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${sortByValue ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'}`} title="Tooltip에서 값 크기순으로 정렬">
@@ -160,7 +160,11 @@ const AnalysisResultsDisplay = ({
                 {showDataTable ? '통합 결과표 숨기기' : '통합 결과표 보기'}
               </button>
             </div>
-            {showDataTable && <IntegratedResultsTable completeAnalysisResults={completeAnalysisResults} />}
+            {/* ▼▼▼ 수정된 부분 ▼▼▼ */}
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showDataTable ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                <IntegratedResultsTable completeAnalysisResults={completeAnalysisResults} />
+            </div>
+            {/* ▲▲▲ 여기까지 수정 ▲▲▲ */}
           </>
         )}
 
@@ -170,10 +174,10 @@ const AnalysisResultsDisplay = ({
   );
 };
 
-// 완전 분석 결과 섹션
+// 분석 결과 섹션
 const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor }) => (
     <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-lg p-8 mb-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center"><Star className="w-8 h-8 text-yellow-500 mr-3" />완벽한 통합 분석 결과</h2>
+      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center"><Star className="w-8 h-8 text-yellow-500 mr-3" />통합 분석 결과</h2>
       <div className="grid gap-6">
         {Object.entries(completeAnalysisResults).map(([sampleName, result]) => (
           <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
@@ -308,7 +312,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
 // 통합 결과 테이블 컴포넌트
 const IntegratedResultsTable = ({ completeAnalysisResults }) => (
   <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-    <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 완벽한 통합 분석 결과표</h2>
+    <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 통합 분석 결과표</h2>
     <div className="overflow-x-auto">
       <table className="w-full border-collapse border border-gray-300 text-sm">
         <thead>

@@ -40,7 +40,7 @@ const FileTreeItem = ({ item, level = 0, onSelectFolder, selectedFolder }) => {
     <div className="relative">
       {isFolder && (
         <div
-          className={`flex items-center cursor-pointer py-1 px-2 rounded hover:bg-gray-100 ${selectedFolder === item.path ? 'bg-blue-100 text-blue-800' : ''}`}
+          className={`flex items-center cursor-pointer py-1 px-2 rounded hover:bg-gray-100 transition-colors duration-150 ${selectedFolder === item.path ? 'bg-blue-100 text-blue-800' : ''}`}
           style={indentStyle}
           onClick={handleFolderClick}
           onMouseEnter={() => item.description && setShowTooltip(true)}
@@ -457,7 +457,6 @@ const EnhancedFileUploadSection = ({
         </div>
       )}
 
-
       {/* GitHub 파일 불러오기 */}
       {activeTab === 'github' && (
         <div>
@@ -525,44 +524,43 @@ const EnhancedFileUploadSection = ({
                 </div>
           )}
 
-              {/* 🔍 전역 검색 결과 표시 컴포넌트 - UI 개선 */}
-              {searchTerm && showGlobalResults && !hasFolderLoadError && (
-                <div className="mb-4">
-                  <h4 className="text-sm font-bold text-gray-800 mb-2 p-2 bg-blue-50 rounded-md border border-blue-200">
-                    🔍 전체 폴더 검색 결과 "{searchTerm}" ({globalSearchResults.length}개)
-                  </h4>
-                  {globalSearchResults.length > 0 ? (
-                    <div className="space-y-2 max-h-40 overflow-y-auto border border-blue-200 rounded-lg p-3 bg-blue-50">
-                      {globalSearchResults.map((result, index) => (
-                        <div key={index} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
-                          <div className="flex items-center min-w-0">
-                            <span className="text-lg mr-2 flex-shrink-0">{getFileTypeIcon(result.fileType)}</span>
-                            <div className="min-w-0">
-                              <div className="font-medium text-sm text-gray-800 truncate" title={result.filename}>{result.filename}</div>
-                              <div className="text-xs text-gray-500 truncate" title={`📁 ${result.folderPath}`}>
-                                📁 {result.folderPath} · 샘플: {result.sampleName}
-                              </div>
+              {/* 🔍 전역 검색 결과 표시 컴포넌트 - UI 개선 및 애니메이션 추가 */}
+              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${searchTerm && showGlobalResults && !hasFolderLoadError ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
+                <h4 className="text-sm font-bold text-gray-800 mb-2 p-2 bg-blue-50 rounded-md border border-blue-200">
+                  🔍 전체 폴더 검색 결과 "{searchTerm}" ({globalSearchResults.length}개)
+                </h4>
+                {globalSearchResults.length > 0 ? (
+                  <div className="space-y-2 max-h-40 overflow-y-auto border border-blue-200 rounded-lg p-3 bg-blue-50">
+                    {globalSearchResults.map((result, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
+                        <div className="flex items-center min-w-0">
+                          <span className="text-lg mr-2 flex-shrink-0">{getFileTypeIcon(result.fileType)}</span>
+                          <div className="min-w-0">
+                            <div className="font-medium text-sm text-gray-800 truncate" title={result.filename}>{result.filename}</div>
+                            <div className="text-xs text-gray-500 truncate" title={`📁 ${result.folderPath}`}>
+                              📁 {result.folderPath} · 샘플: {result.sampleName}
                             </div>
                           </div>
-                          <button
-                            onClick={() => {
-                              handleFolderChange(result.folderPath); // 폴더 이동 시 기존 파일 선택 및 검색어 초기화 함수 재사용
-                              setShowGlobalResults(false);
-                            }}
-                            className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors flex-shrink-0"
-                          >
-                            폴더로 이동
-                          </button>
                         </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-4 text-gray-500 bg-blue-50 border border-blue-200 rounded-lg">
-                      검색어 "{searchTerm}"에 대한 파일이 전체 폴더에서 발견되지 않았습니다.
-                    </div>
-                  )}
-                </div>
-              )}
+                        <button
+                          onClick={() => {
+                            handleFolderChange(result.folderPath); // 폴더 이동 시 기존 파일 선택 및 검색어 초기화 함수 재사용
+                            setShowGlobalResults(false);
+                          }}
+                          className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors flex-shrink-0"
+                        >
+                          폴더로 이동
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-4 text-gray-500 bg-blue-50 border border-blue-200 rounded-lg">
+                    검색어 "{searchTerm}"에 대한 파일이 전체 폴더에서 발견되지 않았습니다.
+                  </div>
+                )}
+              </div>
+
               {/* 파일 선택 영역 (샘플명별 그룹화) */}
               {!hasFolderLoadError && groupedFilesBySampleName.size > 0 ? ( // 에러 발생 시 파일 선택 영역 숨김
                 <div className="mb-4">
@@ -606,7 +604,7 @@ const EnhancedFileUploadSection = ({
                             const fileType = detectFileType(filename);
                             const isSelected = selectedFiles.has(filename);
                             return (
-                              <label key={filename} className={`flex items-center p-2 cursor-pointer transition-colors ${
+                              <label key={filename} className={`flex items-center p-2 cursor-pointer transition-colors duration-150 ${
                                 isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'
                               }`}>
                                 <input
@@ -799,13 +797,16 @@ const EnhancedFileUploadSection = ({
               </div>
             </div>
 
-            <ParameterInputSection
-              deviceParams={deviceParams}
-              setDeviceParams={setDeviceParams}
-              showParamInput={showParamInput}
-              uploadedFiles={uploadedFiles}
-              setUploadedFiles={setUploadedFiles}
-            />
+            {/* ParameterInputSection에 대한 애니메이션 래퍼 */}
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showParamInput ? 'max-h-[1000px] opacity-100 mb-12' : 'max-h-0 opacity-0'}`}>
+              <ParameterInputSection
+                deviceParams={deviceParams}
+                setDeviceParams={setDeviceParams}
+                showParamInput={showParamInput}
+                uploadedFiles={uploadedFiles}
+                setUploadedFiles={setUploadedFiles}
+              />
+            </div>
 
             {/* 수식 및 코드 점검 컴포넌트 */}
             {showFormulaInspector && (
