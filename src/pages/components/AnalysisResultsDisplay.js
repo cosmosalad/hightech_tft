@@ -193,22 +193,29 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                 </div>
               </div>
             </div>
+            
             <div className="grid md:grid-cols-3 gap-6">
+              
+              {/* 1️⃣ 기본 전기 특성 - 가장 중요한 기본 파라미터들 */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-3">🎯 핵심 파라미터</h4>
+                <h4 className="font-semibold text-blue-800 mb-3">⚡ 기본 전기 특성</h4>
                 <div className="space-y-2 text-sm">
-                  {['Vth (Linear 기준)', 'gm_max (Linear 기준)', 'μFE (통합 계산)', 'μeff (정확 계산)'].map((key) => (
+                  {['Vth (Linear 기준)', 'gm_max (Linear 기준)', 'μFE (통합 계산)', 'Ion/Ioff'].map((key) => (
                     <div key={key} className="flex justify-between items-center">
                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
-                      <div className="flex items-center space-x-1"><span className="font-mono text-xs">{result.parameters[key]}</span></div>
+                      <div className="flex items-center space-x-1">
+                        <span className="font-mono text-xs">{result.parameters[key]}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
+
+              {/* 2️⃣ 품질 & 안정성 - 소자의 품질과 안정성 지표들 */}
               <div className="bg-gradient-to-br from-green-50 to-yellow-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-3">📊 품질 지표</h4>
+                <h4 className="font-semibold text-green-800 mb-3">📊 품질 & 안정성</h4>
                 <div className="space-y-2 text-sm">
-                  {['SS (Linear 기준)', 'Ion/Ioff', 'ΔVth (Hysteresis)', 'Stability'].map((key) => (
+                  {['SS (Linear 기준)', 'Dit (Linear 기준)', 'ΔVth (Hysteresis)', 'Stability'].map((key) => (
                     <div key={key} className="flex justify-between items-center">
                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
                       <div className="flex items-center space-x-1">
@@ -221,23 +228,25 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                   ))}
                 </div>
               </div>
+
+              {/* 3️⃣ 고급 이동도 분석 - 이동도 물리 모델 파라미터들 */}
               <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-purple-800 mb-3">🔬 계산 상세</h4>
+                <h4 className="font-semibold text-purple-800 mb-3">🔬 고급 이동도 분석</h4>
                 <div className="space-y-2 text-sm">
-                  {['μ0 (Y-function)', 'θ (계산값)', 'SS (Linear 기준)', 'Ron'].map((key) => (
+                  {['μ0 (Y-function)', 'μeff (정확 계산)', 'θ (계산값)', 'Ron'].map((key) => (
                     <div key={key} className="flex justify-between items-center">
                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
                       <div className="flex items-center space-x-1">
                         <span className="font-mono text-xs">{result.parameters[key]}</span>
-                        {key.includes('SS') && result.hasLinear && (
-                          <button onClick={() => { const linearResult = analysisResults['IDVG-Linear']?.find(r => r.displayName === sampleName); if (linearResult) openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters['SS (Linear 기준)']); }} className="p-1 hover:bg-blue-100 rounded transition-colors" title="SS를 통해 Dit 수정하기"><Edit3 className="w-3 h-3 text-blue-600" /></button>
-                        )}
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
+              
             </div>
+            
+            {/* 경고 및 품질 문제 표시는 그대로 유지 */}
             {result.warnings && result.warnings.length > 0 && (
               <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                 <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>

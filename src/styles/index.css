@@ -2,24 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
-/* 전역 폰트 설정 - Pretendard Variable 적용 */
+/* Pretendard 가변 다이나믹 서브셋 (CDN에서 이미 로드됨) */
+
+/* UhBeeSe_hyun 폰트 추가 (제목 전용) */
+@font-face {
+    font-family: 'UhBeeSe_hyun';
+    src: url('https://gcore.jsdelivr.net/gh/projectnoonnu/noonfonts_five@.2.0/UhBeeSe_hyun.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* 전역 폰트 설정 - Pretendard Variable */
 * {
   font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 
                system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 
                'Noto Sans KR', 'Malgun Gothic', sans-serif;
 }
 
+/* 제목 전용 폰트 클래스 */
+.title-font {
+  font-family: 'UhBeeSe_hyun', 'Pretendard Variable', 'Pretendard', sans-serif;
+}
+
 body {
   margin: 0;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* font-family는 위에서 전역 설정했으므로 제거 */
 }
-
-code {
-  font-family: 'Pretendard Variable', source-code-pro, Menlo, Monaco, Consolas, 
-               'Courier New', monospace;
-}
-
-/* 기존 로컬 폰트 설정 제거 (CDN 사용) */
-/* @font-face 설정 삭제됨 */

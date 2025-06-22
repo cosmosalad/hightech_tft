@@ -63,10 +63,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
         {/* 헤더 섹션 */}
         <header className="text-center mb-16">
           <div className="mb-8">
-            <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight mb-4">
+            <h1 className="title-font text-6xl md:text-7xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight mb-4 py-1">
               TFT Electrical
             </h1>
-            <h1 className="text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight">
+            <h1 className="title-font text-6xl md:text-7xl font-bold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent leading-tight py-1">
               Characterization Analyzer
             </h1>
           </div>

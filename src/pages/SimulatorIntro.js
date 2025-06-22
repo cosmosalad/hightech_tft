@@ -105,9 +105,9 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-xl">
             <Play className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4">
-            TFT Process Simulator
-          </h1>
+            <h1 className="title-font text-5xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-4 leading-normal">
+              TFT Process Simulator
+            </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             TFT 제조 공정의 기본 흐름을 시각적으로 학습할 수 있는 <strong>교육용 시뮬레이터</strong>입니다. 
             열산화부터 전극 증착까지 주요 공정들을 애니메이션으로 체험해보세요.
