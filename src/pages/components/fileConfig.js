@@ -292,13 +292,13 @@ export const detectFileType = (filename) => {
 }
 
   if (name.includes('idvg') &&
-    (name.includes('linear') || name.includes('lin'))) {
-    return 'IDVG-Linear';
+    (name.includes('sat') || name.includes('saturation'))) {
+    return 'IDVG-Saturation';
   }
 
   if (name.includes('idvg') &&
-    (name.includes('sat') || name.includes('saturation'))) {
-    return 'IDVG-Saturation';
+    (name.includes('linear') || name.includes('lin'))) {
+    return 'IDVG-Linear';
   }
 
   return 'Unknown';
