@@ -713,7 +713,9 @@ const EnhancedFileUploadSection = ({
       setUploadedFiles,
       startAnalysis,
       handleGoToMainHome,
-      handleGitHubFilesLoaded
+      handleGitHubFilesLoaded,
+      parameterMode,
+      setParameterMode
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
 
@@ -798,13 +800,15 @@ const EnhancedFileUploadSection = ({
             </div>
 
             {/* ParameterInputSection에 대한 애니메이션 래퍼 */}
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showParamInput ? 'max-h-[1000px] opacity-100 mb-12' : 'max-h-0 opacity-0'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${showParamInput ? 'max-h-none opacity-100 mb-12' : 'max-h-0 opacity-0 overflow-hidden'}`}>
               <ParameterInputSection
                 deviceParams={deviceParams}
                 setDeviceParams={setDeviceParams}
                 showParamInput={showParamInput}
                 uploadedFiles={uploadedFiles}
                 setUploadedFiles={setUploadedFiles}
+                parameterMode={parameterMode}
+                setParameterMode={setParameterMode}
               />
             </div>
 

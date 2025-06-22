@@ -17,7 +17,8 @@ export const analyzeFiles = async (files, deviceParams) => {
       const worksheet = workbook.Sheets[workbook.SheetNames[0]];
       const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
       
-      const analysisResult = performAnalysis(jsonData, fileInfo.type, fileInfo.name, deviceParams);
+      const paramsToUse = fileInfo.individualParams || deviceParams;
+      const analysisResult = performAnalysis(jsonData, fileInfo.type, fileInfo.name, paramsToUse);
       
       if (!results[fileInfo.type]) {
         results[fileInfo.type] = [];
@@ -57,7 +58,7 @@ const performAnalysis = (data, type, filename, deviceParams) => {
 };
 
 // 통합 분석 함수 (기존과 동일하지만 새 모듈 사용)
-export const performCompleteAnalysis = (analysisResults, deviceParams) => {
+export const performCompleteAnalysis = (analysisResults, deviceParams, uploadedFiles = []) => {
   const sampleGroups = {};
   
   Object.entries(analysisResults).forEach(([type, resultArray]) => {
@@ -73,7 +74,7 @@ export const performCompleteAnalysis = (analysisResults, deviceParams) => {
   const completeResults = {};
   
   Object.entries(sampleGroups).forEach(([sampleName, sampleData]) => {
-    completeResults[sampleName] = performSampleCompleteAnalysis(sampleName, sampleData, deviceParams);
+    completeResults[sampleName] = performSampleCompleteAnalysis(sampleName, sampleData, deviceParams, uploadedFiles);
   });
 
   return completeResults;
@@ -91,7 +92,10 @@ export const calculateGmMaxFromLinear = (linearResult) => {
   return maxGmPoint.gm;
 };
 
-const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => {
+const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams, sampleFiles = []) => {
+
+  const sampleFile = sampleFiles.find(f => (f.alias || f.name) === sampleName);
+  const paramsToUse = sampleFile?.individualParams || deviceParams;
   const results = {
     sampleName,
     hasLinear: !!sampleData['IDVG-Linear'],
@@ -154,7 +158,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
     // μFE 재계산
     let muFE = 0;
     if (gm_max_lin > 0) {
-      muFE = TFTParams.calculateMuFE(gm_max_lin, deviceParams, vds_linear);
+      muFE = TFTParams.calculateMuFE(gm_max_lin, paramsToUse, vds_linear);
     }
 
     // Y-function으로 μ0 계산
@@ -164,7 +168,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       const mu0Result = TFTParams.calculateMu0(
         linearData.chartData, 
         linearData.gmData, 
-        deviceParams, 
+        paramsToUse, 
         vth_lin, 
         vds_linear
       );
@@ -184,7 +188,7 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams) => 
       const linearData = sampleData['IDVG-Linear'];
       const thetaResult = TFTParams.calculateTheta(
         mu0, 
-        deviceParams, 
+        paramsToUse, 
         linearData.chartData, 
         vth_lin, 
         vds_linear

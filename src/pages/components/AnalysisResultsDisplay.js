@@ -1,7 +1,7 @@
 // C:\Users\HYUN\hightech_tft\src\pages\components\AnalysisResultsDisplay.js
 
-import React, { useState } from 'react';
-import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3 } from 'lucide-react';
+import React, { useState, useEffect } from 'react'; // useEffect 추가
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown } from 'lucide-react'; // 아이콘 추가
 import SSRangeEditor from './SSRangeEditor';
 import { calculateDit } from '../parameters/index.js';
 import {
@@ -20,7 +20,8 @@ const AnalysisResultsDisplay = ({
   setCurrentPage,
   handleGoToMainHome,
   setAnalysisResults,
-  setCompleteAnalysisResults
+  setCompleteAnalysisResults,
+  uploadedFiles
 }) => {
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
@@ -31,6 +32,41 @@ const AnalysisResultsDisplay = ({
     chartData: null,
     currentSS: null
   });
+  // 👇 이 부분 추가
+  const [showScrollButtons, setShowScrollButtons] = useState(false);
+  const [canScrollUp, setCanScrollUp] = useState(false);
+  const [canScrollDown, setCanScrollDown] = useState(false);
+
+  // 스크롤 감지
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight;
+      const clientHeight = window.innerHeight;
+
+      // 스크롤이 있을 때만 버튼 표시
+      setShowScrollButtons(scrollHeight > clientHeight + 100);
+
+      // 위로 스크롤 가능한지 확인
+      setCanScrollUp(scrollTop > 300);
+
+      // 아래로 스크롤 가능한지 확인
+      setCanScrollDown(scrollTop < scrollHeight - clientHeight - 100);
+    };
+    // 초기 체크
+    handleScroll();
+
+    // 스크롤 이벤트 리스너 추가
+    window.addEventListener('scroll', handleScroll);
+
+    // 리사이즈 이벤트도 감지 (내용이 변경될 때)
+    window.addEventListener('resize', handleScroll);
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleScroll);
+    };
+  }, []);
 
   const formatLinearCurrent = (value) => {
     if (value >= 1e-3) return `${parseFloat((value * 1000).toFixed(1))}m`;
@@ -109,6 +145,32 @@ const AnalysisResultsDisplay = ({
     return <AlertTriangle className="w-4 h-4 text-red-500" title="매우 미흡한 SS 값 (>1500 mV/decade)" />;
   };
 
+  // 스크롤 함수들
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  };
+  const scrollToBottom = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: 'smooth'
+    });
+  };
+  const scrollDown = () => {
+    window.scrollBy({
+      top: window.innerHeight * 0.8, // 화면 높이의 80%만큼 스크롤
+      behavior: 'smooth'
+    });
+  };
+  const scrollUp = () => {
+    window.scrollBy({
+      top: -window.innerHeight * 0.8, // 화면 높이의 80%만큼 위로 스크롤
+      behavior: 'smooth'
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -131,7 +193,13 @@ const AnalysisResultsDisplay = ({
         </div>
 
         {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
-          <CompleteAnalysisSection completeAnalysisResults={completeAnalysisResults} deviceParams={deviceParams} analysisResults={analysisResults} openSSEditor={openSSEditor} />
+          <CompleteAnalysisSection
+            completeAnalysisResults={completeAnalysisResults}
+            deviceParams={deviceParams}
+            analysisResults={analysisResults}
+            openSSEditor={openSSEditor}
+            uploadedFiles={uploadedFiles}
+          />
         )}
 
         {analysisResults && Object.keys(analysisResults).map((type) => {
@@ -169,101 +237,150 @@ const AnalysisResultsDisplay = ({
         )}
 
         <SSRangeEditor isOpen={ssEditorState.isOpen} onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))} chartData={ssEditorState.chartData} currentSS={ssEditorState.currentSS} sampleName={ssEditorState.currentSample} onApplyResult={handleSSUpdate} />
+        {/* 👇 스크롤 버튼들 추가 */}
+        {showScrollButtons && (
+          <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">
+            {/* 위로 스크롤 버튼 */}
+            {canScrollUp && (
+              <button
+                onClick={scrollToTop}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
+                title="맨 위로"
+              >
+                <ChevronUp className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* 아래로 스크롤 버튼 */}
+            {canScrollDown && (
+              <button
+                onClick={scrollToBottom}
+                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
+                title="맨 아래로"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
 };
 
 // 분석 결과 섹션
-const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor }) => (
-    <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-lg p-8 mb-8">
-      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center"><Star className="w-8 h-8 text-yellow-500 mr-3" />통합 분석 결과</h2>
-      <div className="grid gap-6">
-        {Object.entries(completeAnalysisResults).map(([sampleName, result]) => (
-          <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-800">{sampleName}<span className="text-sm font-normal text-gray-600 ml-3">(W={(deviceParams.W * 1e6).toFixed(1)}μm, L={(deviceParams.L * 1e6).toFixed(1)}μm, tox={(deviceParams.tox * 1e9).toFixed(1)}nm)</span></h3>
-              <div className="flex items-center space-x-4">
-                <span className={`px-3 py-1 rounded-full text-sm font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>품질: {result.quality.grade} ({result.quality.score}점)</span>
-                <div className="flex space-x-2">
-                  {result.hasLinear && <span className="w-3 h-3 bg-blue-500 rounded-full" title="Linear"></span>}
-                  {result.hasSaturation && <span className="w-3 h-3 bg-green-500 rounded-full" title="Saturation"></span>}
-                  {result.hasIDVD && <span className="w-3 h-3 bg-purple-500 rounded-full" title="IDVD"></span>}
-                  {result.hasHysteresis && <span className="w-3 h-3 bg-orange-500 rounded-full" title="Hysteresis"></span>}
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-6">
-              
-              {/* 1️⃣ 기본 전기 특성 - 가장 중요한 기본 파라미터들 */}
-              <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-blue-800 mb-3">⚡ 기본 전기 특성</h4>
-                <div className="space-y-2 text-sm">
-                  {['Vth (Linear 기준)', 'gm_max (Linear 기준)', 'μFE (통합 계산)', 'Ion/Ioff'].map((key) => (
-                    <div key={key} className="flex justify-between items-center">
-                      <span className="text-gray-600">{key.split(' ')[0]}:</span>
-                      <div className="flex items-center space-x-1">
-                        <span className="font-mono text-xs">{result.parameters[key]}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor, uploadedFiles }) => {
 
-              {/* 2️⃣ 품질 & 안정성 - 소자의 품질과 안정성 지표들 */}
-              <div className="bg-gradient-to-br from-green-50 to-yellow-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-green-800 mb-3">📊 품질 & 안정성</h4>
-                <div className="space-y-2 text-sm">
-                  {['SS (Linear 기준)', 'Dit (Linear 기준)', 'ΔVth (Hysteresis)', 'Stability'].map((key) => (
-                    <div key={key} className="flex justify-between items-center">
-                      <span className="text-gray-600">{key.split(' ')[0]}:</span>
-                      <div className="flex items-center space-x-1">
-                        <span className="font-mono text-xs">{result.parameters[key]}</span>
-                        {key.includes('SS') && result.hasLinear && (
-                          <button onClick={() => { const linearResult = analysisResults['IDVG-Linear']?.find(r => r.displayName === sampleName); if (linearResult) openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters[key]); }} className="p-1 hover:bg-blue-100 rounded transition-colors" title="SS 값 수정하기"><Edit3 className="w-3 h-3 text-blue-600" /></button>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+ // 샘플별 개별 파라미터 가져오는 함수
+ const getSampleParams = (sampleName) => {
+   if (!uploadedFiles) return deviceParams;
+   const sampleFile = uploadedFiles.find(f => (f.alias || f.name) === sampleName);
+   return sampleFile?.individualParams || deviceParams;
+ };
 
-              {/* 3️⃣ 고급 이동도 분석 - 이동도 물리 모델 파라미터들 */}
-              <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
-                <h4 className="font-semibold text-purple-800 mb-3">🔬 고급 이동도 분석</h4>
-                <div className="space-y-2 text-sm">
-                  {['μ0 (Y-function)', 'μeff (정확 계산)', 'θ (계산값)', 'Ron'].map((key) => (
-                    <div key={key} className="flex justify-between items-center">
-                      <span className="text-gray-600">{key.split(' ')[0]}:</span>
-                      <div className="flex items-center space-x-1">
-                        <span className="font-mono text-xs">{result.parameters[key]}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-            </div>
-            
-            {/* 경고 및 품질 문제 표시는 그대로 유지 */}
-            {result.warnings && result.warnings.length > 0 && (
-              <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
-                <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>
-                <ul className="text-sm text-yellow-700 space-y-1">{result.warnings.map((warning, index) => (<li key={index}>• {warning}</li>))}</ul>
-              </div>
-            )}
-            {result.quality.issues.length > 0 && (
-              <div className="mt-2 p-3 bg-red-50 border-l-4 border-red-400 rounded">
-                <h5 className="font-semibold text-red-800 mb-2">❌ 품질 문제:</h5>
-                <ul className="text-sm text-red-700 space-y-1">{result.quality.issues.map((issue, index) => (<li key={index}>• {issue}</li>))}</ul>
-              </div>
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
+ return (
+   <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-lg p-8 mb-8">
+     <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center"><Star className="w-8 h-8 text-yellow-500 mr-3" />통합 분석 결과</h2>
+     <div className="grid gap-6">
+       {Object.entries(completeAnalysisResults).map(([sampleName, result]) => {
+         const sampleParams = getSampleParams(sampleName); // 개별 파라미터 가져오기
+
+         return (
+           <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
+             <div className="flex items-center justify-between mb-4">
+               <h3 className="text-xl font-bold text-gray-800">
+                 {sampleName}
+                 <span className="text-sm font-normal text-gray-600 ml-3">
+                   (W={(sampleParams.W * 1e6).toFixed(1)}μm, L={(sampleParams.L * 1e6).toFixed(1)}μm, tox={(sampleParams.tox * 1e9).toFixed(1)}nm)
+                 </span>
+               </h3>
+               <div className="flex items-center space-x-4">
+                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>품질: {result.quality.grade} ({result.quality.score}점)</span>
+                 <div className="flex space-x-2">
+                   {result.hasLinear && <span className="w-3 h-3 bg-blue-500 rounded-full" title="Linear"></span>}
+                   {result.hasSaturation && <span className="w-3 h-3 bg-green-500 rounded-full" title="Saturation"></span>}
+                   {result.hasIDVD && <span className="w-3 h-3 bg-purple-500 rounded-full" title="IDVD"></span>}
+                   {result.hasHysteresis && <span className="w-3 h-3 bg-orange-500 rounded-full" title="Hysteresis"></span>}
+                 </div>
+               </div>
+             </div>
+
+             <div className="grid md:grid-cols-3 gap-6">
+
+               {/* 1️⃣ 기본 전기 특성 - 가장 중요한 기본 파라미터들 */}
+               <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
+                 <h4 className="font-semibold text-blue-800 mb-3">⚡ 기본 전기 특성</h4>
+                 <div className="space-y-2 text-sm">
+                   {['Vth (Linear 기준)', 'gm_max (Linear 기준)', 'μFE (통합 계산)', 'Ion/Ioff'].map((key) => (
+                     <div key={key} className="flex justify-between items-center">
+                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                       <div className="flex items-center space-x-1">
+                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+
+               {/* 2️⃣ 품질 & 안정성 - 소자의 품질과 안정성 지표들 */}
+               <div className="bg-gradient-to-br from-green-50 to-yellow-50 p-4 rounded-lg">
+                 <h4 className="font-semibold text-green-800 mb-3">📊 품질 & 안정성</h4>
+                 <div className="space-y-2 text-sm">
+                   {['SS (Linear 기준)', 'Dit (Linear 기준)', 'ΔVth (Hysteresis)', 'Stability'].map((key) => (
+                     <div key={key} className="flex justify-between items-center">
+                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                       <div className="flex items-center space-x-1">
+                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                         {key.includes('SS') && result.hasLinear && (
+                           <button onClick={() => { const linearResult = analysisResults['IDVG-Linear']?.find(r => r.displayName === sampleName); if (linearResult) openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters[key]); }} className="p-1 hover:bg-blue-100 rounded transition-colors" title="SS 값 수정하기"><Edit3 className="w-3 h-3 text-blue-600" /></button>
+                         )}
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+
+               {/* 3️⃣ 고급 이동도 분석 - 이동도 물리 모델 파라미터들 */}
+               <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
+                 <h4 className="font-semibold text-purple-800 mb-3">🔬 고급 이동도 분석</h4>
+                 <div className="space-y-2 text-sm">
+                   {['μ0 (Y-function)', 'μeff (정확 계산)', 'θ (계산값)', 'Ron'].map((key) => (
+                     <div key={key} className="flex justify-between items-center">
+                       <span className="text-gray-600">{key.split(' ')[0]}:</span>
+                       <div className="flex items-center space-x-1">
+                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+               </div>
+
+             </div>
+
+             {/* 경고 및 품질 문제 표시는 그대로 유지 */}
+             {result.warnings && result.warnings.length > 0 && (
+               <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
+                 <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>
+                 <ul className="text-sm text-yellow-700 space-y-1">{result.warnings.map((warning, index) => (<li key={index}>• {warning}</li>))}</ul>
+               </div>
+             )}
+             {result.quality.issues.length > 0 && (
+               <div className="mt-2 p-3 bg-red-50 border-l-4 border-red-400 rounded">
+                 <h5 className="font-semibold text-red-800 mb-2">❌ 품질 문제:</h5>
+                 <ul className="text-sm text-red-700 space-y-1">{result.quality.issues.map((issue, index) => (<li key={index}>• {issue}</li>))}</ul>
+               </div>
+             )}
+           </div>
+         );
+       })}
+     </div>
+   </div>
+ );
+};
 
 // 개별 분석 섹션
 const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {

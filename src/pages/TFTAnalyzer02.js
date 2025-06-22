@@ -23,7 +23,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     Cox: 3.45e-7      // 산화막 정전용량 (F/cm²)
   });
   const [showParamInput, setShowParamInput] = useState(false);
-
+  const [parameterMode, setParameterMode] = useState('single');
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
@@ -92,7 +92,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       setAnalysisResults(results);
       
       // 통합 분석 수행
-      const completeResults = performCompleteAnalysis(results, deviceParams);
+      const completeResults = performCompleteAnalysis(results, deviceParams, uploadedFiles);
       setCompleteAnalysisResults(completeResults);
       
       setCurrentPage('analyzer');
@@ -120,6 +120,8 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       setUploadedFiles={setUploadedFiles}
       startAnalysis={startAnalysis}
       handleGoToMainHome={handleGoToMainHome}
+      parameterMode={parameterMode}
+      setParameterMode={setParameterMode}
     />
   );
 
@@ -135,6 +137,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       setShowDataTable={setShowDataTable}
       setCurrentPage={setCurrentPage}
       handleGoToMainHome={handleGoToMainHome}
+      uploadedFiles={uploadedFiles}
     />
   );
 

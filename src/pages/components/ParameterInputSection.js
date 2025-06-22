@@ -13,9 +13,10 @@ const ParameterInputSection = ({
   setDeviceParams, 
   showParamInput,
   uploadedFiles,
-  setUploadedFiles
+  setUploadedFiles,
+  parameterMode,
+  setParameterMode
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState('single');
 
   if (!showParamInput) return null;
 
@@ -37,7 +38,7 @@ const ParameterInputSection = ({
   ];
 
   const handleMethodSelect = (methodId) => {
-    setSelectedMethod(methodId);
+    setParameterMode(methodId);
     
     // 샘플별 파라미터 방식으로 변경할 때, 기존 파일들에 기본 파라미터 설정
     if (methodId === 'individual' && uploadedFiles && setUploadedFiles) {
@@ -141,7 +142,7 @@ const ParameterInputSection = ({
               onClick={() => handleMethodSelect(method.id)}
               className={`
                 relative p-4 rounded-xl border-2 transition-all duration-200 cursor-pointer
-                ${selectedMethod === method.id ? 
+                ${parameterMode === method.id ?
                   'border-blue-500 bg-blue-50 shadow-md' : 
                   'border-gray-200 hover:border-blue-300 hover:shadow-sm bg-white'
                 }
@@ -166,7 +167,7 @@ const ParameterInputSection = ({
       </div>
 
       {/* 단일 파라미터 입력 섹션 */}
-      {selectedMethod === 'single' && (
+      {parameterMode === 'single' && (
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-xl text-white shadow-lg">
           <div className="flex items-center justify-center mb-4">
             <Database className="w-6 h-6 mr-2" />
@@ -246,7 +247,7 @@ const ParameterInputSection = ({
       )}
 
       {/* 샘플별 개별 파라미터 입력 섹션 */}
-      {selectedMethod === 'individual' && (
+      {parameterMode === 'individual' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded-xl text-white text-center">
             <div className="flex items-center justify-center mb-2">
