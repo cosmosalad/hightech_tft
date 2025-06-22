@@ -1,23 +1,25 @@
-/*@font-face {
-  font-family: "PretendardVariable";
-  font-weight: normal;
-  src: url("../assets/font/PretendardVariable.ttf") format("truetype");
-}*/
-
-body {
-  margin: 0;
-  font-family: "PretendardVariable", -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
-}
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 전역 폰트 설정 - Pretendard Variable 적용 */
+* {
+  font-family: 'Pretendard Variable', 'Pretendard', -apple-system, BlinkMacSystemFont, 
+               system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 
+               'Noto Sans KR', 'Malgun Gothic', sans-serif;
+}
+
+body {
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* font-family는 위에서 전역 설정했으므로 제거 */
+}
+
+code {
+  font-family: 'Pretendard Variable', source-code-pro, Menlo, Monaco, Consolas, 
+               'Courier New', monospace;
+}
+
+/* 기존 로컬 폰트 설정 제거 (CDN 사용) */
+/* @font-face 설정 삭제됨 */
