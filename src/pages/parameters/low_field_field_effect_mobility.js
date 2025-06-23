@@ -116,7 +116,7 @@ export const calculateMu0 = (chartData, gmData, deviceParams, vth, vds) => {
   const mu0 = mu0_raw * 1e4; // m²/V·s → cm²/V·s 변환
 
   // ✅ 물리적 타당성 검증
-  if (mu0 <= 0 || mu0 > 200) { // TFT 일반적 범위
+  if (mu0 <= 0 || mu0 > 500) { // TFT 일반적 범위
     return { 
       mu0: 0, 
       quality: 'Poor', 

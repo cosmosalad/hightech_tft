@@ -175,11 +175,25 @@ const performSampleCompleteAnalysis = (sampleName, sampleData, deviceParams, sam
       mu0 = mu0Result.mu0;
       mu0_quality = mu0Result.quality;
       
-      if (mu0Result.quality === 'Poor' && muFE > 0) {
-        mu0 = muFE * 1.2; // Fallback
-        mu0_quality = 'Fallback';
-        results.warnings.push('Y-function 실패, Fallback 방법 사용');
+    if (mu0Result.quality === 'Poor') {
+      mu0 = 0;
+      mu0_quality = 'N/A';
+      
+      // error 메시지에서 원인만 추출
+      let failureReason = '측정 조건 불량';
+      if (mu0Result.error) {
+        if (mu0Result.error.includes('Poor linearity')) {
+          failureReason = '선형성 부족';
+        } else if (mu0Result.error.includes('Insufficient data')) {
+          failureReason = '데이터 부족';
+        } else if (mu0Result.error.includes('Unphysical')) {
+          failureReason = '비물리적 값';
+        } else if (mu0Result.error.includes('Invalid slope')) {
+          failureReason = '기울기 오류';
+        }
       }
+      results.warnings.push(`Y-function 실패: ${failureReason}`);
+    }
     }
 
     // θ 계산
@@ -329,9 +343,9 @@ export const evaluateDataQuality = (params, warnings, dataAvailability) => {
   } else if (params['μ0 품질'] === 'Poor') {
     paramScore += 1;
     issues.push('Y-function 품질 불량');
-  } else if (params['μ0 품질'] === 'Fallback') {
-    paramScore += 3;
-    issues.push('Y-function 실패, Fallback 사용');
+  } else if (params['μ0 품질'] === 'N/A') {
+    paramScore += 0;  // 0점 처리
+    issues.push('Y-function 구현 실패');
   } else {
     issues.push('μ0 계산 실패');
   }
