@@ -72,7 +72,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
           
           <p className="text-xl md:text-2xl text-gray-700 mb-8 font-light leading-relaxed max-w-4xl mx-auto">
-            Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
+            Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산해 보세요!
           </p>
 
           <div className="flex flex-wrap justify-center items-center gap-4 mb-8">

@@ -737,7 +737,7 @@ const EnhancedFileUploadSection = ({
                 TFT Electrical Characterization Analyzer
               </h1>
               <p className="text-xl text-gray-600 mb-8">
-                Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산합니다
+                Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산해 보세요!
               </p>
               <div className="bg-gradient-to-r from-purple-100 to-pink-100 p-4 rounded-lg">
                 <p className="text-lg font-semibold text-purple-800">🎯 통합 분석</p>
