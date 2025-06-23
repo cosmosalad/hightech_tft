@@ -270,7 +270,7 @@ const DynamicFormulaInspector = () => {
           <Code className="w-8 h-8 text-blue-600 mr-3" />
           <h2 className="text-3xl font-bold text-gray-800">🔥 TFT 파라미터 코드 점검기</h2>
         </div>
-        <p className="text-gray-600 text-lg">GitHub 원본 파일을 부드러운 UI로 경험해보세요.</p>
+        <p className="text-gray-600 text-lg">GitHub 원본 파일의 수식을 점검해보세요.</p>
       </div>
 
       <div className="space-y-4">
