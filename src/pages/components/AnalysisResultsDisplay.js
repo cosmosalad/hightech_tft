@@ -319,7 +319,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                      <div key={key} className="flex justify-between items-center">
                        <span className="text-gray-600">{key.split(' ')[0]}:</span>
                        <div className="flex items-center space-x-1">
-                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                         <span className="text-xs font-medium">{result.parameters[key]}</span>
                        </div>
                      </div>
                    ))}
@@ -334,7 +334,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                      <div key={key} className="flex justify-between items-center">
                        <span className="text-gray-600">{key.split(' ')[0]}:</span>
                        <div className="flex items-center space-x-1">
-                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                         <span className="text-xs font-medium">{result.parameters[key]}</span>
                          {key.includes('SS') && result.hasLinear && (
                            <button onClick={() => { const linearResult = analysisResults['IDVG-Linear']?.find(r => r.displayName === sampleName); if (linearResult) openSSEditor(sampleName, 'IDVG-Linear', linearResult.chartData, result.parameters[key]); }} className="p-1 hover:bg-blue-100 rounded transition-colors" title="SS 값 수정하기"><Edit3 className="w-3 h-3 text-blue-600" /></button>
                          )}
@@ -352,7 +352,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                      <div key={key} className="flex justify-between items-center">
                        <span className="text-gray-600">{key.split(' ')[0]}:</span>
                        <div className="flex items-center space-x-1">
-                         <span className="font-mono text-xs">{result.parameters[key]}</span>
+                         <span className="text-xs font-medium">{result.parameters[key]}</span>
                        </div>
                      </div>
                    ))}
@@ -416,7 +416,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
                   <div key={key} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
                     <span className="font-medium text-gray-700 text-sm">{key}:</span>
                     <div className="flex items-center space-x-2">
-                      <span className="text-gray-900 font-mono text-xs">{value}</span>
+                      <span className="text-gray-900 text-xs font-medium">{value}</span>
                       {key === 'SS' && (type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
                         <div className="flex items-center space-x-1">
                           {getSSQualityIcon(value)}
@@ -466,17 +466,17 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
               <td className="border border-gray-300 px-2 py-2 text-center">
                 <span className={`px-2 py-1 rounded text-xs font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{result.quality.grade}</span>
               </td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['Vth (Linear 기준)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['gm_max (Linear 기준)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs font-bold text-blue-700">{result.parameters['μFE (통합 계산)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['μ0 (Y-function)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['μeff (정확 계산)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['θ (계산값)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['SS (Linear 기준)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['Dit (Linear 기준)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['Ion/Ioff']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['ΔVth (Hysteresis)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center font-mono text-xs">{result.parameters['Ron']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Vth (Linear 기준)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['gm_max (Linear 기준)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-bold text-blue-700">{result.parameters['μFE (통합 계산)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['μ0 (Y-function)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['μeff (정확 계산)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['θ (계산값)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['SS (Linear 기준)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Dit (Linear 기준)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Ion/Ioff']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['ΔVth (Hysteresis)']}</td>
+              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Ron']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs">
                 <div className="flex justify-center space-x-1">
                   {result.hasLinear && <span className="w-2 h-2 bg-blue-500 rounded-full" title="Linear"></span>}
