@@ -14,7 +14,7 @@
     "children": {
       "0613": {
         "type": "folder",
-        "description": "Pressure: 7mTorr\nPower: 70W",
+        "description": "O2: 0sccm\nPressure: 7mTorr\nPower: 70W\nsputtering time: 8m15s\nMeasured THickness: 28nm",
         "files": [
           "0613_IDVG_Lin_0sccm_300.xls",
           "0613_IDVG_Lin_0sccm_350.xls"
@@ -22,7 +22,7 @@
       },
       "0614": {
         "type": "folder",
-        "description": "Pressure: 5mTorr\nPower: 100W",
+        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMeasured THickness: 38nm",
         "files": [
           "0614_IDVG_Lin_1sccm_000.xls",
           "0614_IDVG_Lin_1sccm_050.xls",
@@ -34,7 +34,7 @@
       },
       "0616": {
         "type": "folder",
-        "description": "Pressure: 5mTorr\nPower: 100W",
+        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s\nMeasured THickness: 36nm",
         "files": [
           "0616_IDVD_1sccm_000.xls",
           "0616_IDVD_1sccm_100.xls",
