@@ -64,17 +64,46 @@
         "type": "folder",
         "description": "Pressure: 7mTorr\nPower: 70W",
         "children": {
+          "before_annealing_1sccm": {
+            "type": "folder",
+            "files": [
+              "T1_IDVG_Lin_1c_000_1.xls",
+              "T1_IDVG_Lin_1c_000_2.xls",
+              "T1_IDVG_Lin_1c_000_3.xls",
+              "T1_IDVG_Lin_1c_000_4.xls",
+              "T1_IDVG_Lin_1c_000_5.xls",
+              "T1_IDVG_Lin_1c_000_6.xls",
+              "T1_IDVG_Lin_1c_000_7.xls",
+              "T1_IDVG_Lin_1c_000_8.xls"
+            ]
+          },
+          "before_annealing_2sccm": {
+            "type": "folder",
+            "files": [
+              "T1_IDVG_Lin_2c_000_1.xls",
+              "T1_IDVG_Lin_2c_000_2.xls",
+              "T1_IDVG_Lin_2c_000_3.xls",
+              "T1_IDVG_Lin_2c_000_5.xls"
+            ]
+          },
+          "before_annealing_3sccm": {
+            "type": "folder",
+            "files": [
+              "T1_IDVG_Lin_3c_000_3.xls",
+              "T1_IDVG_Lin_3c_000_5.xls"
+            ]
+          },
           "after_annealing100_1sccm": {
             "type": "folder",
             "files": [
-              "T1_IDVG_Lin_1c_100_5.xls",
-              "T1_IDVG_Lin_1c_100_6.xls",
-              "T1_IDVG_Lin_1c_100_7.xls",
-              "T1_IDVG_Lin_1c_100_8.xls",
               "T1_IDVG_Lin_1c_100_1.xls",
               "T1_IDVG_Lin_1c_100_2.xls",
               "T1_IDVG_Lin_1c_100_3.xls",
-              "T1_IDVG_Lin_1c_100_4.xls"
+              "T1_IDVG_Lin_1c_100_4.xls",
+              "T1_IDVG_Lin_1c_100_5.xls",
+              "T1_IDVG_Lin_1c_100_6.xls",
+              "T1_IDVG_Lin_1c_100_7.xls",
+              "T1_IDVG_Lin_1c_100_8.xls"
             ]
           },
           "after_annealing100_2sccm": {
@@ -96,14 +125,14 @@
           "after_annealing200_1sccm": {
             "type": "folder",
             "files": [
-              "T1_IDVG_Lin_1c_200_5.xls",
-              "T1_IDVG_Lin_1c_200_6.xls",
-              "T1_IDVG_Lin_1c_200_7.xls",
-              "T1_IDVG_Lin_1c_200_8.xls",
               "T1_IDVG_Lin_1c_200_1.xls",
               "T1_IDVG_Lin_1c_200_2.xls",
               "T1_IDVG_Lin_1c_200_3.xls",
-              "T1_IDVG_Lin_1c_200_4.xls"
+              "T1_IDVG_Lin_1c_200_4.xls",
+              "T1_IDVG_Lin_1c_200_5.xls",
+              "T1_IDVG_Lin_1c_200_6.xls",
+              "T1_IDVG_Lin_1c_200_7.xls",
+              "T1_IDVG_Lin_1c_200_8.xls"
             ]
           },
           "after_annealing200_2sccm": {
@@ -207,35 +236,6 @@
                 ]
               }
             }
-          },
-          "before_annealing_1sccm": {
-            "type": "folder",
-            "files": [
-              "T1_IDVG_Lin_1c_000_1.xls",
-              "T1_IDVG_Lin_1c_000_2.xls",
-              "T1_IDVG_Lin_1c_000_3.xls",
-              "T1_IDVG_Lin_1c_000_4.xls",
-              "T1_IDVG_Lin_1c_000_5.xls",
-              "T1_IDVG_Lin_1c_000_6.xls",
-              "T1_IDVG_Lin_1c_000_7.xls",
-              "T1_IDVG_Lin_1c_000_8.xls"
-            ]
-          },
-          "before_annealing_2sccm": {
-            "type": "folder",
-            "files": [
-              "T1_IDVG_Lin_2c_000_1.xls",
-              "T1_IDVG_Lin_2c_000_2.xls",
-              "T1_IDVG_Lin_2c_000_3.xls",
-              "T1_IDVG_Lin_2c_000_5.xls"
-            ]
-          },
-          "before_annealing_3sccm": {
-            "type": "folder",
-            "files": [
-              "T1_IDVG_Lin_3c_000_3.xls",
-              "T1_IDVG_Lin_3c_000_5.xls"
-            ]
           }
         }
       }
