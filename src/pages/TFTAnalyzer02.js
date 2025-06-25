@@ -9,6 +9,16 @@ import HomePage from './components/HomePage';
 import { analyzeFiles, performCompleteAnalysis } from './analysis/analysisEngine';
 import { detectFileType } from './utils/fileUtils';
 
+// Analytics import 추가
+import {
+  trackPageView,
+  trackAnalysisStart,
+  trackAnalysisComplete,
+  trackError,
+  trackPerformance,
+  trackParameterMode
+} from './utils/analytics';
+
 const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   const [currentPage, setCurrentPage] = useState('home');
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -24,9 +34,29 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   });
   const [showParamInput, setShowParamInput] = useState(false);
   const [parameterMode, setParameterMode] = useState('single');
+
+  // 페이지 변경 시 스크롤 및 Analytics 추적
   useEffect(() => {
     window.scrollTo(0, 0);
+    
+    // 페이지별 Analytics 추적
+    const pageMapping = {
+      'home': { title: 'TFT Analyzer - Home', path: '/tft-analyzer' },
+      'analyzer': { title: 'TFT Analyzer - Analysis Results', path: '/tft-analyzer/results' }
+    };
+    
+    const pageInfo = pageMapping[currentPage];
+    if (pageInfo) {
+      trackPageView(pageInfo.path, pageInfo.title);
+    }
   }, [currentPage]);
+
+  // 파라미터 모드 변경 시 Analytics 추적
+  useEffect(() => {
+    if (parameterMode !== 'single') { // 초기값이 아닐 때만 추적
+      trackParameterMode(parameterMode, deviceParams);
+    }
+  }, [parameterMode, deviceParams]);
 
   const handleGoBack = () => {
     if (currentPage === 'analyzer') {
@@ -72,12 +102,14 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     );
   };
 
-  // 분석 시작
+  // 향상된 분석 시작 함수
   const startAnalysis = async () => {
     if (uploadedFiles.length === 0) {
       alert('먼저 엑셀 파일을 업로드해주세요.');
       return;
     }
+    
+    const startTime = performance.now();
     
     window.scrollTo({
       top: 0,
@@ -86,7 +118,15 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     });
     
     setIsAnalyzing(true);
+    
     try {
+      // 샘플 수 계산 (Analytics용)
+      const sampleNames = [...new Set(uploadedFiles.map(f => f.alias || f.name))];
+      const hasIndividualParams = uploadedFiles.some(f => f.individualParams);
+      
+      // 분석 시작 추적
+      trackAnalysisStart(uploadedFiles.length, sampleNames.length, hasIndividualParams);
+      
       // 모듈화된 분석 엔진 사용
       const results = await analyzeFiles(uploadedFiles, deviceParams);
       setAnalysisResults(results);
@@ -95,9 +135,26 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       const completeResults = performCompleteAnalysis(results, deviceParams, uploadedFiles);
       setCompleteAnalysisResults(completeResults);
       
+      // 분석 완료 추적
+      const duration = performance.now() - startTime;
+      const successCount = Object.keys(results).length;
+      const errorCount = uploadedFiles.length - successCount;
+      
+      trackAnalysisComplete(duration, uploadedFiles.length, successCount, errorCount);
+      trackPerformance('analysis_complete', duration, {
+        sample_count: sampleNames.length,
+        parameter_mode: parameterMode,
+        has_individual_params: hasIndividualParams
+      });
+      
       setCurrentPage('analyzer');
+      
     } catch (error) {
       console.error('분석 중 오류 발생:', error);
+      
+      // 에러 추적
+      trackError('analysis', error.message, `${uploadedFiles.length} files`);
+      
       alert('파일 분석 중 오류가 발생했습니다.');
     } finally {
       setIsAnalyzing(false);

@@ -11,6 +11,15 @@ import {
   GmCharts
 } from './ChartComponents';
 
+// Analytics import 추가
+import {
+  trackChartInteraction,
+  trackDataTableView,
+  trackFormulaInspection,
+  trackFeatureUsage,
+  trackEngagement
+} from '../utils/analytics';
+
 const AnalysisResultsDisplay = ({
   analysisResults,
   completeAnalysisResults,
@@ -77,6 +86,10 @@ const AnalysisResultsDisplay = ({
   };
 
   const openSSEditor = (sampleName, measurementType, chartData, currentSS) => {
+    // SS 에디터 열기 Analytics 추적
+    trackFeatureUsage('ss_editor_open', 1);
+    trackFormulaInspection('SS', 'interactive_editor');
+    
     setSSEditorState({
       isOpen: true,
       currentSample: sampleName,
@@ -129,6 +142,10 @@ const AnalysisResultsDisplay = ({
           console.error('통합 분석 결과 업데이트 실패:', error);
         }
       }
+
+      // SS 업데이트 완료 Analytics 추적
+      trackFeatureUsage('ss_editor_update', 1);
+      trackEngagement('parameter_modification', 1, 'SS_adjustment');
     }
 
     setSSEditorState({ isOpen: false, currentSample: null, currentMeasurement: null, chartData: null, currentSS: null });
@@ -145,30 +162,62 @@ const AnalysisResultsDisplay = ({
     return <AlertTriangle className="w-4 h-4 text-red-500" title="매우 미흡한 SS 값 (>1500 mV/decade)" />;
   };
 
-  // 스크롤 함수들
+  // 향상된 Log Scale 토글 함수
+  const handleLogScaleToggle = (chartType) => {
+    setShowLogScale(!showLogScale);
+    trackChartInteraction(chartType, 'toggle_log_scale', { new_state: !showLogScale });
+  };
+
+  // 향상된 Sort By Value 토글 함수
+  const handleSortToggle = () => {
+    setSortByValue(!sortByValue);
+    trackChartInteraction('all_charts', 'toggle_sort_by_value', { new_state: !sortByValue });
+    trackFeatureUsage('sort_by_value', 1);
+  };
+
+  // 향상된 데이터 테이블 토글 함수
+  const handleDataTableToggle = () => {
+    setShowDataTable(!showDataTable);
+    
+    if (!showDataTable) { // 테이블을 열 때만 추적
+      const measurementTypes = Object.keys(analysisResults || {});
+      const sampleCount = Object.keys(completeAnalysisResults || {}).length;
+      trackDataTableView(measurementTypes, sampleCount);
+      trackFeatureUsage('integrated_results_table', 1);
+    }
+  };
+
+  // 스크롤 함수들 (Analytics 추가)
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
       behavior: 'smooth'
     });
+    trackEngagement('scroll_navigation', 1, 'to_top');
   };
+  
   const scrollToBottom = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
       behavior: 'smooth'
     });
+    trackEngagement('scroll_navigation', 1, 'to_bottom');
   };
+  
   const scrollDown = () => {
     window.scrollBy({
       top: window.innerHeight * 0.8, // 화면 높이의 80%만큼 스크롤
       behavior: 'smooth'
     });
+    trackEngagement('scroll_navigation', 1, 'page_down');
   };
+  
   const scrollUp = () => {
     window.scrollBy({
       top: -window.innerHeight * 0.8, // 화면 높이의 80%만큼 위로 스크롤
       behavior: 'smooth'
     });
+    trackEngagement('scroll_navigation', 1, 'page_up');
   };
 
   return (
@@ -178,7 +227,11 @@ const AnalysisResultsDisplay = ({
           <h1 className="text-3xl font-bold text-gray-800">TFT 통합 분석 결과</h1>
           <div className="flex items-center space-x-4">
             <div className="relative flex items-center space-x-2">
-              <button onClick={() => setSortByValue(!sortByValue)} className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${sortByValue ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'}`} title="Tooltip에서 값 크기순으로 정렬">
+              <button 
+                onClick={handleSortToggle} 
+                className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${sortByValue ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'}`} 
+                title="Tooltip에서 값 크기순으로 정렬"
+              >
                 <div className="flex items-center space-x-2">
                   <BarChart3 className={`w-4 h-4 transition-all duration-300 ${sortByValue ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'}`} />
                   <span className="font-medium text-sm">{sortByValue ? '값 정렬 활성' : '값 정렬 비활성'}</span>
@@ -187,8 +240,18 @@ const AnalysisResultsDisplay = ({
                 <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${sortByValue ? 'bg-white/10 group-hover:opacity-100' : 'bg-gradient-to-r from-emerald-50 to-teal-50 group-hover:opacity-100'}`}></div>
               </button>
             </div>
-            <button onClick={() => setCurrentPage('home')} className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"><ArrowLeft className="w-4 h-4 mr-2" />분석기 홈으로</button>
-            <button onClick={handleGoToMainHome} className="flex items-center px-4 py-2.5 bg-gradient-to-r from-gray-600 to-slate-600 text-white rounded-xl hover:from-gray-700 hover:to-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"><Home className="w-4 h-4 mr-2" />메인 홈으로</button>
+            <button 
+              onClick={() => setCurrentPage('home')} 
+              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />분석기 홈으로
+            </button>
+            <button 
+              onClick={handleGoToMainHome} 
+              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-gray-600 to-slate-600 text-white rounded-xl hover:from-gray-700 hover:to-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
+            >
+              <Home className="w-4 h-4 mr-2" />메인 홈으로
+            </button>
           </div>
         </div>
 
@@ -214,7 +277,7 @@ const AnalysisResultsDisplay = ({
               getSSQualityIcon={getSSQualityIcon}
               sortByValue={sortByValue}
               showLogScale={showLogScale}
-              setShowLogScale={setShowLogScale}
+              setShowLogScale={(newValue) => handleLogScaleToggle(type)}
               formatLinearCurrent={formatLinearCurrent}
             />
           );
@@ -223,7 +286,10 @@ const AnalysisResultsDisplay = ({
         {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
           <>
             <div className="text-center mb-8">
-              <button onClick={() => setShowDataTable(!showDataTable)} className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center mx-auto">
+              <button 
+                onClick={handleDataTableToggle} 
+                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center mx-auto"
+              >
                 <Table className="w-5 h-5 mr-2" />
                 {showDataTable ? '통합 결과표 숨기기' : '통합 결과표 보기'}
               </button>
@@ -236,7 +302,15 @@ const AnalysisResultsDisplay = ({
           </>
         )}
 
-        <SSRangeEditor isOpen={ssEditorState.isOpen} onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))} chartData={ssEditorState.chartData} currentSS={ssEditorState.currentSS} sampleName={ssEditorState.currentSample} onApplyResult={handleSSUpdate} />
+        <SSRangeEditor 
+          isOpen={ssEditorState.isOpen} 
+          onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))} 
+          chartData={ssEditorState.chartData} 
+          currentSS={ssEditorState.currentSS} 
+          sampleName={ssEditorState.currentSample} 
+          onApplyResult={handleSSUpdate} 
+        />
+        
         {/* 👇 스크롤 버튼들 추가 */}
         {showScrollButtons && (
           <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">

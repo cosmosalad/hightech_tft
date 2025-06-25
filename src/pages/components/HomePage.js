@@ -19,6 +19,17 @@ import {
   loadFolderStructure
 } from './fileConfig';
 
+// Analytics import 추가
+import {
+  trackPageView,
+  trackFileUpload,
+  trackGitHubLoad,
+  trackSearch,
+  trackError,
+  trackPerformance,
+  initializeSession
+} from '../utils/analytics';
+
 
 // --- FileTreeItem Component ---
 const FileTreeItem = ({ item, level = 0, onSelectFolder, selectedFolder }) => {
@@ -252,6 +263,14 @@ const EnhancedFileUploadSection = ({
     return searchFiles(searchTerm);
   }, [searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
+  // 검색어 변경 시 Analytics 추적
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+    if (value.trim()) {
+      const results = searchFiles(value);
+      trackSearch(value, results.length, 'github_files');
+    }
+  }, []);
 
   const loadFileFromGitHub = useCallback(async (filename, folder) => {
     const folderPath = folder.split('/').map(part => encodeURIComponent(part)).join('/');
@@ -282,13 +301,14 @@ const EnhancedFileUploadSection = ({
     return fileInfo;
   }, [GITHUB_CONFIG.username, GITHUB_CONFIG.repo, GITHUB_CONFIG.branch]); // GITHUB_CONFIG는 변경될 수 없으므로 사실상 상수 취급 가능, ESLint 경고 방지
 
-
+  // 향상된 GitHub 파일 로드 함수
   const loadSelectedFiles = async () => {
     if (selectedFiles.size === 0) {
       alert('불러올 파일을 선택해주세요.');
       return;
     }
 
+    const startTime = performance.now();
     setIsLoadingFiles(true);
     const filesToLoad = Array.from(selectedFiles);
     const loadedFiles = [];
@@ -300,17 +320,31 @@ const EnhancedFileUploadSection = ({
           loadedFiles.push(fileInfo);
         } catch (error) {
           console.error(`파일 로드 실패: ${filename}`, error);
+          trackError('github_load', error.message, filename);
           alert(`파일 '${filename}' 로드에 실패했습니다. 콘솔을 확인하세요.`);
         }
       }
 
       if (loadedFiles.length > 0) {
         onGitHubFilesLoaded(loadedFiles);
+        
+        // Analytics 추적
+        const duration = performance.now() - startTime;
+        trackGitHubLoad(selectedFolder, loadedFiles.length, duration);
+        trackPerformance('github_load', duration, { 
+          success_count: loadedFiles.length,
+          total_count: filesToLoad.length 
+        });
+        
         alert(`${loadedFiles.length}개 파일을 성공적으로 불러왔습니다!`);
         setSelectedFiles(new Set());
       } else {
+        trackError('github_load', 'All files failed to load', selectedFolder);
         alert('선택한 파일 중 로드에 성공한 파일이 없습니다.');
       }
+    } catch (error) {
+      trackError('github_load', error.message, selectedFolder);
+      throw error;
     } finally {
       setIsLoadingFiles(false);
     }
@@ -491,13 +525,13 @@ const EnhancedFileUploadSection = ({
                     <input
                       type="text"
                       value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onChange={(e) => handleSearchChange(e.target.value)}
                       placeholder="파일명, 샘플명, 타입으로 검색..."
                       className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     {searchTerm && (
                       <button
-                        onClick={() => setSearchTerm('')}
+                        onClick={() => handleSearchChange('')}
                         className="absolute inset-y-0 right-0 pr-3 flex items-center"
                       >
                         <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
@@ -705,7 +739,7 @@ const EnhancedFileUploadSection = ({
       deviceParams,
       showParamInput,
       isAnalyzing,
-      handleFileUpload,
+      handleFileUpload: originalHandleFileUpload,
       removeFile,
       updateFileAlias,
       setShowParamInput,
@@ -718,6 +752,38 @@ const EnhancedFileUploadSection = ({
       setParameterMode
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
+
+      // 페이지 로드 시 Analytics 초기화
+      useEffect(() => {
+        trackPageView('/tft-analyzer/home', 'TFT Analyzer - File Upload & Configuration');
+        initializeSession();
+      }, []);
+
+      // 향상된 파일 업로드 핸들러
+      const handleFileUpload = useCallback((event) => {
+        const startTime = performance.now();
+        const files = Array.from(event.target.files);
+        
+        try {
+          // 기존 파일 업로드 로직
+          originalHandleFileUpload(event);
+          
+          // Analytics 추적
+          const fileTypes = files.map(file => detectFileType(file.name));
+          const uniqueTypes = [...new Set(fileTypes)];
+          
+          trackFileUpload(uniqueTypes, files.length, 'local');
+          
+          // 성능 추적
+          const duration = performance.now() - startTime;
+          const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+          trackPerformance('file_upload', duration, { file_size_mb: Math.round(totalSize / (1024 * 1024) * 100) / 100 });
+          
+        } catch (error) {
+          trackError('file_upload', error.message);
+          throw error;
+        }
+      }, [originalHandleFileUpload]);
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
