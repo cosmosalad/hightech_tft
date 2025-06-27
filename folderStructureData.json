@@ -313,7 +313,11 @@
               "IDVG_Lin_2_000_00_5.xls",
               "IDVG_Lin_2_000_00_6.xls",
               "IDVG_Lin_2_000_00_7.xls",
-              "IDVG_Lin_2_000_00_8.xls"
+              "IDVG_Lin_2_000_00_8.xls",
+              "IDVG_Lin_2_000_00_1_new.xls",
+              "IDVG_Lin_2_000_00_2_new.xls",
+              "IDVG_Lin_2_000_00_3_new.xls",
+              "IDVG_Lin_2_000_00_4_new.xls"
             ]
           },
           "sample3_annealing100_60m": {
@@ -349,7 +353,12 @@
               "IDVG_Lin_3_000_00_5.xls",
               "IDVG_Lin_3_000_00_6.xls",
               "IDVG_Lin_3_000_00_7.xls",
-              "IDVG_Lin_3_000_00_8.xls"
+              "IDVG_Lin_3_000_00_8.xls",
+              "IDVG_Lin_3_000_00_1_new.xls",
+              "IDVG_Lin_3_000_00_2_new.xls",
+              "IDVG_Lin_3_000_00_3_new.xls",
+              "IDVG_Lin_3_000_00_4_new.xls",
+              "IDVG_Lin_3_000_00_7_new.xls"
             ]
           }
         }
