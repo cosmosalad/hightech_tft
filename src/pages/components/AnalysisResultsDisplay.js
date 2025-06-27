@@ -1,5 +1,3 @@
-// C:\Users\HYUN\hightech_tft\src\pages\components\AnalysisResultsDisplay.js
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown, X, Trash2, Edit, ChevronRight, ChevronLeft, Pin, PinOff } from 'lucide-react';
 import SSRangeEditor from './SSRangeEditor';
@@ -40,6 +38,10 @@ const AnalysisResultsDisplay = ({
 }) => {
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
+  
+  // 새로 추가: 통합 분석 결과 표시 상태
+  const [showCompleteAnalysis, setShowCompleteAnalysis] = useState(true);
+  
   const [ssEditorState, setSSEditorState] = useState({
     isOpen: false,
     currentSample: null,
@@ -56,17 +58,16 @@ const AnalysisResultsDisplay = ({
   const [newSessionName, setNewSessionName] = useState('');
   const nameInputRef = useRef(null);
 
-  // 사이드바 상태 관리: isSidebarOpen은 이제 isSidebarPinned가 false일 때의 hover 상태를 나타냄.
-  // 사이드바는 isSidebarPinned가 true거나 isSidebarOpen이 true일 때 확장된 상태
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 마우스 오버로 임시 열림 여부
-  const [isSidebarPinned, setIsSidebarPinned] = useState(false); // 버튼으로 고정 여부
+  // 사이드바 상태 관리
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false);
 
   // 현재 세션 데이터를 useMemo로 캐싱
   const currentSession = useMemo(() => {
     return allAnalysisSessions.find(session => session.id === currentSessionId);
   }, [allAnalysisSessions, currentSessionId]);
 
-  // 스크롤 감지 (기존과 동일)
+  // 스크롤 감지
   useEffect(() => {
     if (!currentSession) {
       setShowScrollButtons(false);
@@ -89,7 +90,7 @@ const AnalysisResultsDisplay = ({
     };
   }, [currentSession]);
 
-  // 세션 이름 수정 모드 시작 (기존과 동일)
+  // 세션 이름 수정 모드 시작
   const startEditingSessionName = (session) => {
     setEditingSessionId(session.id);
     setNewSessionName(session.name);
@@ -99,7 +100,7 @@ const AnalysisResultsDisplay = ({
     }, 0);
   };
 
-  // 세션 이름 저장 (기존과 동일)
+  // 세션 이름 저장
   const saveSessionName = useCallback((sessionId) => {
     const trimmedNewName = newSessionName.trim();
     if (editingSessionId === sessionId && trimmedNewName && trimmedNewName !== allAnalysisSessions.find(s => s.id === sessionId)?.name) {
@@ -110,14 +111,14 @@ const AnalysisResultsDisplay = ({
     setNewSessionName('');
   }, [editingSessionId, newSessionName, allAnalysisSessions, updateSessionName]);
 
-  // 세션 이름 입력 중 Enter 키 처리 (기존과 동일)
+  // 세션 이름 입력 중 Enter 키 처리
   const handleNameInputKeyPress = (e, sessionId) => {
     if (e.key === 'Enter') {
       saveSessionName(sessionId);
     }
   };
 
-  // 입력 필드 외부 클릭 감지 (수정 모드 종료) (기존과 동일)
+  // 입력 필드 외부 클릭 감지 (수정 모드 종료)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (editingSessionId && nameInputRef.current && !nameInputRef.current.contains(event.target)) {
@@ -140,9 +141,9 @@ const AnalysisResultsDisplay = ({
   const mainContentMlClass = isExpanded ? EXPANDED_ML : COLLAPSED_ML;
 
   // 사이드바 배경색 및 텍스트 색상 조정
-  const sidebarBg = 'bg-gray-800'; // 원래 배경
+  const sidebarBg = 'bg-gray-800';
   const headerTextColor = 'text-blue-400';
-  const defaultTextColor = 'text-gray-200'; // 밝은 회색
+  const defaultTextColor = 'text-gray-200';
   const hoverBgColor = 'hover:bg-gray-700';
   const selectedBgColor = 'bg-blue-600';
 
@@ -232,6 +233,13 @@ const AnalysisResultsDisplay = ({
     trackFeatureUsage('sort_by_value', 1);
   };
 
+  // 새로 추가: 통합 분석 결과 토글 함수
+  const handleCompleteAnalysisToggle = () => {
+    setShowCompleteAnalysis(!showCompleteAnalysis);
+    trackFeatureUsage('complete_analysis_toggle', 1);
+    trackEngagement('section_toggle', 1, showCompleteAnalysis ? 'hide' : 'show');
+  };
+
   const handleDataTableToggle = () => {
     setShowDataTable(!showDataTable);
     if (!showDataTable) {
@@ -246,7 +254,7 @@ const AnalysisResultsDisplay = ({
   const scrollToBottom = () => { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'to_bottom'); };
   const scrollDown = () => { window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'page_down'); };
   const scrollUp = () => { window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'page_up'); };
-
+ 
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* 사이드바 컨테이너 */}
@@ -258,14 +266,14 @@ const AnalysisResultsDisplay = ({
             'shadow-lg flex flex-col z-40',
             sidebarWidthClass,
             'transition-all duration-300 ease-in-out',
-            !isSidebarPinned && 'group', // isSidebarPinned가 false일 때만 'group' 추가
-          ].filter(Boolean).join(' ') // null 또는 false 값을 필터링하고 공백으로 연결
+            !isSidebarPinned && 'group',
+          ].filter(Boolean).join(' ')
         }
         onMouseEnter={() => !isSidebarPinned && setIsSidebarOpen(true)}
         onMouseLeave={() => !isSidebarPinned && setIsSidebarOpen(false)}
       >
         {/* 사이드바 헤더 및 토글 버튼 */}
-        <div className={`flex items-center ${isExpanded ? 'justify-between px-4 py-4 border-b border-gray-700' : 'justify-center py-4'}`}> {/* px-4 py-4로 상하좌우 패딩 조정 */}
+        <div className={`flex items-center ${isExpanded ? 'justify-between px-4 py-4 border-b border-gray-700' : 'justify-center py-4'}`}>
           {isExpanded ? (
             <>
               <h2 className={`text-xl font-bold ${headerTextColor} whitespace-nowrap`}>분석 기록</h2>
@@ -278,18 +286,17 @@ const AnalysisResultsDisplay = ({
               </button>
             </>
           ) : (
-            // 축소 상태일 때의 아이콘 (항상 표시)
-            <div className="flex flex-col items-center space-y-1"> {/* space-y-1로 간격 좁힘 */}
+            <div className="flex flex-col items-center space-y-1">
               <ChevronRight className={`w-8 h-8 ${headerTextColor} transition-all duration-300`} title="분석 기록 열기" />
-              <span className={`text-xs font-semibold ${headerTextColor} transition-opacity duration-300`}>Tab</span> {/* '기록' 대신 'Tab' */}
+              <span className={`text-xs font-semibold ${headerTextColor} transition-opacity duration-300`}>Tab</span>
             </div>
           )}
         </div>
 
-        {/* 세션 목록 및 하단 탐색 버튼 (확장 상태에서만 내용 표시) */}
+        {/* 세션 목록 및 하단 탐색 버튼 */}
         {isExpanded && (
-          <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100"> {/* 항상 opacity-100으로 유지 */}
-            <div className="flex-grow overflow-y-auto px-4 pr-2 custom-scrollbar py-4"> {/* 상하 여백 추가 */}
+          <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100">
+            <div className="flex-grow overflow-y-auto px-4 pr-2 custom-scrollbar py-4">
               <div className="space-y-2">
                 {allAnalysisSessions.map(session => (
                   <div
@@ -340,7 +347,7 @@ const AnalysisResultsDisplay = ({
             </div>
 
             {/* 하단 탐색 버튼 */}
-            <div className="mt-auto space-y-3 py-4 border-t border-gray-700 px-4"> {/* 상하 여백 추가 */}
+            <div className="mt-auto space-y-3 py-4 border-t border-gray-700 px-4">
               <button
                 onClick={() => setCurrentPage('home')}
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md"
@@ -364,33 +371,82 @@ const AnalysisResultsDisplay = ({
       <div className={`flex-1 p-8 transition-all duration-300 ease-in-out ${mainContentMlClass}`}>
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">TFT 통합 분석 결과</h1>
+          
+          {/* 수정된 버튼 그룹 */}
           <div className="flex items-center justify-end mb-8 space-x-4">
-            <div className="relative flex items-center space-x-2">
+            <div className="relative flex items-center space-x-3">
+              {/* 통합 분석 결과 토글 버튼 */}
+              <button 
+                onClick={handleCompleteAnalysisToggle} 
+                className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  showCompleteAnalysis 
+                    ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white' 
+                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                }`} 
+                title="통합 분석 결과 섹션 표시/숨기기"
+              >
+                <div className="flex items-center space-x-2">
+                  <Star className={`w-4 h-4 transition-all duration-300 ${
+                    showCompleteAnalysis ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'
+                  }`} />
+                  <span className="font-medium text-sm">
+                    {showCompleteAnalysis ? '통합 결과 표시' : '통합 결과 숨김'}
+                  </span>
+                </div>
+                {showCompleteAnalysis && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
+                )}
+                <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${
+                  showCompleteAnalysis 
+                    ? 'bg-white/10 group-hover:opacity-100' 
+                    : 'bg-gradient-to-r from-purple-50 to-indigo-50 group-hover:opacity-100'
+                }`}></div>
+              </button>
+
+              {/* 기존 값 정렬 버튼 */}
               <button 
                 onClick={handleSortToggle} 
-                className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${sortByValue ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'}`} 
+                className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
+                  sortByValue 
+                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white' 
+                    : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-gray-300'
+                }`} 
                 title="Tooltip에서 값 크기순으로 정렬"
               >
                 <div className="flex items-center space-x-2">
-                  <BarChart3 className={`w-4 h-4 transition-all duration-300 ${sortByValue ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'}`} />
-                  <span className="font-medium text-sm">{sortByValue ? '값 정렬 활성' : '값 정렬 비활성'}</span>
+                  <BarChart3 className={`w-4 h-4 transition-all duration-300 ${
+                    sortByValue ? 'text-white' : 'text-gray-600 group-hover:text-gray-800'
+                  }`} />
+                  <span className="font-medium text-sm">
+                    {sortByValue ? '값 정렬 활성' : '값 정렬 비활성'}
+                  </span>
                 </div>
-                {sortByValue && <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>}
-                <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${sortByValue ? 'bg-white/10 group-hover:opacity-100' : 'bg-gradient-to-r from-emerald-50 to-teal-50 group-hover:opacity-100'}`}></div>
+                {sortByValue && (
+                  <div className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
+                )}
+                <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${
+                  sortByValue 
+                    ? 'bg-white/10 group-hover:opacity-100' 
+                    : 'bg-gradient-to-r from-emerald-50 to-teal-50 group-hover:opacity-100'
+                }`}></div>
               </button>
             </div>
           </div>
 
+          {/* 통합 분석 결과 섹션 - 조건부 렌더링 */}
           {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
-            <CompleteAnalysisSection
-              completeAnalysisResults={completeAnalysisResults}
-              deviceParams={deviceParams}
-              analysisResults={analysisResults}
-              openSSEditor={openSSEditor}
-              uploadedFiles={uploadedFiles}
-            />
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showCompleteAnalysis ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              <CompleteAnalysisSection
+                completeAnalysisResults={completeAnalysisResults}
+                deviceParams={deviceParams}
+                analysisResults={analysisResults}
+                openSSEditor={openSSEditor}
+                uploadedFiles={uploadedFiles}
+              />
+            </div>
           )}
 
+          {/* 개별 분석 결과 섹션들 */}
           {analysisResults && Object.keys(analysisResults).map((type) => {
             const resultArray = analysisResults[type];
             if (resultArray.length === 0) return null;
@@ -409,6 +465,7 @@ const AnalysisResultsDisplay = ({
             );
           })}
 
+          {/* 통합 결과표 섹션 */}
           {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
             <>
               <div className="text-center mb-8">
@@ -469,7 +526,7 @@ const AnalysisResultsDisplay = ({
   );
 };
 
-// CompleteAnalysisSection (변경 없음)
+// CompleteAnalysisSection 컴포넌트
 const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor, uploadedFiles }) => {
 
  // 샘플별 개별 파라미터 가져오는 함수
@@ -575,6 +632,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
  );
 };
 
+// IndividualAnalysisSection 컴포넌트
 const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
@@ -588,7 +646,6 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
           {type === 'IDVG-Hysteresis' && <HysteresisCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} sortByValue={sortByValue} />}
           {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
             <>
-
               <IDVGCharts resultArray={resultArray} type={type} sortByValue={sortByValue} showLogScale={showLogScale} setShowLogScale={setShowLogScale} formatLinearCurrent={formatLinearCurrent} />
               {resultArray.some(result => result.gmData) && (
                 <div className="mt-8">
@@ -628,6 +685,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
   );
 };
 
+// IntegratedResultsTable 컴포넌트
 const IntegratedResultsTable = ({ completeAnalysisResults }) => (
   <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
     <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 통합 분석 결과표</h2>
