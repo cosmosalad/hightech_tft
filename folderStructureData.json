@@ -238,6 +238,121 @@
             }
           }
         }
+      },
+      "0626": {
+        "type": "folder",
+        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 5m45s\nMeasured THickness: 26.7nm",
+        "children": {
+          "sample1_annealing100_20m": {
+            "type": "folder",
+            "description": "Sample 1, 100°C annealing, 20 minutes",
+            "files": [
+              "IDVG_Lin_1_100_20_1.xls",
+              "IDVG_Lin_1_100_20_2.xls",
+              "IDVG_Lin_1_100_20_3.xls",
+              "IDVG_Lin_1_100_20_4.xls",
+              "IDVG_Lin_1_100_20_5.xls",
+              "IDVG_Lin_1_100_20_6.xls",
+              "IDVG_Lin_1_100_20_7.xls",
+              "IDVG_Lin_1_100_20_8.xls"
+            ]
+          },
+          "sample1_annealing200_20m": {
+            "type": "folder",
+            "description": "Sample 1, 200°C annealing, 20 minutes",
+            "files": [
+              "IDVG_Lin_1_200_20_4.xls",
+              "IDVG_Lin_1_200_20_5.xls",
+              "IDVG_Lin_1_200_20_6.xls",
+              "IDVG_Lin_1_200_20_7.xls",
+              "IDVG_Lin_1_200_20_8.xls"
+            ]
+          },
+          "sample1_before annealing": {
+            "type": "folder",
+            "description": "Sample 1, before annealing treatment",
+            "files": [
+              "IDVG_Lin_1_000_00_1.xls",
+              "IDVG_Lin_1_000_00_2.xls",
+              "IDVG_Lin_1_000_00_3.xls",
+              "IDVG_Lin_1_000_00_4.xls",
+              "IDVG_Lin_1_000_00_5.xls",
+              "IDVG_Lin_1_000_00_6.xls",
+              "IDVG_Lin_1_000_00_7.xls",
+              "IDVG_Lin_1_000_00_8.xls"
+            ]
+          },
+          "sample2_annealing100_40m": {
+            "type": "folder",
+            "description": "Sample 2, 100°C annealing, 40 minutes",
+            "files": [
+              "IDVG_Lin_2_100_40_1.xls",
+              "IDVG_Lin_2_100_40_2.xls",
+              "IDVG_Lin_2_100_40_3.xls",
+              "IDVG_Lin_2_100_40_4.xls"
+            ]
+          },
+          "sample2_annealing150_40m": {
+            "type": "folder",
+            "description": "Sample 2, 150°C annealing, 40 minutes",
+            "files": [
+              "IDVG_Lin_2_150_40_1.xls",
+              "IDVG_Lin_2_150_40_2.xls",
+              "IDVG_Lin_2_150_40_3.xls",
+              "IDVG_Lin_2_150_40_4.xls"
+            ]
+          },
+          "sample2_before annealing": {
+            "type": "folder",
+            "description": "Sample 2, before annealing treatment",
+            "files": [
+              "IDVG_Lin_2_000_00_1.xls",
+              "IDVG_Lin_2_000_00_2.xls",
+              "IDVG_Lin_2_000_00_3.xls",
+              "IDVG_Lin_2_000_00_4.xls",
+              "IDVG_Lin_2_000_00_5.xls",
+              "IDVG_Lin_2_000_00_6.xls",
+              "IDVG_Lin_2_000_00_7.xls",
+              "IDVG_Lin_2_000_00_8.xls"
+            ]
+          },
+          "sample3_annealing100_60m": {
+            "type": "folder",
+            "description": "Sample 3, 100°C annealing, 60 minutes",
+            "files": [
+              "IDVG_Lin_3_100_60_1.xls",
+              "IDVG_Lin_3_100_60_2.xls",
+              "IDVG_Lin_3_100_60_3.xls",
+              "IDVG_Lin_3_100_60_4.xls",
+              "IDVG_Lin_3_100_60_7.xls"
+            ]
+          },
+          "sample3_annealing150_60m": {
+            "type": "folder",
+            "description": "Sample 3, 150°C annealing, 60 minutes",
+            "files": [
+              "IDVG_Lin_3_150_60_1.xls",
+              "IDVG_Lin_3_150_60_2.xls",
+              "IDVG_Lin_3_150_60_3.xls",
+              "IDVG_Lin_3_150_60_4.xls",
+              "IDVG_Lin_3_150_60_7.xls"
+            ]
+          },
+          "sample3_before annealing": {
+            "type": "folder",
+            "description": "Sample 3, before annealing treatment",
+            "files": [
+              "IDVG_Lin_3_000_00_1.xls",
+              "IDVG_Lin_3_000_00_2.xls",
+              "IDVG_Lin_3_000_00_3.xls",
+              "IDVG_Lin_3_000_00_4.xls",
+              "IDVG_Lin_3_000_00_5.xls",
+              "IDVG_Lin_3_000_00_6.xls",
+              "IDVG_Lin_3_000_00_7.xls",
+              "IDVG_Lin_3_000_00_8.xls"
+            ]
+          }
+        }
       }
     }
   },
