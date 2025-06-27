@@ -1,7 +1,9 @@
+// C:\Users\HYUN\hightech_tft\src\pages\components\HomePage.js
+
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import {
   ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download,
-  CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText
+  CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText, PlusCircle, Save, Trash2
 } from 'lucide-react';
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
@@ -27,7 +29,8 @@ import {
   trackSearch,
   trackError,
   trackPerformance,
-  initializeSession
+  initializeSession,
+  trackFeatureUsage
 } from '../utils/analytics';
 
 
@@ -139,7 +142,8 @@ const EnhancedFileUploadSection = ({
   handleFileUpload,
   removeFile,
   updateFileAlias,
-  onGitHubFilesLoaded
+  onGitHubFilesLoaded,
+  setUploadedFiles // 모든 파일 삭제를 위해 setUploadedFiles 추가
 }) => {
   const [activeTab, setActiveTab] = useState('local');
   const [selectedFolder, setSelectedFolder] = useState('공통'); // 초기 폴더 설정
@@ -299,7 +303,7 @@ const EnhancedFileUploadSection = ({
     };
 
     return fileInfo;
-  }, [GITHUB_CONFIG.username, GITHUB_CONFIG.repo, GITHUB_CONFIG.branch]); // GITHUB_CONFIG는 변경될 수 없으므로 사실상 상수 취급 가능, ESLint 경고 방지
+  }, [GITHUB_CONFIG.username, GITHUB_CONFIG.repo, GITHUB_CONFIG.branch]);
 
   // 향상된 GitHub 파일 로드 함수
   const loadSelectedFiles = async () => {
@@ -328,16 +332,14 @@ const EnhancedFileUploadSection = ({
       if (loadedFiles.length > 0) {
         onGitHubFilesLoaded(loadedFiles);
         
-        // Analytics 추적
-        const duration = performance.now() - startTime;
-        trackGitHubLoad(selectedFolder, loadedFiles.length, duration);
-        trackPerformance('github_load', duration, { 
+        trackGitHubLoad(selectedFolder, loadedFiles.length, performance.now() - startTime);
+        trackPerformance('github_load', performance.now() - startTime, { 
           success_count: loadedFiles.length,
           total_count: filesToLoad.length 
         });
         
         alert(`${loadedFiles.length}개 파일을 성공적으로 불러왔습니다!`);
-        setSelectedFiles(new Set());
+        setSelectedFiles(new Set()); // 성공적으로 불러왔으면 선택 상태 초기화
       } else {
         trackError('github_load', 'All files failed to load', selectedFolder);
         alert('선택한 파일 중 로드에 성공한 파일이 없습니다.');
@@ -362,7 +364,6 @@ const EnhancedFileUploadSection = ({
     });
   };
 
-  // 특정 샘플명의 모든 파일 선택/해제
   const toggleSampleGroupSelection = useCallback((sampleName, filenamesInGroup) => {
     setSelectedFiles(prev => {
       const newSet = new Set(prev);
@@ -377,24 +378,30 @@ const EnhancedFileUploadSection = ({
     });
   }, []);
 
-  // 전체 선택/해제 (현재 필터링된 모든 파일 대상)
   const toggleSelectAll = useCallback(() => {
-    if (filteredFiles.length === 0) return; // 파일이 없으면 선택/해제 로직 건너뛰기
+    if (filteredFiles.length === 0) return;
     if (selectedFiles.size === filteredFiles.length) {
-      setSelectedFiles(new Set()); // 전체 해제
+      setSelectedFiles(new Set());
     } else {
-      setSelectedFiles(new Set(filteredFiles)); // 필터링된 파일 전체 선택
+      setSelectedFiles(new Set(filteredFiles));
     }
   }, [selectedFiles.size, filteredFiles]);
 
   const handleFolderChange = (folder) => {
     setSelectedFolder(folder);
-    setSelectedFiles(new Set()); // 폴더 변경 시 선택된 파일 초기화
-    setSearchTerm(''); // 폴더 변경 시 검색어 초기화
+    setSelectedFiles(new Set());
+    setSearchTerm('');
     setShowGlobalResults(false);
   };
 
-  // EnhancedFileUploadSection 컴포넌트 자체의 로딩 오버레이
+  // 모든 불러온 파일 삭제 핸들러
+  const handleClearAllFiles = () => {
+    if (window.confirm('현재 불러온 모든 파일(' + uploadedFiles.length + '개)을 목록에서 삭제하시겠습니까?')) {
+      setUploadedFiles([]); // 상위 컴포넌트의 상태 업데이트 함수 호출
+      trackFeatureUsage('clear_all_uploaded_files', uploadedFiles.length); // Analytics 추적
+    }
+  };
+
   if (isFolderStructureLoading) {
     return (
       <div className="bg-white p-8 rounded-xl shadow-lg flex justify-center items-center" style={{ minHeight: '400px' }}>
@@ -411,7 +418,6 @@ const EnhancedFileUploadSection = ({
         <h2 className="text-2xl font-bold text-gray-800">파일 불러오기</h2>
       </div>
 
-      {/* 탭 선택 */}
       <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
         <button
           onClick={() => setActiveTab('local')}
@@ -437,7 +443,6 @@ const EnhancedFileUploadSection = ({
         </button>
       </div>
 
-      {/* 로컬 파일 업로드 */}
       {activeTab === 'local' && (
         <div>
           <p className="text-gray-600 mb-6">
@@ -451,7 +456,6 @@ const EnhancedFileUploadSection = ({
             className="hidden"
             id="file-upload"
           />
-          {/* 파일 선택 버튼 */}
           <label
             htmlFor="file-upload"
             className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors cursor-pointer flex items-center justify-center mb-4"
@@ -459,7 +463,6 @@ const EnhancedFileUploadSection = ({
             <Upload className="w-5 h-5 mr-2" />
             엑셀 파일 선택
           </label>
-          {/* 드래그 앤 드롭 영역 */}
           <div
             onDragEnter={handleDragEnter}
             onDragLeave={handleDragLeave}
@@ -491,14 +494,12 @@ const EnhancedFileUploadSection = ({
         </div>
       )}
 
-      {/* GitHub 파일 불러오기 */}
       {activeTab === 'github' && (
         <div>
           <p className="text-gray-600 mb-6">
             GitHub 저장소에서 엑셀 파일을 선택해서 불러오세요
           </p>
 
-          {/* Folder Tree Selection */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               폴더 선택:
@@ -512,8 +513,7 @@ const EnhancedFileUploadSection = ({
             />
           </div>
 
-          {/* 🔍 검색창 추가 */}
-          {!hasFolderLoadError && ( // 에러 발생 시 검색창 숨김
+          {!hasFolderLoadError && (
             <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     파일 검색:
@@ -538,7 +538,6 @@ const EnhancedFileUploadSection = ({
                       </button>
                     )}
                   </div>
-                  {/* 검색 결과 수 표시 */}
                   {searchTerm && (
                     <div className="text-sm text-gray-500 mt-1 space-y-1">
                       <p>"{searchTerm}" 현재 폴더 검색 결과: {filteredFiles.length}개 파일</p>
@@ -558,7 +557,6 @@ const EnhancedFileUploadSection = ({
                 </div>
           )}
 
-              {/* 🔍 전역 검색 결과 표시 컴포넌트 - UI 개선 및 애니메이션 추가 */}
               <div className={`transition-all duration-500 ease-in-out overflow-hidden ${searchTerm && showGlobalResults && !hasFolderLoadError ? 'max-h-96 opacity-100 mb-4' : 'max-h-0 opacity-0'}`}>
                 <h4 className="text-sm font-bold text-gray-800 mb-2 p-2 bg-blue-50 rounded-md border border-blue-200">
                   🔍 전체 폴더 검색 결과 "{searchTerm}" ({globalSearchResults.length}개)
@@ -578,7 +576,7 @@ const EnhancedFileUploadSection = ({
                         </div>
                         <button
                           onClick={() => {
-                            handleFolderChange(result.folderPath); // 폴더 이동 시 기존 파일 선택 및 검색어 초기화 함수 재사용
+                            handleFolderChange(result.folderPath);
                             setShowGlobalResults(false);
                           }}
                           className="text-xs bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors flex-shrink-0"
@@ -595,10 +593,8 @@ const EnhancedFileUploadSection = ({
                 )}
               </div>
 
-              {/* 파일 선택 영역 (샘플명별 그룹화) */}
-              {!hasFolderLoadError && groupedFilesBySampleName.size > 0 ? ( // 에러 발생 시 파일 선택 영역 숨김
+              {!hasFolderLoadError && groupedFilesBySampleName.size > 0 ? (
                 <div className="mb-4">
-                  {/* 전체 선택 및 선택 개수 */}
                   <div className="flex items-center justify-between mb-3">
                     <label className="flex items-center cursor-pointer">
                       <input
@@ -614,11 +610,9 @@ const EnhancedFileUploadSection = ({
                     </span>
                   </div>
 
-                  {/* 샘플명별 그룹 목록 */}
                   <div className="space-y-3 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
                     {Array.from(groupedFilesBySampleName.entries()).map(([sampleName, filenamesInGroup]) => (
                       <div key={sampleName} className="border border-gray-100 rounded-lg shadow-sm bg-white overflow-hidden">
-                        {/* 샘플명 헤더 */}
                         <div className="flex items-center justify-between p-3 bg-gray-100 border-b border-gray-200">
                           <label className="flex items-center cursor-pointer">
                             <input
@@ -632,7 +626,6 @@ const EnhancedFileUploadSection = ({
                             </span>
                           </label>
                         </div>
-                        {/* 해당 샘플명의 파일 목록 */}
                         <div className="divide-y divide-gray-100">
                           {filenamesInGroup.map((filename) => {
                             const fileType = detectFileType(filename);
@@ -660,17 +653,16 @@ const EnhancedFileUploadSection = ({
                   </div>
                 </div>
               ) : (
-                !hasFolderLoadError && ( // 에러가 아닐 때만 "파일 없음" 표시
+                !hasFolderLoadError && (
                   <div className="mb-4 text-center py-8 text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
                     📁 해당 폴더에 파일이 없습니다.
                   </div>
                 )
               )}
 
-              {/* 불러오기 버튼 (단일 버튼) */}
               <button
                 onClick={loadSelectedFiles}
-                disabled={isLoadingFiles || selectedFiles.size === 0 || hasFolderLoadError} // 에러 시 버튼 비활성화
+                disabled={isLoadingFiles || selectedFiles.size === 0 || hasFolderLoadError}
                 className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-green-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
               >
                 <Download className="w-5 h-5 mr-2" />
@@ -679,10 +671,19 @@ const EnhancedFileUploadSection = ({
             </div>
           )}
 
-          {/* 불러온 파일 목록 */}
           {uploadedFiles.length > 0 && (
             <div className="mt-6">
-              <h3 className="font-semibold mb-3">불러온 파일들:</h3>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-800">불러온 파일들: ({uploadedFiles.length}개)</h3>
+                <button
+                  onClick={handleClearAllFiles}
+                  className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center group"
+                  title="모든 파일 목록에서 삭제"
+                >
+                  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                  <span className="sr-only">모든 파일 삭제</span>
+                </button>
+              </div>
               <div className="space-y-3">
                 {uploadedFiles.map((file) => (
                   <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
@@ -744,37 +745,35 @@ const EnhancedFileUploadSection = ({
       updateFileAlias,
       setShowParamInput,
       setDeviceParams,
-      setUploadedFiles,
+      setUploadedFiles, // Added for clearing all files
       startAnalysis,
       handleGoToMainHome,
       handleGitHubFilesLoaded,
       parameterMode,
-      setParameterMode
+      setParameterMode,
+      hasExistingSessions,
+      currentSessionName
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
+      const [showAnalysisOptionsModal, setShowAnalysisOptionsModal] = useState(false);
 
-      // 페이지 로드 시 Analytics 초기화
       useEffect(() => {
         trackPageView('/tft-analyzer/home', 'TFT Analyzer - File Upload & Configuration');
         initializeSession();
       }, []);
 
-      // 향상된 파일 업로드 핸들러
       const handleFileUpload = useCallback((event) => {
         const startTime = performance.now();
         const files = Array.from(event.target.files);
         
         try {
-          // 기존 파일 업로드 로직
           originalHandleFileUpload(event);
           
-          // Analytics 추적
           const fileTypes = files.map(file => detectFileType(file.name));
           const uniqueTypes = [...new Set(fileTypes)];
           
           trackFileUpload(uniqueTypes, files.length, 'local');
           
-          // 성능 추적
           const duration = performance.now() - startTime;
           const totalSize = files.reduce((sum, file) => sum + file.size, 0);
           trackPerformance('file_upload', duration, { file_size_mb: Math.round(totalSize / (1024 * 1024) * 100) / 100 });
@@ -784,6 +783,25 @@ const EnhancedFileUploadSection = ({
           throw error;
         }
       }, [originalHandleFileUpload]);
+
+      const handleStartAnalysisClick = () => {
+        if (uploadedFiles.length === 0) {
+          alert('먼저 엑셀 파일을 업로드해주세요.');
+          return;
+        }
+        if (hasExistingSessions) {
+          setShowAnalysisOptionsModal(true);
+        } else {
+          startAnalysis(false);
+        }
+      };
+
+      const handleAnalysisOptionSelect = (overwrite) => {
+        setShowAnalysisOptionsModal(false);
+        startAnalysis(overwrite);
+        trackFeatureUsage('analysis_start_option', overwrite ? 'overwrite_session' : 'new_session');
+      };
+
 
       return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
@@ -818,6 +836,7 @@ const EnhancedFileUploadSection = ({
                 removeFile={removeFile}
                 updateFileAlias={updateFileAlias}
                 onGitHubFilesLoaded={handleGitHubFilesLoaded}
+                setUploadedFiles={setUploadedFiles}
               />
 
               <div className="bg-white p-8 rounded-xl shadow-lg">
@@ -865,7 +884,6 @@ const EnhancedFileUploadSection = ({
               </div>
             </div>
 
-            {/* ParameterInputSection에 대한 애니메이션 래퍼 */}
             <div className={`transition-all duration-500 ease-in-out ${showParamInput ? 'max-h-none opacity-100 mb-12' : 'max-h-0 opacity-0 overflow-hidden'}`}>
               <ParameterInputSection
                 deviceParams={deviceParams}
@@ -878,18 +896,16 @@ const EnhancedFileUploadSection = ({
               />
             </div>
 
-            {/* 수식 및 코드 점검 컴포넌트 */}
             {showFormulaInspector && (
               <div className="mb-8">
                 <FormulaCodeInspector />
               </div>
             )}
 
-            {/* 통합 분석 시작 버튼 */}
             {uploadedFiles.length > 0 && (
               <div className="text-center">
                 <button
-                  onClick={startAnalysis}
+                  onClick={handleStartAnalysisClick}
                   disabled={isAnalyzing}
                   className="bg-gradient-to-r from-green-600 to-blue-600 text-white py-4 px-8 rounded-lg font-bold text-lg hover:from-green-700 hover:to-blue-700 transition-all disabled:opacity-50 flex items-center mx-auto shadow-lg"
                 >
@@ -908,6 +924,51 @@ const EnhancedFileUploadSection = ({
               </div>
             )}
           </div>
+
+          {/* 분석 옵션 선택 모달 */}
+          {showAnalysisOptionsModal && (
+            <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center transform transition-all duration-300 scale-100 opacity-100">
+                <h3 className="text-2xl font-bold text-gray-800 mb-6">분석 결과 저장 방식 선택</h3>
+                <p className="text-gray-600 mb-8">
+                  현재 업로드된 파일들로 새로운 분석을 시작하거나, 기존 세션에 결과를 덮어쓸 수 있습니다.
+                </p>
+                
+                <div className="space-y-4">
+                  <button
+                    onClick={() => handleAnalysisOptionSelect(false)}
+                    className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center shadow-md"
+                  >
+                    <PlusCircle className="w-5 h-5 mr-2" />
+                    새로운 분석 세션으로 시작
+                  </button>
+                  {hasExistingSessions && currentSessionName && (
+                    <button
+                      onClick={() => handleAnalysisOptionSelect(true)}
+                      className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center shadow-md"
+                    >
+                      <Save className="w-5 h-5 mr-2" />
+                      '{currentSessionName}' 세션에 덮어쓰기
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowAnalysisOptionsModal(false)}
+                    className="w-full bg-gray-300 text-gray-800 py-3 px-6 rounded-lg font-semibold hover:bg-gray-400 transition-colors flex items-center justify-center mt-4"
+                  >
+                    <X className="w-5 h-5 mr-2" />
+                    취소
+                  </button>
+                </div>
+
+                {hasExistingSessions && (
+                  <p className="text-xs text-gray-500 mt-6">
+                    <AlertTriangle className="w-4 h-4 inline-block mr-1 text-orange-500" />
+                    **경고:** 기존 세션에 덮어쓰면 이전 결과는 복구할 수 없습니다.
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       );
     };

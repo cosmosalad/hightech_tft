@@ -1,5 +1,6 @@
-// src/pages/TFTAnalyzer02.js (업데이트된 메인 컴포넌트)
-import React, { useState, useEffect } from 'react';
+// src/pages/TFTAnalyzer02.js
+
+import React, { useState, useEffect, useCallback } from 'react';
 
 // 모듈화된 컴포넌트들 import
 import AnalysisResultsDisplay from './components/AnalysisResultsDisplay';
@@ -22,8 +23,9 @@ import {
 const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   const [currentPage, setCurrentPage] = useState('home');
   const [uploadedFiles, setUploadedFiles] = useState([]);
-  const [analysisResults, setAnalysisResults] = useState(null);
-  const [completeAnalysisResults, setCompleteAnalysisResults] = useState(null);
+  const [analysisSessions, setAnalysisSessions] = useState([]);
+  const [currentSessionId, setCurrentSessionId] = useState(null);
+
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [deviceParams, setDeviceParams] = useState({
@@ -39,7 +41,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   useEffect(() => {
     window.scrollTo(0, 0);
     
-    // 페이지별 Analytics 추적
     const pageMapping = {
       'home': { title: 'TFT Analyzer - Home', path: '/tft-analyzer' },
       'analyzer': { title: 'TFT Analyzer - Analysis Results', path: '/tft-analyzer/results' }
@@ -53,7 +54,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
 
   // 파라미터 모드 변경 시 Analytics 추적
   useEffect(() => {
-    if (parameterMode !== 'single') { // 초기값이 아닐 때만 추적
+    if (parameterMode !== 'single') {
       trackParameterMode(parameterMode, deviceParams);
     }
   }, [parameterMode, deviceParams]);
@@ -70,7 +71,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     onNavigateHome();
   };
 
-  // 파일 업로드 핸들러
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     const newFiles = files.map(file => ({
@@ -78,22 +78,19 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       name: file.name,
       type: detectFileType(file.name),
       id: Date.now() + Math.random(),
-      alias: '' // 사용자 정의 샘플명
+      alias: ''
     }));
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
-  // GitHub 파일 로드 핸들러 (추가된 함수)
   const handleGitHubFilesLoaded = (newFiles) => {
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
-  // 파일 제거
   const removeFile = (id) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  // 파일 샘플명 업데이트
   const updateFileAlias = (id, alias) => {
     setUploadedFiles(prev => 
       prev.map(file => 
@@ -102,8 +99,34 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     );
   };
 
-  // 향상된 분석 시작 함수
-  const startAnalysis = async () => {
+  // 새로운 콜백 함수: 특정 세션의 분석 결과 업데이트
+  const updateSessionResults = useCallback((sessionId, updatedAnalysisResults, updatedCompleteAnalysisResults) => {
+    setAnalysisSessions(prevSessions =>
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? {
+              ...session,
+              analysisResults: updatedAnalysisResults,
+              completeAnalysisResults: updatedCompleteAnalysisResults,
+            }
+          : session
+      )
+    );
+  }, []);
+
+  // 새로운 콜백 함수: 특정 세션의 이름 업데이트
+  const updateSessionName = useCallback((sessionId, newName) => {
+    setAnalysisSessions(prevSessions =>
+      prevSessions.map(session =>
+        session.id === sessionId
+          ? { ...session, name: newName }
+          : session
+      )
+    );
+  }, []);
+
+  // startAnalysis 함수에 overwriteExistingSession 인자 추가
+  const startAnalysis = async (overwriteExistingSession = false) => {
     if (uploadedFiles.length === 0) {
       alert('먼저 엑셀 파일을 업로드해주세요.');
       return;
@@ -120,22 +143,45 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     setIsAnalyzing(true);
     
     try {
-      // 샘플 수 계산 (Analytics용)
       const sampleNames = [...new Set(uploadedFiles.map(f => f.alias || f.name))];
       const hasIndividualParams = uploadedFiles.some(f => f.individualParams);
       
-      // 분석 시작 추적
       trackAnalysisStart(uploadedFiles.length, sampleNames.length, hasIndividualParams);
       
-      // 모듈화된 분석 엔진 사용
       const results = await analyzeFiles(uploadedFiles, deviceParams);
-      setAnalysisResults(results);
-      
-      // 통합 분석 수행
       const completeResults = performCompleteAnalysis(results, deviceParams, uploadedFiles);
-      setCompleteAnalysisResults(completeResults);
       
-      // 분석 완료 추적
+      if (overwriteExistingSession && currentSessionId) {
+        // 기존 세션 덮어쓰기
+        setAnalysisSessions(prev =>
+          prev.map(session =>
+            session.id === currentSessionId
+              ? {
+                  ...session,
+                  analysisResults: results,
+                  completeAnalysisResults: completeResults,
+                  // 덮어쓰기 시 파일 목록과 파라미터도 업데이트
+                  uploadedFiles: uploadedFiles, 
+                  deviceParams: deviceParams,
+                  name: session.name // 이름은 유지
+                }
+              : session
+          )
+        );
+      } else {
+        // 새로운 세션 생성
+        const newSession = {
+          id: Date.now(),
+          name: `분석 기록 ${analysisSessions.length + 1}`, // ⭐ 이름 변경
+          analysisResults: results,
+          completeAnalysisResults: completeResults,
+          uploadedFiles: uploadedFiles,
+          deviceParams: deviceParams
+        };
+        setAnalysisSessions(prev => [...prev, newSession]);
+        setCurrentSessionId(newSession.id);
+      }
+      
       const duration = performance.now() - startTime;
       const successCount = Object.keys(results).length;
       const errorCount = uploadedFiles.length - successCount;
@@ -151,17 +197,23 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       
     } catch (error) {
       console.error('분석 중 오류 발생:', error);
-      
-      // 에러 추적
       trackError('analysis', error.message, `${uploadedFiles.length} files`);
-      
       alert('파일 분석 중 오류가 발생했습니다.');
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // 홈 페이지 렌더링
+  const removeAnalysisSession = (idToRemove) => {
+    setAnalysisSessions(prevSessions => {
+      const updatedSessions = prevSessions.filter(session => session.id !== idToRemove);
+      if (currentSessionId === idToRemove) {
+        setCurrentSessionId(updatedSessions.length > 0 ? updatedSessions[0].id : null);
+      }
+      return updatedSessions;
+    });
+  };
+
   const renderHomePage = () => (
     <HomePage
       uploadedFiles={uploadedFiles}
@@ -179,22 +231,23 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       handleGoToMainHome={handleGoToMainHome}
       parameterMode={parameterMode}
       setParameterMode={setParameterMode}
+      hasExistingSessions={analysisSessions.length > 0}
+      currentSessionName={currentSessionId ? analysisSessions.find(s => s.id === currentSessionId)?.name : null}
     />
   );
 
-  // 분석 페이지 렌더링
   const renderAnalyzerPage = () => (
     <AnalysisResultsDisplay
-      analysisResults={analysisResults}
-      setAnalysisResults={setAnalysisResults} 
-      completeAnalysisResults={completeAnalysisResults}
-      setCompleteAnalysisResults={setCompleteAnalysisResults}
-      deviceParams={deviceParams}
+      allAnalysisSessions={analysisSessions}
+      currentSessionId={currentSessionId}
+      setCurrentSessionId={setCurrentSessionId}
+      updateSessionResults={updateSessionResults}
+      updateSessionName={updateSessionName} // ⭐ 추가된 props
       showDataTable={showDataTable}
       setShowDataTable={setShowDataTable}
       setCurrentPage={setCurrentPage}
       handleGoToMainHome={handleGoToMainHome}
-      uploadedFiles={uploadedFiles}
+      removeAnalysisSession={removeAnalysisSession}
     />
   );
 

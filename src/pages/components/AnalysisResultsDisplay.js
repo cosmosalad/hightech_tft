@@ -1,9 +1,10 @@
 // C:\Users\HYUN\hightech_tft\src\pages\components\AnalysisResultsDisplay.js
 
-import React, { useState, useEffect } from 'react'; // useEffect 추가
-import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown } from 'lucide-react'; // 아이콘 추가
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown, X, Trash2, Edit, ChevronRight, ChevronLeft, Pin, PinOff } from 'lucide-react';
 import SSRangeEditor from './SSRangeEditor';
 import { calculateDit } from '../parameters/index.js';
+import { performCompleteAnalysis } from '../analysis/analysisEngine.js';
 import {
   IDVDCharts,
   HysteresisCharts,
@@ -11,7 +12,6 @@ import {
   GmCharts
 } from './ChartComponents';
 
-// Analytics import 추가
 import {
   trackChartInteraction,
   trackDataTableView,
@@ -20,17 +20,23 @@ import {
   trackEngagement
 } from '../utils/analytics';
 
+// 사이드바의 축소된 너비와 확장된 너비 정의
+const COLLAPSED_WIDTH = 'w-16'; // 약 64px
+const EXPANDED_WIDTH = 'w-60'; // 약 240px (원래 크기로 유지)
+const COLLAPSED_ML = 'ml-16'; // 메인 콘텐츠의 margin-left
+const EXPANDED_ML = 'ml-60'; // 메인 콘텐츠의 margin-left
+
 const AnalysisResultsDisplay = ({
-  analysisResults,
-  completeAnalysisResults,
-  deviceParams,
+  allAnalysisSessions,
+  currentSessionId,
+  setCurrentSessionId,
+  updateSessionResults,
+  updateSessionName,
   showDataTable,
   setShowDataTable,
   setCurrentPage,
   handleGoToMainHome,
-  setAnalysisResults,
-  setCompleteAnalysisResults,
-  uploadedFiles
+  removeAnalysisSession
 }) => {
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
@@ -41,41 +47,122 @@ const AnalysisResultsDisplay = ({
     chartData: null,
     currentSS: null
   });
-  // 👇 이 부분 추가
   const [showScrollButtons, setShowScrollButtons] = useState(false);
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
 
-  // 스크롤 감지
+  // 세션 이름 수정 상태
+  const [editingSessionId, setEditingSessionId] = useState(null);
+  const [newSessionName, setNewSessionName] = useState('');
+  const nameInputRef = useRef(null);
+
+  // 사이드바 상태 관리: isSidebarOpen은 이제 isSidebarPinned가 false일 때의 hover 상태를 나타냄.
+  // 사이드바는 isSidebarPinned가 true거나 isSidebarOpen이 true일 때 확장된 상태
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // 마우스 오버로 임시 열림 여부
+  const [isSidebarPinned, setIsSidebarPinned] = useState(false); // 버튼으로 고정 여부
+
+  // 현재 세션 데이터를 useMemo로 캐싱
+  const currentSession = useMemo(() => {
+    return allAnalysisSessions.find(session => session.id === currentSessionId);
+  }, [allAnalysisSessions, currentSessionId]);
+
+  // 스크롤 감지 (기존과 동일)
   useEffect(() => {
+    if (!currentSession) {
+      setShowScrollButtons(false);
+      return;
+    }
     const handleScroll = () => {
       const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
       const scrollHeight = document.documentElement.scrollHeight;
       const clientHeight = window.innerHeight;
-
-      // 스크롤이 있을 때만 버튼 표시
       setShowScrollButtons(scrollHeight > clientHeight + 100);
-
-      // 위로 스크롤 가능한지 확인
       setCanScrollUp(scrollTop > 300);
-
-      // 아래로 스크롤 가능한지 확인
       setCanScrollDown(scrollTop < scrollHeight - clientHeight - 100);
     };
-    // 초기 체크
     handleScroll();
-
-    // 스크롤 이벤트 리스너 추가
     window.addEventListener('scroll', handleScroll);
-
-    // 리사이즈 이벤트도 감지 (내용이 변경될 때)
     window.addEventListener('resize', handleScroll);
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleScroll);
     };
-  }, []);
+  }, [currentSession]);
+
+  // 세션 이름 수정 모드 시작 (기존과 동일)
+  const startEditingSessionName = (session) => {
+    setEditingSessionId(session.id);
+    setNewSessionName(session.name);
+    setTimeout(() => {
+      nameInputRef.current?.focus();
+      nameInputRef.current?.select();
+    }, 0);
+  };
+
+  // 세션 이름 저장 (기존과 동일)
+  const saveSessionName = useCallback((sessionId) => {
+    const trimmedNewName = newSessionName.trim();
+    if (editingSessionId === sessionId && trimmedNewName && trimmedNewName !== allAnalysisSessions.find(s => s.id === sessionId)?.name) {
+      updateSessionName(sessionId, trimmedNewName);
+      trackFeatureUsage('session_name_edit', 1);
+    }
+    setEditingSessionId(null);
+    setNewSessionName('');
+  }, [editingSessionId, newSessionName, allAnalysisSessions, updateSessionName]);
+
+  // 세션 이름 입력 중 Enter 키 처리 (기존과 동일)
+  const handleNameInputKeyPress = (e, sessionId) => {
+    if (e.key === 'Enter') {
+      saveSessionName(sessionId);
+    }
+  };
+
+  // 입력 필드 외부 클릭 감지 (수정 모드 종료) (기존과 동일)
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (editingSessionId && nameInputRef.current && !nameInputRef.current.contains(event.target)) {
+        saveSessionName(editingSessionId);
+      }
+    };
+    if (editingSessionId) {
+      document.addEventListener('mousedown', handleClickOutside);
+    } else {
+      document.removeEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editingSessionId, saveSessionName]);
+
+  // 사이드바 너비 클래스 계산
+  const isExpanded = isSidebarOpen || isSidebarPinned;
+  const sidebarWidthClass = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
+  const mainContentMlClass = isExpanded ? EXPANDED_ML : COLLAPSED_ML;
+
+  // 사이드바 배경색 및 텍스트 색상 조정
+  const sidebarBg = 'bg-gray-800'; // 원래 배경
+  const headerTextColor = 'text-blue-400';
+  const defaultTextColor = 'text-gray-200'; // 밝은 회색
+  const hoverBgColor = 'hover:bg-gray-700';
+  const selectedBgColor = 'bg-blue-600';
+
+  if (!currentSession) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center p-8">
+        <div className="text-center text-gray-600">
+          <p className="text-xl font-medium mb-4">선택된 분석 결과가 없습니다.</p>
+          <button
+            onClick={() => setCurrentPage('home')}
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+          >
+            홈으로 돌아가 분석 시작
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const { analysisResults, completeAnalysisResults, uploadedFiles, deviceParams } = currentSession;
 
   const formatLinearCurrent = (value) => {
     if (value >= 1e-3) return `${parseFloat((value * 1000).toFixed(1))}m`;
@@ -86,10 +173,8 @@ const AnalysisResultsDisplay = ({
   };
 
   const openSSEditor = (sampleName, measurementType, chartData, currentSS) => {
-    // SS 에디터 열기 Analytics 추적
     trackFeatureUsage('ss_editor_open', 1);
     trackFormulaInspection('SS', 'interactive_editor');
-    
     setSSEditorState({
       isOpen: true,
       currentSample: sampleName,
@@ -101,53 +186,27 @@ const AnalysisResultsDisplay = ({
 
   const handleSSUpdate = async (result) => {
     const { newSS } = result;
-    const updatedResults = { ...analysisResults };
     const measurementType = ssEditorState.currentMeasurement;
-    const sampleIndex = updatedResults[measurementType].findIndex(r => r.displayName === ssEditorState.currentSample);
-
+    const sampleName = ssEditorState.currentSample;
+    const updatedAnalysisResults = { ...currentSession.analysisResults };
+    const sampleIndex = updatedAnalysisResults[measurementType].findIndex(r => r.displayName === sampleName);
     if (sampleIndex !== -1) {
-      updatedResults[measurementType][sampleIndex].parameters.SS = `${newSS.toFixed(1)} mV/decade (범위 조정)`;
-      const newDit = calculateDit(newSS, deviceParams);
+      updatedAnalysisResults[measurementType][sampleIndex].parameters.SS = `${newSS.toFixed(1)} mV/decade (범위 조정)`;
+      const newDit = calculateDit(newSS, currentSession.deviceParams);
       if (newDit > 0) {
-        updatedResults[measurementType][sampleIndex].parameters.Dit = `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)`;
+        updatedAnalysisResults[measurementType][sampleIndex].parameters.Dit = `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)`;
       } else {
-        updatedResults[measurementType][sampleIndex].parameters.Dit = 'N/A (계산 실패)';
+        updatedAnalysisResults[measurementType][sampleIndex].parameters.Dit = 'N/A (계산 실패)';
       }
-      setAnalysisResults(updatedResults);
-
-      if (completeAnalysisResults && setCompleteAnalysisResults) {
-        try {
-          const { evaluateDataQuality } = await import('../analysis/analysisEngine.js');
-          const updatedCompleteResults = { ...completeAnalysisResults };
-          if (updatedCompleteResults[ssEditorState.currentSample]) {
-            updatedCompleteResults[ssEditorState.currentSample].parameters['SS (Linear 기준)'] = `${newSS.toFixed(1)} mV/decade (범위 조정)`;
-            const newDitComplete = calculateDit(newSS, deviceParams);
-            if (newDitComplete > 0) {
-              updatedCompleteResults[ssEditorState.currentSample].parameters['Dit (Linear 기준)'] = `${newDitComplete.toExponential(2)} cm⁻²eV⁻¹ (재계산)`;
-            }
-            const newQuality = evaluateDataQuality(
-              updatedCompleteResults[ssEditorState.currentSample].parameters,
-              updatedCompleteResults[ssEditorState.currentSample].warnings || [],
-              {
-                hasLinear: updatedCompleteResults[ssEditorState.currentSample].hasLinear,
-                hasSaturation: updatedCompleteResults[ssEditorState.currentSample].hasSaturation,
-                hasIDVD: updatedCompleteResults[ssEditorState.currentSample].hasIDVD,
-                hasHysteresis: updatedCompleteResults[ssEditorState.currentSample].hasHysteresis
-              }
-            );
-            updatedCompleteResults[ssEditorState.currentSample].quality = newQuality;
-            setCompleteAnalysisResults(updatedCompleteResults);
-          }
-        } catch (error) {
-          console.error('통합 분석 결과 업데이트 실패:', error);
-        }
-      }
-
-      // SS 업데이트 완료 Analytics 추적
+      const updatedCompleteResults = performCompleteAnalysis(
+        updatedAnalysisResults,
+        currentSession.deviceParams,
+        currentSession.uploadedFiles
+      );
+      updateSessionResults(currentSession.id, updatedAnalysisResults, updatedCompleteResults);
       trackFeatureUsage('ss_editor_update', 1);
       trackEngagement('parameter_modification', 1, 'SS_adjustment');
     }
-
     setSSEditorState({ isOpen: false, currentSample: null, currentMeasurement: null, chartData: null, currentSS: null });
     alert(`SS 값이 ${ssEditorState.currentSS} → ${newSS.toFixed(1)} mV/decade로 업데이트되었습니다!`);
   };
@@ -162,24 +221,20 @@ const AnalysisResultsDisplay = ({
     return <AlertTriangle className="w-4 h-4 text-red-500" title="매우 미흡한 SS 값 (>1500 mV/decade)" />;
   };
 
-  // 향상된 Log Scale 토글 함수
   const handleLogScaleToggle = (chartType) => {
     setShowLogScale(!showLogScale);
     trackChartInteraction(chartType, 'toggle_log_scale', { new_state: !showLogScale });
   };
 
-  // 향상된 Sort By Value 토글 함수
   const handleSortToggle = () => {
     setSortByValue(!sortByValue);
     trackChartInteraction('all_charts', 'toggle_sort_by_value', { new_state: !sortByValue });
     trackFeatureUsage('sort_by_value', 1);
   };
 
-  // 향상된 데이터 테이블 토글 함수
   const handleDataTableToggle = () => {
     setShowDataTable(!showDataTable);
-    
-    if (!showDataTable) { // 테이블을 열 때만 추적
+    if (!showDataTable) {
       const measurementTypes = Object.keys(analysisResults || {});
       const sampleCount = Object.keys(completeAnalysisResults || {}).length;
       trackDataTableView(measurementTypes, sampleCount);
@@ -187,45 +242,129 @@ const AnalysisResultsDisplay = ({
     }
   };
 
-  // 스크롤 함수들 (Analytics 추가)
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: 'smooth'
-    });
-    trackEngagement('scroll_navigation', 1, 'to_top');
-  };
-  
-  const scrollToBottom = () => {
-    window.scrollTo({
-      top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
-    });
-    trackEngagement('scroll_navigation', 1, 'to_bottom');
-  };
-  
-  const scrollDown = () => {
-    window.scrollBy({
-      top: window.innerHeight * 0.8, // 화면 높이의 80%만큼 스크롤
-      behavior: 'smooth'
-    });
-    trackEngagement('scroll_navigation', 1, 'page_down');
-  };
-  
-  const scrollUp = () => {
-    window.scrollBy({
-      top: -window.innerHeight * 0.8, // 화면 높이의 80%만큼 위로 스크롤
-      behavior: 'smooth'
-    });
-    trackEngagement('scroll_navigation', 1, 'page_up');
-  };
+  const scrollToTop = () => { window.scrollTo({ top: 0, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'to_top'); };
+  const scrollToBottom = () => { window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'to_bottom'); };
+  const scrollDown = () => { window.scrollBy({ top: window.innerHeight * 0.8, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'page_down'); };
+  const scrollUp = () => { window.scrollBy({ top: -window.innerHeight * 0.8, behavior: 'smooth' }); trackEngagement('scroll_navigation', 1, 'page_up'); };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">TFT 통합 분석 결과</h1>
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* 사이드바 컨테이너 */}
+      <div
+        className={
+          [
+            'fixed top-0 left-0 h-full',
+            sidebarBg,
+            'shadow-lg flex flex-col z-40',
+            sidebarWidthClass,
+            'transition-all duration-300 ease-in-out',
+            !isSidebarPinned && 'group', // isSidebarPinned가 false일 때만 'group' 추가
+          ].filter(Boolean).join(' ') // null 또는 false 값을 필터링하고 공백으로 연결
+        }
+        onMouseEnter={() => !isSidebarPinned && setIsSidebarOpen(true)}
+        onMouseLeave={() => !isSidebarPinned && setIsSidebarOpen(false)}
+      >
+        {/* 사이드바 헤더 및 토글 버튼 */}
+        <div className={`flex items-center ${isExpanded ? 'justify-between px-4 py-4 border-b border-gray-700' : 'justify-center py-4'}`}> {/* px-4 py-4로 상하좌우 패딩 조정 */}
+          {isExpanded ? (
+            <>
+              <h2 className={`text-xl font-bold ${headerTextColor} whitespace-nowrap`}>분석 기록</h2>
+              <button
+                onClick={() => setIsSidebarPinned(!isSidebarPinned)}
+                className="p-1 rounded-full text-gray-400 hover:text-blue-200 hover:bg-gray-700 transition-colors"
+                title={isSidebarPinned ? '사이드바 고정 해제' : '사이드바 고정'}
+              >
+                {isSidebarPinned ? <PinOff className="w-5 h-5" /> : <Pin className="w-5 h-5" />}
+              </button>
+            </>
+          ) : (
+            // 축소 상태일 때의 아이콘 (항상 표시)
+            <div className="flex flex-col items-center space-y-1"> {/* space-y-1로 간격 좁힘 */}
+              <ChevronRight className={`w-8 h-8 ${headerTextColor} transition-all duration-300`} title="분석 기록 열기" />
+              <span className={`text-xs font-semibold ${headerTextColor} transition-opacity duration-300`}>Tab</span> {/* '기록' 대신 'Tab' */}
+            </div>
+          )}
+        </div>
+
+        {/* 세션 목록 및 하단 탐색 버튼 (확장 상태에서만 내용 표시) */}
+        {isExpanded && (
+          <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100"> {/* 항상 opacity-100으로 유지 */}
+            <div className="flex-grow overflow-y-auto px-4 pr-2 custom-scrollbar py-4"> {/* 상하 여백 추가 */}
+              <div className="space-y-2">
+                {allAnalysisSessions.map(session => (
+                  <div
+                    key={session.id}
+                    className={`relative flex items-center justify-between p-3 rounded-lg cursor-pointer transition-colors duration-200 group
+                      ${session.id === currentSessionId
+                        ? selectedBgColor + ' text-white shadow-md'
+                        : defaultTextColor + ' ' + hoverBgColor
+                      }`}
+                    onClick={() => setCurrentSessionId(session.id)}
+                  >
+                    {editingSessionId === session.id ? (
+                      <input
+                        ref={nameInputRef}
+                        type="text"
+                        value={newSessionName}
+                        onChange={(e) => setNewSessionName(e.target.value)}
+                        onBlur={() => saveSessionName(session.id)}
+                        onKeyPress={(e) => handleNameInputKeyPress(e, session.id)}
+                        className="w-full bg-gray-700 text-white px-2 py-1 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
+                      />
+                    ) : (
+                      <>
+                        <span className="flex-1 text-sm font-medium pr-2 truncate" onDoubleClick={() => startEditingSessionName(session)} title={session.name}>
+                          {session.name}
+                        </span>
+                        <button
+                          onClick={(e) => { e.stopPropagation(); startEditingSessionName(session); }}
+                          className="ml-2 p-1 rounded-full text-gray-400 hover:text-blue-200 hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                          title="세션 이름 수정"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        {allAnalysisSessions.length > 1 && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeAnalysisSession(session.id); }}
+                            className="ml-1 p-1 rounded-full text-red-400 hover:text-red-300 hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                            title="세션 삭제"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 하단 탐색 버튼 */}
+            <div className="mt-auto space-y-3 py-4 border-t border-gray-700 px-4"> {/* 상하 여백 추가 */}
+              <button
+                onClick={() => setCurrentPage('home')}
+                className="w-full flex items-center justify-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                분석기 홈
+              </button>
+              <button
+                onClick={handleGoToMainHome}
+                className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors shadow-md"
+              >
+                <Home className="w-4 h-4 mr-2" />
+                메인 홈
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 메인 콘텐츠 - 좌측 여백 동적 조절 */}
+      <div className={`flex-1 p-8 transition-all duration-300 ease-in-out ${mainContentMlClass}`}>
+        <div className="max-w-7xl mx-auto">
+          <h1 className="text-3xl font-bold text-gray-800 mb-8">TFT 통합 분석 결과</h1>
+          <div className="flex items-center justify-end mb-8 space-x-4">
             <div className="relative flex items-center space-x-2">
               <button 
                 onClick={handleSortToggle} 
@@ -240,113 +379,97 @@ const AnalysisResultsDisplay = ({
                 <div className={`absolute inset-0 opacity-0 transition-opacity duration-300 ${sortByValue ? 'bg-white/10 group-hover:opacity-100' : 'bg-gradient-to-r from-emerald-50 to-teal-50 group-hover:opacity-100'}`}></div>
               </button>
             </div>
-            <button 
-              onClick={() => setCurrentPage('home')} 
-              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />분석기 홈으로
-            </button>
-            <button 
-              onClick={handleGoToMainHome} 
-              className="flex items-center px-4 py-2.5 bg-gradient-to-r from-gray-600 to-slate-600 text-white rounded-xl hover:from-gray-700 hover:to-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 font-medium"
-            >
-              <Home className="w-4 h-4 mr-2" />메인 홈으로
-            </button>
           </div>
-        </div>
 
-        {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
-          <CompleteAnalysisSection
-            completeAnalysisResults={completeAnalysisResults}
-            deviceParams={deviceParams}
-            analysisResults={analysisResults}
-            openSSEditor={openSSEditor}
-            uploadedFiles={uploadedFiles}
-          />
-        )}
-
-        {analysisResults && Object.keys(analysisResults).map((type) => {
-          const resultArray = analysisResults[type];
-          if (resultArray.length === 0) return null;
-          return (
-            <IndividualAnalysisSection
-              key={type}
-              type={type}
-              resultArray={resultArray}
+          {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
+            <CompleteAnalysisSection
+              completeAnalysisResults={completeAnalysisResults}
+              deviceParams={deviceParams}
+              analysisResults={analysisResults}
               openSSEditor={openSSEditor}
-              getSSQualityIcon={getSSQualityIcon}
-              sortByValue={sortByValue}
-              showLogScale={showLogScale}
-              setShowLogScale={(newValue) => handleLogScaleToggle(type)}
-              formatLinearCurrent={formatLinearCurrent}
+              uploadedFiles={uploadedFiles}
             />
-          );
-        })}
+          )}
 
-        {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
-          <>
-            <div className="text-center mb-8">
-              <button 
-                onClick={handleDataTableToggle} 
-                className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center mx-auto"
-              >
-                <Table className="w-5 h-5 mr-2" />
-                {showDataTable ? '통합 결과표 숨기기' : '통합 결과표 보기'}
-              </button>
+          {analysisResults && Object.keys(analysisResults).map((type) => {
+            const resultArray = analysisResults[type];
+            if (resultArray.length === 0) return null;
+            return (
+              <IndividualAnalysisSection
+                key={type}
+                type={type}
+                resultArray={resultArray}
+                openSSEditor={openSSEditor}
+                getSSQualityIcon={getSSQualityIcon}
+                sortByValue={sortByValue}
+                showLogScale={showLogScale}
+                setShowLogScale={(newValue) => handleLogScaleToggle(type)}
+                formatLinearCurrent={formatLinearCurrent}
+              />
+            );
+          })}
+
+          {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
+            <>
+              <div className="text-center mb-8">
+                <button 
+                  onClick={handleDataTableToggle} 
+                  className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:from-indigo-700 hover:to-purple-700 transition-colors flex items-center mx-auto"
+                >
+                  <Table className="w-5 h-5 mr-2" />
+                  {showDataTable ? '통합 결과표 숨기기' : '통합 결과표 보기'}
+                </button>
+              </div>
+              <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showDataTable ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                  <IntegratedResultsTable completeAnalysisResults={completeAnalysisResults} />
+              </div>
+            </>
+          )}
+
+          <SSRangeEditor 
+            isOpen={ssEditorState.isOpen} 
+            onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))} 
+            chartData={ssEditorState.chartData} 
+            currentSS={ssEditorState.currentSS} 
+            sampleName={ssEditorState.currentSample} 
+            onApplyResult={handleSSUpdate} 
+          />
+          
+          {/* 스크롤 버튼들 */}
+          {showScrollButtons && (
+            <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">
+              {canScrollUp && (
+                <button
+                  onClick={scrollToTop}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
+                  title="맨 위로"
+                >
+                  <ChevronUp className="w-5 h-5" />
+                </button>
+              )}
+
+              {canScrollDown && (
+                <button
+                  onClick={scrollToBottom}
+                  onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                  className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
+                  title="맨 아래로"
+                >
+                  <ChevronDown className="w-5 h-5" />
+                </button>
+              )}
             </div>
-            {/* ▼▼▼ 수정된 부분 ▼▼▼ */}
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showDataTable ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                <IntegratedResultsTable completeAnalysisResults={completeAnalysisResults} />
-            </div>
-            {/* ▲▲▲ 여기까지 수정 ▲▲▲ */}
-          </>
-        )}
-
-        <SSRangeEditor 
-          isOpen={ssEditorState.isOpen} 
-          onClose={() => setSSEditorState(prev => ({ ...prev, isOpen: false }))} 
-          chartData={ssEditorState.chartData} 
-          currentSS={ssEditorState.currentSS} 
-          sampleName={ssEditorState.currentSample} 
-          onApplyResult={handleSSUpdate} 
-        />
-        
-        {/* 👇 스크롤 버튼들 추가 */}
-        {showScrollButtons && (
-          <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">
-            {/* 위로 스크롤 버튼 */}
-            {canScrollUp && (
-              <button
-                onClick={scrollToTop}
-                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
-                title="맨 위로"
-              >
-                <ChevronUp className="w-5 h-5" />
-              </button>
-            )}
-
-            {/* 아래로 스크롤 버튼 */}
-            {canScrollDown && (
-              <button
-                onClick={scrollToBottom}
-                onMouseEnter={(e) => e.target.style.transform = 'scale(1.1)'}
-                onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
-                className="group bg-white hover:bg-blue-50 text-gray-600 hover:text-blue-600 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-blue-300"
-                title="맨 아래로"
-              >
-                <ChevronDown className="w-5 h-5" />
-              </button>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
 };
 
-// 분석 결과 섹션
+// CompleteAnalysisSection (변경 없음)
 const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor, uploadedFiles }) => {
 
  // 샘플별 개별 파라미터 가져오는 함수
@@ -361,7 +484,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
      <h2 className="text-3xl font-bold text-gray-800 mb-6 flex items-center"><Star className="w-8 h-8 text-yellow-500 mr-3" />통합 분석 결과</h2>
      <div className="grid gap-6">
        {Object.entries(completeAnalysisResults).map(([sampleName, result]) => {
-         const sampleParams = getSampleParams(sampleName); // 개별 파라미터 가져오기
+         const sampleParams = getSampleParams(sampleName);
 
          return (
            <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
@@ -373,7 +496,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                  </span>
                </h3>
                <div className="flex items-center space-x-4">
-                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>품질: {result.quality.grade} ({result.quality.score}점)</span>
+                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : result.quality.grade === 'D' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>{result.quality.grade}</span>
                  <div className="flex space-x-2">
                    {result.hasLinear && <span className="w-3 h-3 bg-blue-500 rounded-full" title="Linear"></span>}
                    {result.hasSaturation && <span className="w-3 h-3 bg-green-500 rounded-full" title="Saturation"></span>}
@@ -385,7 +508,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 
              <div className="grid md:grid-cols-3 gap-6">
 
-               {/* 1️⃣ 기본 전기 특성 - 가장 중요한 기본 파라미터들 */}
                <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
                  <h4 className="font-semibold text-blue-800 mb-3">⚡ 기본 전기 특성</h4>
                  <div className="space-y-2 text-sm">
@@ -400,7 +522,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                  </div>
                </div>
 
-               {/* 2️⃣ 품질 & 안정성 - 소자의 품질과 안정성 지표들 */}
                <div className="bg-gradient-to-br from-green-50 to-yellow-50 p-4 rounded-lg">
                  <h4 className="font-semibold text-green-800 mb-3">📊 품질 & 안정성</h4>
                  <div className="space-y-2 text-sm">
@@ -418,7 +539,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
                  </div>
                </div>
 
-               {/* 3️⃣ 고급 이동도 분석 - 이동도 물리 모델 파라미터들 */}
                <div className="bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
                  <h4 className="font-semibold text-purple-800 mb-3">🔬 고급 이동도 분석</h4>
                  <div className="space-y-2 text-sm">
@@ -435,7 +555,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 
              </div>
 
-             {/* 경고 및 품질 문제 표시는 그대로 유지 */}
              {result.warnings && result.warnings.length > 0 && (
                <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                  <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>
@@ -456,7 +575,6 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
  );
 };
 
-// 개별 분석 섹션
 const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
@@ -470,6 +588,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
           {type === 'IDVG-Hysteresis' && <HysteresisCharts resultArray={resultArray} hasMultipleFiles={hasMultipleFiles} sortByValue={sortByValue} />}
           {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
             <>
+
               <IDVGCharts resultArray={resultArray} type={type} sortByValue={sortByValue} showLogScale={showLogScale} setShowLogScale={setShowLogScale} formatLinearCurrent={formatLinearCurrent} />
               {resultArray.some(result => result.gmData) && (
                 <div className="mt-8">
@@ -494,7 +613,7 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
                       {key === 'SS' && (type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
                         <div className="flex items-center space-x-1">
                           {getSSQualityIcon(value)}
-                          <button onClick={() => openSSEditor(result.displayName, type, result.chartData, value)} className="p-1 hover:bg-blue-100 rounded transition-colors group" title="SS 값 수정하기"><Edit3 className="w-3 h-3 text-blue-600 group-hover:text-blue-800" /></button>
+                          <button onClick={() => openSSEditor(result.displayName, type, result.chartData, value)} className="p-1 hover:bg-blue-100 rounded transition-colors group" title="SS 값 수정하기"><Edit3 className="w-3 h-3 text-blue-600" /></button>
                         </div>
                       )}
                     </div>
@@ -509,7 +628,6 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
   );
 };
 
-// 통합 결과 테이블 컴포넌트
 const IntegratedResultsTable = ({ completeAnalysisResults }) => (
   <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
     <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 통합 분석 결과표</h2>
@@ -538,7 +656,7 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
             <tr key={sampleName} className="hover:bg-gray-50">
               <td className="border border-gray-300 px-3 py-2 font-medium bg-blue-50">{sampleName}</td>
               <td className="border border-gray-300 px-2 py-2 text-center">
-                <span className={`px-2 py-1 rounded text-xs font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{result.quality.grade}</span>
+                <span className={`px-2 py-1 rounded text-xs font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : result.quality.grade === 'D' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>{result.quality.grade}</span>
               </td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Vth (Linear 기준)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['gm_max (Linear 기준)']}</td>
