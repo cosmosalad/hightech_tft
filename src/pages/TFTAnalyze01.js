@@ -17,10 +17,25 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   });
   const [showParamInput, setShowParamInput] = useState(false);
   const [showFormulaInfo, setShowFormulaInfo] = useState('');
+  // ⭐ New state for discontinued message
+  const [showDiscontinuedMessage, setShowDiscontinuedMessage] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
+
+  // ⭐ New useEffect for the discontinued message timer
+  useEffect(() => {
+    if (currentPage === 'home') {
+      const timer = setTimeout(() => {
+        setShowDiscontinuedMessage(true);
+      }, 3000); // Show message after 3 seconds
+      return () => clearTimeout(timer); // Cleanup the timer
+    } else {
+      setShowDiscontinuedMessage(false); // Hide if not on home page
+    }
+  }, [currentPage]);
+
 
   const handleGoBack = () => {
     if (currentPage === 'analyzer') {
@@ -620,7 +635,30 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
 
   // 홈 페이지
   const renderHomePage = () => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8 relative"> {/* Added relative for message positioning */}
+    {/* ⭐ Discontinued Message Overlay */}
+    {showDiscontinuedMessage && (
+      <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fadeIn">
+        <div className="bg-gradient-to-br from-red-500 to-red-700 text-white p-8 rounded-2xl shadow-2xl text-center max-w-lg w-full transform scale-95 animate-popIn border-4 border-red-300">
+          <div className="text-6xl mb-4 animate-bounce-once">⚠️</div>
+          <h2 className="text-4xl font-extrabold mb-4 drop-shadow-lg">업데이트 중단 알림</h2>
+          <p className="text-xl mb-6 font-semibold opacity-90">
+            해당 분석기는 업데이트가 중단되었습니다.
+          </p>
+          <p className="text-2xl mb-8 font-bold text-yellow-200 animate-pulse">
+            새로운 '통합 분석 모드'를 이용해 주세요!
+          </p>
+          <button
+            onClick={handleGoToMainHome} // Assuming this button navigates to the main home where integrated mode exists
+            className="bg-white text-red-700 font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 flex items-center justify-center mx-auto"
+          >
+            <Play className="w-6 h-6 mr-3" />
+            통합 분석 모드로 이동
+          </button>
+        </div>
+      </div>
+    )}
+
     <div className="max-w-4xl mx-auto">
       <div className="flex justify-end mb-4">
         <button
