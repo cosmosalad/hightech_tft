@@ -480,7 +480,7 @@ const AnalysisResultsDisplay = ({
 
           {/* 통합 분석 결과 섹션 - 조건부 렌더링 */}
           {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showCompleteAnalysis ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${showCompleteAnalysis ? 'max-h-none opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
               <CompleteAnalysisSection
                 completeAnalysisResults={completeAnalysisResults}
                 deviceParams={deviceParams}
