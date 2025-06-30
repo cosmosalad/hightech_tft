@@ -4,6 +4,47 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
 
+// 🌟 황금비 기반 색상 생성 함수들
+const generateGoldenRatioColor = (index) => {
+  const goldenAngle = 137.508; // 황금각
+  const hue = (index * goldenAngle) % 360;
+  const saturation = 65 + (index % 4) * 5; // 65%, 70%, 75%, 80% 순환
+  const lightness = 45 + (index % 3) * 8;  // 45%, 53%, 61% 순환
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+const generateIGColor = (index) => {
+  const goldenAngle = 137.508;
+  const hue = (index * goldenAngle) % 360;
+  const saturation = 70 + (index % 3) * 5; // 더 높은 채도
+  const lightness = 60 + (index % 2) * 10; // 더 밝게
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+const generateTangentColor = (index) => {
+  const goldenAngle = 137.508;
+  const hue = ((index * goldenAngle) + 20) % 360; // +20도 오프셋
+  const saturation = 75 + (index % 3) * 5;
+  const lightness = 40 + (index % 2) * 10;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+const generateGmColor = (index) => {
+  const goldenAngle = 137.508;
+  const hue = ((index * goldenAngle) + 180) % 360; // +180도 오프셋으로 구별
+  const saturation = 70 + (index % 3) * 5;
+  const lightness = 50 + (index % 2) * 8;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
+const generateReferenceColor = (index, offset = 0) => {
+  const goldenAngle = 137.508;
+  const hue = ((index * goldenAngle) + offset) % 360;
+  const saturation = 60 + (index % 2) * 10;
+  const lightness = 35 + (index % 2) * 5;
+  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+};
+
 // Tooltip 컴포넌트
 export const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue, showLogScale, formatLinearCurrent }) => {
   if (active && payload && payload.length) {
@@ -100,7 +141,7 @@ export const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
                   {result.gateVoltages && result.gateVoltages.map((vg, vgIndex) => {
                     const lineKey = `VG_${vg}V`;
                     return (
-                      <Line key={vg} type="monotone" dataKey={lineKey} stroke={`hsl(${(vgIndex * 60) % 360}, 70%, 50%)`} strokeWidth={2} dot={false} name={`${result.displayName} VG=${vg}V`} hide={hiddenLines.has(lineKey)} />
+                      <Line key={vg} type="monotone" dataKey={lineKey} stroke={generateGoldenRatioColor(vgIndex)} strokeWidth={2} dot={false} name={`${result.displayName} VG=${vg}V`} hide={hiddenLines.has(lineKey)} />
                     );
                   })}
                 </LineChart>
@@ -140,6 +181,9 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                     return { VG: vg, Forward: forwardPoint?.ID || null, Backward: backwardPoint?.ID || null, Forward_IG: forwardPoint?.IG || null, Backward_IG: backwardPoint?.IG || null };
                 });
 
+                const forwardColor = generateGoldenRatioColor(index * 2);
+                const backwardColor = generateGoldenRatioColor(index * 2 + 1);
+
                 return (
                     <div key={index} className="relative">
                         {hasMultipleFiles && (<h4 className="text-md font-medium mb-3 text-gray-700 bg-gray-100 p-2 rounded">{result.displayName}</h4>)}
@@ -150,10 +194,9 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                     <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
                                     <YAxis scale="log" domain={[1e-12, 1e-3]} label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                     <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-                                    {/* 👇 [수정] 아무 동작도 하지 않는 onClick 핸들러를 명시적으로 추가하여 기본 동작을 막음 */}
                                     <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line" onClick={() => {}}/>
-                                    <Line type="monotone" dataKey="Forward" stroke="#2563eb" name={`${result.displayName} Forward`} strokeWidth={2} dot={false} connectNulls={false} />
-                                    <Line type="monotone" dataKey="Backward" stroke="#dc2626" name={`${result.displayName} Backward`} strokeWidth={2} dot={false} connectNulls={false} />
+                                    <Line type="monotone" dataKey="Forward" stroke={forwardColor} name={`${result.displayName} Forward`} strokeWidth={2} dot={false} connectNulls={false} />
+                                    <Line type="monotone" dataKey="Backward" stroke={backwardColor} name={`${result.displayName} Backward`} strokeWidth={2} dot={false} connectNulls={false} />
                                 </LineChart>
                             </ResponsiveContainer>
                         </div>
@@ -168,8 +211,8 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
                                         <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
                                         <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
                                         <Legend wrapperStyle={{ paddingTop: '10px' }} iconType="line" onClick={() => {}}/>
-                                        <Line type="monotone" dataKey="Forward_IG" stroke="#2563eb" name={`${result.displayName} Forward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
-                                        <Line type="monotone" dataKey="Backward_IG" stroke="#dc2626" name={`${result.displayName} Backward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
+                                        <Line type="monotone" dataKey="Forward_IG" stroke={forwardColor} name={`${result.displayName} Forward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
+                                        <Line type="monotone" dataKey="Backward_IG" stroke={backwardColor} name={`${result.displayName} Backward - IG`} strokeWidth={2} dot={false} connectNulls={false} />
                                     </LineChart>
                                 </ResponsiveContainer>
                             </div>
@@ -322,22 +365,22 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" content={renderCustomLegend} />
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={index} type="monotone" dataKey={key} stroke={`hsl(${index * 120}, 70%, 50%)`} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
               const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
               if (!tangentInfo) return null;
-              return <Line key={`tangent-${index}`} type="monotone" dataKey={`${key}_tangent`} stroke={`hsl(${index * 120 + 30}, 80%, 45%)`} strokeWidth={2} strokeDasharray="8 4" dot={false} legendType="none" connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={`tangent-${index}`} type="monotone" dataKey={`${key}_tangent`} stroke={generateTangentColor(index)} strokeWidth={2} strokeDasharray="8 4" dot={false} legendType="none" connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
                 const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
                 if (!tangentInfo) return null;
                 return (
                   <React.Fragment key={`ref-${index}`}>
-                    <ReferenceLine x={tangentInfo.gmMaxVG} stroke={`hsl(${index * 120}, 60%, 40%)`} strokeDasharray="4 4" strokeWidth={1} label={{ value: `gm_max VG`, position: "topLeft", style: { fontSize: '10px' } }} />
-                    <ReferenceLine x={tangentInfo.vth} stroke={`hsl(${index * 120 + 60}, 70%, 35%)`} strokeDasharray="4 4" strokeWidth={2} label={{ value: `Vth=${tangentInfo.vth.toFixed(2)}V`, position: "bottomRight", style: { fontSize: '11px', fontWeight: 'bold' } }} />
-                    <ReferenceLine x={tangentInfo.vth} y={0} stroke="transparent" dot={{ fill: `hsl(${index * 120 + 60}, 80%, 40%)`, stroke: `hsl(${index * 120 + 60}, 90%, 20%)`, strokeWidth: 2, r: 6 }} />
+                    <ReferenceLine x={tangentInfo.gmMaxVG} stroke={generateReferenceColor(index, 0)} strokeDasharray="4 4" strokeWidth={1} label={{ value: `gm_max VG`, position: "topLeft", style: { fontSize: '10px' } }} />
+                    <ReferenceLine x={tangentInfo.vth} stroke={generateReferenceColor(index, 60)} strokeDasharray="4 4" strokeWidth={2} label={{ value: `Vth=${tangentInfo.vth.toFixed(2)}V`, position: "bottomRight", style: { fontSize: '11px', fontWeight: 'bold' } }} />
+                    <ReferenceLine x={tangentInfo.vth} y={0} stroke="transparent" dot={{ fill: generateReferenceColor(index, 60), stroke: generateReferenceColor(index, 90), strokeWidth: 2, r: 6 }} />
                   </React.Fragment>
                 );
             })}
@@ -345,74 +388,74 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
         </ResponsiveContainer>
       </div>
 
-      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
-        <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
-        <div className="h-80">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={combinedData} margin={{ left: 18 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
-              <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
-              <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-              <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
-              {resultArray.map((result, index) => {
-                const key = result.displayName || `File${index + 1}`;
-                return (
-                  <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={`hsl(${index * 120}, 80%, 65%)`} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} />
-                );
-              })}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-    </div>
-  );
+     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
+       <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
+       <div className="h-80">
+         <ResponsiveContainer width="100%" height="100%">
+           <LineChart data={combinedData} margin={{ left: 18 }}>
+             <CartesianGrid strokeDasharray="3 3" />
+             <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+             <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
+             <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
+             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
+             {resultArray.map((result, index) => {
+               const key = result.displayName || `File${index + 1}`;
+               return (
+                 <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={generateIGColor(index)} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} />
+               );
+             })}
+           </LineChart>
+         </ResponsiveContainer>
+       </div>
+     </div>
+   </div>
+ );
 };
 
 // Gm 차트 컴포넌트
 export const GmCharts = ({ resultArray, sortByValue }) => {
-  const [hiddenLines, setHiddenLines] = useState(new Set());
-  const handleLegendClick = (data) => {
-    const { dataKey } = data;
-    setHiddenLines(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(dataKey)) newSet.delete(dataKey);
-      else newSet.add(dataKey);
-      return newSet;
-    });
-  };
+ const [hiddenLines, setHiddenLines] = useState(new Set());
+ const handleLegendClick = (data) => {
+   const { dataKey } = data;
+   setHiddenLines(prev => {
+     const newSet = new Set(prev);
+     if (newSet.has(dataKey)) newSet.delete(dataKey);
+     else newSet.add(dataKey);
+     return newSet;
+   });
+ };
 
-  const allVGValues = [...new Set(resultArray.flatMap(result => result.gmData ? result.gmData.map(d => d.VG) : []))].sort((a, b) => a - b);
-  if (allVGValues.length === 0) return null;
+ const allVGValues = [...new Set(resultArray.flatMap(result => result.gmData ? result.gmData.map(d => d.VG) : []))].sort((a, b) => a - b);
+ if (allVGValues.length === 0) return null;
 
-  const combinedGmData = allVGValues.map(vg => {
-    const dataPoint = { VG: vg };
-    resultArray.forEach((result, index) => {
-      if (result.gmData) {
-        const point = result.gmData.find(d => Math.abs(d.VG - vg) < 0.01);
-        const key = result.displayName || `File${index + 1}`;
-        dataPoint[`${key}_gm`] = point?.gm || null;
-      }
-    });
-    return dataPoint;
-  });
+ const combinedGmData = allVGValues.map(vg => {
+   const dataPoint = { VG: vg };
+   resultArray.forEach((result, index) => {
+     if (result.gmData) {
+       const point = result.gmData.find(d => Math.abs(d.VG - vg) < 0.01);
+       const key = result.displayName || `File${index + 1}`;
+       dataPoint[`${key}_gm`] = point?.gm || null;
+     }
+   });
+   return dataPoint;
+ });
 
-  return (
-    <div className="h-80">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={combinedGmData} margin={{ left: 18 }}>
-          <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
-          <YAxis scale="linear" domain={['auto', 'auto']} label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5, dx: -15 }} tickFormatter={(value) => value.toExponential(1)} />
-          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} showLogScale={false} formatLinearCurrent={(value) => value.toExponential(2)} />} />
-          <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
-          {resultArray.map((result, index) => {
-            if (!result.gmData) return null;
-            const key = result.displayName || `File${index + 1}`;
-            return <Line key={index} type="monotone" dataKey={`${key}_gm`} stroke={`hsl(${index * 120 + 180}, 70%, 50%)`} strokeWidth={2} dot={false} name={`${key} - gm`} connectNulls={false} hide={hiddenLines.has(`${key}_gm`)} />;
-          })}
-        </LineChart>
-      </ResponsiveContainer>
-    </div>
-  );
+ return (
+   <div className="h-80">
+     <ResponsiveContainer width="100%" height="100%">
+       <LineChart data={combinedGmData} margin={{ left: 18 }}>
+         <CartesianGrid strokeDasharray="3 3" />
+         <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+         <YAxis scale="linear" domain={['auto', 'auto']} label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5, dx: -15 }} tickFormatter={(value) => value.toExponential(1)} />
+         <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} showLogScale={false} formatLinearCurrent={(value) => value.toExponential(2)} />} />
+         <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
+         {resultArray.map((result, index) => {
+           if (!result.gmData) return null;
+           const key = result.displayName || `File${index + 1}`;
+           return <Line key={index} type="monotone" dataKey={`${key}_gm`} stroke={generateGmColor(index)} strokeWidth={2} dot={false} name={`${key} - gm`} connectNulls={false} hide={hiddenLines.has(`${key}_gm`)} />;
+         })}
+       </LineChart>
+     </ResponsiveContainer>
+   </div>
+ );
 };
