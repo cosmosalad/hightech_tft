@@ -10,6 +10,11 @@ import HomePage from './components/HomePage';
 import { analyzeFiles, performCompleteAnalysis } from './analysis/analysisEngine';
 import { detectFileType } from './utils/fileUtils';
 
+// 1. Import 수정 - 불필요한 함수 제거
+import {
+  exportMultipleSessions
+} from './utils/analysisExportImport';
+
 // Analytics import 추가
 import {
   trackPageView,
@@ -125,6 +130,33 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     );
   }, []);
 
+  // 2. 불필요한 함수들 제거 및 간소화
+  const handleExportAllSessions = async (sessions) => {
+    if (sessions.length === 0) {
+      alert('내보낼 세션이 없습니다.');
+      return;
+    }
+    try {
+      const result = await exportMultipleSessions(sessions, false);
+      if (result.success) {
+        alert(result.message);
+      } else {
+        alert(result.message);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('내보내기 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 🆕 분석기록 불러오기 핸들러 함수
+  const handleImportAnalysisSession = (sessions) => {
+    setAnalysisSessions(prev => [...prev, ...sessions]);
+    if (sessions.length > 0) {
+      setCurrentSessionId(sessions[0].id);
+    }
+  };
+
   // startAnalysis 함수에 overwriteExistingSession 인자 추가
   const startAnalysis = async (overwriteExistingSession = false) => {
     if (uploadedFiles.length === 0) {
@@ -163,6 +195,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                   // 덮어쓰기 시 파일 목록과 파라미터도 업데이트
                   uploadedFiles: uploadedFiles, 
                   deviceParams: deviceParams,
+                  parameterMode: parameterMode, // 🆕 추가
                   name: session.name // 이름은 유지
                 }
               : session
@@ -172,11 +205,13 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
         // 새로운 세션 생성
         const newSession = {
           id: Date.now(),
-          name: `분석 기록 ${analysisSessions.length + 1}`, // ⭐ 이름 변경
+          name: `분석 기록 ${analysisSessions.length + 1}`,
+          createdAt: new Date().toISOString(), // 🆕 추가
           analysisResults: results,
           completeAnalysisResults: completeResults,
           uploadedFiles: uploadedFiles,
-          deviceParams: deviceParams
+          deviceParams: deviceParams,
+          parameterMode: parameterMode // 🆕 추가
         };
         setAnalysisSessions(prev => [...prev, newSession]);
         setCurrentSessionId(newSession.id);
@@ -214,6 +249,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     });
   };
 
+  // 4. renderHomePage에서 props 간소화
   const renderHomePage = () => (
     <HomePage
       uploadedFiles={uploadedFiles}
@@ -233,21 +269,25 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       setParameterMode={setParameterMode}
       hasExistingSessions={analysisSessions.length > 0}
       currentSessionName={currentSessionId ? analysisSessions.find(s => s.id === currentSessionId)?.name : null}
+      onImportAnalysisSession={handleImportAnalysisSession}
+      setCurrentPage={setCurrentPage}
     />
   );
 
+  // 3. renderAnalyzerPage에서 props 간소화
   const renderAnalyzerPage = () => (
     <AnalysisResultsDisplay
       allAnalysisSessions={analysisSessions}
       currentSessionId={currentSessionId}
       setCurrentSessionId={setCurrentSessionId}
       updateSessionResults={updateSessionResults}
-      updateSessionName={updateSessionName} // ⭐ 추가된 props
+      updateSessionName={updateSessionName}
       showDataTable={showDataTable}
       setShowDataTable={setShowDataTable}
       setCurrentPage={setCurrentPage}
       handleGoToMainHome={handleGoToMainHome}
       removeAnalysisSession={removeAnalysisSession}
+      onExportAllSessions={handleExportAllSessions}
     />
   );
 

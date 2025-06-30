@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown, X, Trash2, Edit, ChevronRight, ChevronLeft, Pin, PinOff } from 'lucide-react';
+import { ArrowLeft, Home, Table, Star, Edit3, CheckCircle, AlertTriangle, BarChart3, ChevronUp, ChevronDown, X, Trash2, Edit, ChevronRight, ChevronLeft, Pin, PinOff, Download } from 'lucide-react';
 import SSRangeEditor from './SSRangeEditor';
 import { calculateDit } from '../parameters/index.js';
 import { performCompleteAnalysis } from '../analysis/analysisEngine.js';
@@ -19,10 +19,8 @@ import {
 } from '../utils/analytics';
 
 // 사이드바의 축소된 너비와 확장된 너비 정의
-const COLLAPSED_WIDTH = 'w-16'; // 약 64px
-const EXPANDED_WIDTH = 'w-60'; // 약 240px (원래 크기로 유지)
-const COLLAPSED_ML = 'ml-16'; // 메인 콘텐츠의 margin-left
-const EXPANDED_ML = 'ml-60'; // 메인 콘텐츠의 margin-left
+const COLLAPSED_WIDTH = 64; // px 단위로 변경
+const EXPANDED_WIDTH = 240; // px 단위로 변경
 
 const AnalysisResultsDisplay = ({
   allAnalysisSessions,
@@ -34,7 +32,8 @@ const AnalysisResultsDisplay = ({
   setShowDataTable,
   setCurrentPage,
   handleGoToMainHome,
-  removeAnalysisSession
+  removeAnalysisSession,
+  onExportAllSessions
 }) => {
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
@@ -58,14 +57,52 @@ const AnalysisResultsDisplay = ({
   const [newSessionName, setNewSessionName] = useState('');
   const nameInputRef = useRef(null);
 
-  // 사이드바 상태 관리
+  // 사이드바 상태 관리 - 성능 최적화
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
+  
+  // 디바운싱을 위한 타이머 ref
+  const hoverTimerRef = useRef(null);
+  const contentWrapperRef = useRef(null);
 
   // 현재 세션 데이터를 useMemo로 캐싱
   const currentSession = useMemo(() => {
     return allAnalysisSessions.find(session => session.id === currentSessionId);
   }, [allAnalysisSessions, currentSessionId]);
+
+  // 사이드바 hover 디바운싱 처리
+  const handleSidebarMouseEnter = useCallback(() => {
+    if (isSidebarPinned) return;
+    
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+    }
+    
+    hoverTimerRef.current = setTimeout(() => {
+      setIsSidebarOpen(true);
+    }, 100); // 100ms 지연
+  }, [isSidebarPinned]);
+
+  const handleSidebarMouseLeave = useCallback(() => {
+    if (isSidebarPinned) return;
+    
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+    }
+    
+    hoverTimerRef.current = setTimeout(() => {
+      setIsSidebarOpen(false);
+    }, 150); // 150ms 지연으로 너무 빠른 닫힘 방지
+  }, [isSidebarPinned]);
+
+  // 컴포넌트 언마운트 시 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (hoverTimerRef.current) {
+        clearTimeout(hoverTimerRef.current);
+      }
+    };
+  }, []);
 
   // 스크롤 감지
   useEffect(() => {
@@ -135,10 +172,9 @@ const AnalysisResultsDisplay = ({
     };
   }, [editingSessionId, saveSessionName]);
 
-  // 사이드바 너비 클래스 계산
+  // 사이드바 너비 계산 - 성능 최적화
   const isExpanded = isSidebarOpen || isSidebarPinned;
-  const sidebarWidthClass = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
-  const mainContentMlClass = isExpanded ? EXPANDED_ML : COLLAPSED_ML;
+  const sidebarWidth = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
   // 사이드바 배경색 및 텍스트 색상 조정
   const sidebarBg = 'bg-gray-800';
@@ -257,20 +293,12 @@ const AnalysisResultsDisplay = ({
  
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* 사이드바 컨테이너 */}
+      {/* 사이드바 컨테이너 - 성능 최적화 */}
       <div
-        className={
-          [
-            'fixed top-0 left-0 h-full',
-            sidebarBg,
-            'shadow-lg flex flex-col z-40',
-            sidebarWidthClass,
-            'transition-all duration-300 ease-in-out',
-            !isSidebarPinned && 'group',
-          ].filter(Boolean).join(' ')
-        }
-        onMouseEnter={() => !isSidebarPinned && setIsSidebarOpen(true)}
-        onMouseLeave={() => !isSidebarPinned && setIsSidebarOpen(false)}
+        className={`fixed top-0 left-0 h-full ${sidebarBg} shadow-lg flex flex-col z-40 transition-all duration-300 ease-in-out`}
+        style={{ width: `${sidebarWidth}px` }}
+        onMouseEnter={handleSidebarMouseEnter}
+        onMouseLeave={handleSidebarMouseLeave}
       >
         {/* 사이드바 헤더 및 토글 버튼 */}
         <div className={`flex items-center ${isExpanded ? 'justify-between px-4 py-4 border-b border-gray-700' : 'justify-center py-4'}`}>
@@ -346,8 +374,17 @@ const AnalysisResultsDisplay = ({
               </div>
             </div>
 
-            {/* 하단 탐색 버튼 */}
+            {/* 사이드바 하단 버튼 */}
             <div className="mt-auto space-y-3 py-4 border-t border-gray-700 px-4">
+              <button
+                onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
+                disabled={allAnalysisSessions.length === 0}
+                className="w-full flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 transition-colors text-sm"
+              >
+                <Download className="w-4 h-4 mr-2" />
+                전체 세션 내보내기
+              </button>
+
               <button
                 onClick={() => setCurrentPage('home')}
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md"
@@ -367,12 +404,20 @@ const AnalysisResultsDisplay = ({
         )}
       </div>
 
-      {/* 메인 콘텐츠 - 좌측 여백 동적 조절 */}
-      <div className={`flex-1 p-8 transition-all duration-300 ease-in-out ${mainContentMlClass}`}>
+      {/* 메인 콘텐츠 - 성능 최적화된 레이아웃 */}
+      <div 
+        ref={contentWrapperRef}
+        className="flex-1 p-8 transition-all duration-300 ease-in-out will-change-auto"
+        style={{ 
+          marginLeft: `${sidebarWidth}px`,
+          // GPU 가속을 위한 transform 사용
+          transform: 'translateZ(0)'
+        }}
+      >
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">TFT 통합 분석 결과</h1>
           
-          {/* 수정된 버튼 그룹 */}
+          {/* 버튼 그룹 */}
           <div className="flex items-center justify-end mb-8 space-x-4">
             <div className="relative flex items-center space-x-3">
               {/* 통합 분석 결과 토글 버튼 */}
@@ -403,7 +448,7 @@ const AnalysisResultsDisplay = ({
                 }`}></div>
               </button>
 
-              {/* 기존 값 정렬 버튼 */}
+              {/* 값 정렬 버튼 */}
               <button 
                 onClick={handleSortToggle} 
                 className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${

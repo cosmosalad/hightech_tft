@@ -1,12 +1,18 @@
 // C:\Users\HYUN\hightech_tft\src\pages\components\HomePage.js
 
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download,
-  CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText, PlusCircle, Save, Trash2
+  CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText, PlusCircle, Save, Trash2,
+  Database, FileUp
 } from 'lucide-react';
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
+
+// 1. Import 수정 (템플릿 관련 제거)
+import {
+  importAnalysisSession
+} from '../utils/analysisExportImport';
 
 // 설정 파일에서 import
 import {
@@ -136,14 +142,15 @@ const FileTree = ({ folderStructure, onSelectFolder, selectedFolder, isFolderStr
 };
 
 
-// EnhancedFileUploadSection Component
+// 2. EnhancedFileUploadSection Props 제거 (템플릿 관련)
 const EnhancedFileUploadSection = ({
   uploadedFiles,
   handleFileUpload,
   removeFile,
   updateFileAlias,
   onGitHubFilesLoaded,
-  setUploadedFiles // 모든 파일 삭제를 위해 setUploadedFiles 추가
+  setUploadedFiles,
+  onImportAnalysisSession
 }) => {
   const [activeTab, setActiveTab] = useState('local');
   const [selectedFolder, setSelectedFolder] = useState('공통'); // 초기 폴더 설정
@@ -155,6 +162,17 @@ const EnhancedFileUploadSection = ({
   const [hasFolderLoadError, setHasFolderLoadError] = useState(false); // 폴더 구조 로딩 오류 상태
   const [folderTreeData, setFolderTreeData] = useState([]); // 폴더 트리 데이터 상태
   const [isDragging, setIsDragging] = useState(false);
+
+  // 3. 상태 변수 제거 (템플릿 관련)
+  const [isImportingSession, setIsImportingSession] = useState(false);
+  const [notification, setNotification] = useState(null);
+  const analysisFileInputRef = useRef(null);
+
+  // 🆕 알림 표시 함수
+  const showNotification = (message, type = 'success') => {
+    setNotification({ message, type });
+    setTimeout(() => setNotification(null), 5000);
+  };
 
   const handleDragEnter = (e) => {
     e.preventDefault();
@@ -187,6 +205,31 @@ const EnhancedFileUploadSection = ({
       alert('엑셀 파일(.xls, .xlsx)만 업로드 가능합니다.');
     }
   };
+
+  // 🆕 분석기록 불러오기 함수
+  const handleImportAnalysisFile = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setIsImportingSession(true);
+    try {
+      const result = await importAnalysisSession(file);
+      
+      if (result.success) {
+        onImportAnalysisSession(result.sessions);
+        showNotification(result.message, 'success');
+      } else {
+        showNotification(result.message, 'error');
+      }
+    } catch (error) {
+      showNotification('파일 불러오기 중 오류가 발생했습니다.', 'error');
+    } finally {
+      setIsImportingSession(false);
+      event.target.value = ''; // 파일 입력 초기화
+    }
+  };
+  
+  // 4. 불필요한 함수들 제거 (handleImportTemplateFile, handleExportTemplate)
 
   // 컴포넌트 마운트 시 폴더 구조를 비동기적으로 불러옴
   useEffect(() => {
@@ -418,10 +461,28 @@ const EnhancedFileUploadSection = ({
         <h2 className="text-2xl font-bold text-gray-800">파일 불러오기</h2>
       </div>
 
+      {/* 🆕 알림 메시지 */}
+      {notification && (
+        <div className={`mb-4 p-4 rounded-lg border ${
+          notification.type === 'success' 
+            ? 'bg-green-50 border-green-200 text-green-800' 
+            : 'bg-red-50 border-red-200 text-red-800'
+        }`}>
+          <div className="flex items-center">
+            {notification.type === 'success' 
+              ? <CheckCircle className="w-5 h-5 mr-2" />
+              : <AlertTriangle className="w-5 h-5 mr-2" />
+            }
+            {notification.message}
+          </div>
+        </div>
+      )}
+
+      {/* 탭 메뉴 확장 */}
       <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
         <button
           onClick={() => setActiveTab('local')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             activeTab === 'local'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-800'
@@ -432,7 +493,7 @@ const EnhancedFileUploadSection = ({
         </button>
         <button
           onClick={() => setActiveTab('github')}
-          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
             activeTab === 'github'
               ? 'bg-white text-blue-600 shadow-sm'
               : 'text-gray-600 hover:text-gray-800'
@@ -440,6 +501,17 @@ const EnhancedFileUploadSection = ({
         >
           <Github className="w-4 h-4 inline mr-2" />
           GitHub 파일
+        </button>
+        <button
+          onClick={() => setActiveTab('analysis')}
+          className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+            activeTab === 'analysis'
+              ? 'bg-white text-purple-600 shadow-sm'
+              : 'text-gray-600 hover:text-gray-800'
+          }`}
+        >
+          <Database className="w-4 h-4 inline mr-2" />
+          분석기록
         </button>
       </div>
 
@@ -671,6 +743,58 @@ const EnhancedFileUploadSection = ({
             </div>
           )}
 
+          {/* 5. 분석기록 탭 간소화 */}
+          {activeTab === 'analysis' && (
+            <div className="space-y-6">
+              <p className="text-gray-600 mb-6">
+                이전에 저장한 분석기록을 불러오세요
+              </p>
+              {/* 분석기록 불러오기만 */}
+              <div className="border border-purple-200 rounded-lg p-6 bg-purple-50">
+                <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+                  <FileUp className="w-5 h-5 mr-2" />
+                  분석기록 불러오기
+                </h3>
+                <p className="text-purple-700 mb-4 text-sm">
+                  이전에 내보낸 분석기록 파일(.json)을 불러와서 세션을 복원합니다.
+                </p>
+                
+                <input
+                  ref={analysisFileInputRef}
+                  type="file"
+                  accept=".json"
+                  onChange={handleImportAnalysisFile}
+                  className="hidden"
+                />
+                
+                <button
+                  onClick={() => analysisFileInputRef.current?.click()}
+                  disabled={isImportingSession}
+                  className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
+                >
+                  {isImportingSession ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                      불러오는 중...
+                    </>
+                  ) : (
+                    <>
+                      <FileUp className="w-5 h-5 mr-2" />
+                      분석기록 파일 선택
+                    </>
+                  )}
+                </button>
+              </div>
+              {/* 간단한 사용 가이드 */}
+              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">📖 사용법</h3>
+                <p className="text-sm text-gray-600">
+                  이전에 "전체 세션 내보내기"로 저장한 JSON 파일을 선택하면 모든 분석 세션이 복원됩니다.
+                </p>
+              </div>
+            </div>
+          )}
+
           {uploadedFiles.length > 0 && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-3">
@@ -735,6 +859,7 @@ const EnhancedFileUploadSection = ({
       );
     };
 
+    // 6. HomePage 컴포넌트 Props 제거 (템플릿 관련)
     const HomePage = ({
       uploadedFiles,
       deviceParams,
@@ -752,7 +877,9 @@ const EnhancedFileUploadSection = ({
       parameterMode,
       setParameterMode,
       hasExistingSessions,
-      currentSessionName
+      currentSessionName,
+      onImportAnalysisSession,
+      setCurrentPage
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
       const [showAnalysisOptionsModal, setShowAnalysisOptionsModal] = useState(false);
@@ -783,6 +910,15 @@ const EnhancedFileUploadSection = ({
           throw error;
         }
       }, [originalHandleFileUpload]);
+
+      // 🆕 분석기록 불러오기 핸들러
+      const handleImportAnalysisSession = (sessions) => {
+        onImportAnalysisSession(sessions);
+        // 불러온 후 바로 분석 결과 페이지로 이동
+        setCurrentPage('analyzer');
+      };
+
+      // 7. 불필요한 핸들러 함수 제거 (handleImportTemplate)
 
       const handleStartAnalysisClick = () => {
         if (uploadedFiles.length === 0) {
@@ -830,6 +966,7 @@ const EnhancedFileUploadSection = ({
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mb-12">
+              {/* 8. EnhancedFileUploadSection 호출부 수정 */}
               <EnhancedFileUploadSection
                 uploadedFiles={uploadedFiles}
                 handleFileUpload={handleFileUpload}
@@ -837,6 +974,7 @@ const EnhancedFileUploadSection = ({
                 updateFileAlias={updateFileAlias}
                 onGitHubFilesLoaded={handleGitHubFilesLoaded}
                 setUploadedFiles={setUploadedFiles}
+                onImportAnalysisSession={handleImportAnalysisSession}
               />
 
               <div className="bg-white p-8 rounded-xl shadow-lg">
@@ -901,8 +1039,7 @@ const EnhancedFileUploadSection = ({
                 <FormulaCodeInspector />
               </div>
             )}
-
-            {uploadedFiles.length > 0 && (
+{uploadedFiles.length > 0 && (
               <div className="text-center">
                 <button
                   onClick={handleStartAnalysisClick}
