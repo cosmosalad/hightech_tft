@@ -241,7 +241,7 @@
       },
       "0626": {
         "type": "folder",
-        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 5m45s\nMeasured THickness: 26.7nm",
+        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 5m45s\nMeasured\nShield O",
         "children": {
           "sample1_annealing100_20m": {
             "type": "folder",
@@ -370,6 +370,7 @@
     "children": {
       "0628": {
         "type": "folder",
+        "description": "O2: 2sccm\nPressure: 7mTorr\nPower: 70W\nsputtering time: 11m 40s\nShield O",
         "children": {
           "20m": {
             "type": "folder",
@@ -526,6 +527,7 @@
     "children": {
       "0629": {
         "type": "folder",
+        "description": "O2: 2sccm\nPressure: 7mTorr\nPower: 70W\nsputtering time: 11m 40s\nShield X",
         "children": {
           "K6_20m_anneal_X": {
             "type": "folder",
@@ -667,6 +669,7 @@
     "children": {
       "0627": {
         "type": "folder",
+        "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 5m45s\nMeasured\nShield X",
         "children": {
           "20m": {
             "type": "folder",
