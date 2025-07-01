@@ -35,6 +35,51 @@ const AnalysisResultsDisplay = ({
   removeAnalysisSession,
   onExportAllSessions
 }) => {
+
+  useEffect(() => {
+    const style = document.createElement('style');
+    style.textContent = `
+      .pretty-scrollbar::-webkit-scrollbar {
+        width: 8px;
+      }
+      
+      .pretty-scrollbar::-webkit-scrollbar-track {
+        background: rgba(55, 65, 81, 0.3);
+        border-radius: 10px;
+        margin: 4px;
+      }
+      
+      .pretty-scrollbar::-webkit-scrollbar-thumb {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+      }
+      
+      .pretty-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+      }
+      
+      .pretty-scrollbar::-webkit-scrollbar-thumb:active {
+        background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
+      }
+    `;
+    
+    style.id = 'pretty-scrollbar-styles';
+    if (!document.getElementById('pretty-scrollbar-styles')) {
+      document.head.appendChild(style);
+    }
+    
+    return () => {
+      const existingStyle = document.getElementById('pretty-scrollbar-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, []);
+
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
   
@@ -323,8 +368,8 @@ const AnalysisResultsDisplay = ({
 
         {/* 세션 목록 및 하단 탐색 버튼 */}
         {isExpanded && (
-          <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100">
-            <div className="flex-grow overflow-y-auto px-4 pr-2 custom-scrollbar py-4">
+          <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100 min-h-0">
+            <div className="flex-grow overflow-y-auto px-4 pr-2 pretty-scrollbar py-4 min-h-0">
               <div className="space-y-2">
                 {allAnalysisSessions.map(session => (
                   <div
@@ -374,32 +419,68 @@ const AnalysisResultsDisplay = ({
               </div>
             </div>
 
-            {/* 사이드바 하단 버튼 */}
-            <div className="mt-auto space-y-3 py-4 border-t border-gray-700 px-4">
-              <button
-                onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
-                disabled={allAnalysisSessions.length === 0}
-                className="w-full flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 transition-colors text-sm"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                전체 세션 내보내기
-              </button>
+{/* 사이드바 하단 버튼 - 고정 영역 */}
+<div className="flex-shrink-0 space-y-2 py-3 border-t border-gray-700 px-4">
+  {/* 세션이 많을 때 컴팩트한 레이아웃 사용 */}
+  {allAnalysisSessions.length > 8 ? (
+    <>
+      {/* 컴팩트 모드: 아이콘만 표시하거나 더 작은 버튼 */}
+      <button
+        onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
+        disabled={allAnalysisSessions.length === 0}
+        className="w-full flex items-center justify-center px-2 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 transition-colors text-xs"
+        title="전체 세션 내보내기"
+      >
+        <Download className="w-4 h-4 mr-1" />
+        <span className="hidden sm:inline">내보내기</span>
+      </button>
 
-              <button
-                onClick={() => setCurrentPage('home')}
-                className="w-full flex items-center justify-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                분석기 홈
-              </button>
-              <button
-                onClick={handleGoToMainHome}
-                className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors shadow-md"
-              >
-                <Home className="w-4 h-4 mr-2" />
-                메인 홈
-              </button>
-            </div>
+      <div className="flex space-x-2">
+        <button
+          onClick={() => setCurrentPage('home')}
+          className="flex-1 flex items-center justify-center px-2 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md text-xs"
+          title="분석기 홈"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </button>
+        <button
+          onClick={handleGoToMainHome}
+          className="flex-1 flex items-center justify-center px-2 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors shadow-md text-xs"
+          title="메인 홈"
+        >
+          <Home className="w-4 h-4" />
+        </button>
+      </div>
+    </>
+  ) : (
+    <>
+      {/* 일반 모드: 전체 텍스트 표시 */}
+      <button
+        onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
+        disabled={allAnalysisSessions.length === 0}
+        className="w-full flex items-center justify-center px-3 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:bg-gray-400 transition-colors text-sm"
+      >
+        <Download className="w-4 h-4 mr-2" />
+        전체 세션 내보내기
+      </button>
+
+      <button
+        onClick={() => setCurrentPage('home')}
+        className="w-full flex items-center justify-center px-4 py-2 bg-blue-700 text-white rounded-md hover:bg-blue-800 transition-colors shadow-md"
+      >
+        <ArrowLeft className="w-4 h-4 mr-2" />
+        분석기 홈
+      </button>
+      <button
+        onClick={handleGoToMainHome}
+        className="w-full flex items-center justify-center px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 transition-colors shadow-md"
+      >
+        <Home className="w-4 h-4 mr-2" />
+        메인 홈
+      </button>
+    </>
+  )}
+</div>
           </div>
         )}
       </div>
