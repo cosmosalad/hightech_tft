@@ -30,11 +30,7 @@ const generateTangentColor = (index) => {
 };
 
 const generateGmColor = (index) => {
-  const goldenAngle = 137.508;
-  const hue = ((index * goldenAngle) + 180) % 360; // +180도 오프셋으로 구별
-  const saturation = 70 + (index % 3) * 5;
-  const lightness = 50 + (index % 2) * 8;
-  return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
+  return generateGoldenRatioColor(index);
 };
 
 const generateReferenceColor = (index, offset = 0) => {
