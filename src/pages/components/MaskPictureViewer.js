@@ -4,8 +4,8 @@ import {
   RotateCw, MousePointer, Trash2
 } from 'lucide-react';
 
-// SVG 뷰어 컴포넌트
-const SVGViewer = ({ svgContent, fileName, onClose }) => {
+// 통합 이미지 뷰어 컴포넌트 (SVG + PNG/JPG 지원)
+const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -15,6 +15,10 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
   const [measurements, setMeasurements] = useState([]);
   const svgRef = useRef(null);
   const containerRef = useRef(null);
+
+  // 파일 타입 확인
+  const fileExtension = fileName.toLowerCase().split('.').pop();
+  const isImageFile = ['png', 'jpg', 'jpeg'].includes(fileExtension);
 
   const handleScreenClick = (e) => {
     if (!measuring) return;
@@ -94,7 +98,7 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
           <Image className="w-6 h-6 mr-3 text-blue-400" />
           <h3 className="text-lg font-semibold">{fileName}</h3>
           <span className="ml-3 px-2 py-1 bg-gray-700 rounded text-xs">
-            SVG 뷰어 - 픽셀 측정
+            {isImageFile ? `${fileExtension.toUpperCase()} 이미지` : 'SVG'} 뷰어 - 픽셀 측정
           </span>
         </div>
         
@@ -152,7 +156,7 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
         </div>
       )}
 
-      {/* SVG 뷰어 영역 */}
+      {/* 이미지 뷰어 영역 */}
       <div 
         ref={containerRef}
         className="flex-1 overflow-hidden relative bg-black"
@@ -179,21 +183,39 @@ const SVGViewer = ({ svgContent, fileName, onClose }) => {
             }}
           >
             {svgContent ? (
-              <div 
-                dangerouslySetInnerHTML={{ __html: svgContent }} 
-                style={{ 
-                  width: '100%', 
-                  height: '100%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}
-              />
+              fileExtension === 'svg' ? (
+                <div 
+                  dangerouslySetInnerHTML={{ __html: svgContent }} 
+                  style={{ 
+                    width: '100%', 
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                />
+              ) : (
+                <img 
+                  src={`https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/${selectedFolder}/${fileName}`}
+                  alt={fileName}
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    display: 'block',
+                    margin: 'auto'
+                  }}
+                  onError={(e) => {
+                    console.error('이미지 로딩 실패:', fileName);
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )
             ) : (
               <div className="flex items-center justify-center h-full text-gray-300">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto mb-4"></div>
-                  <p className="text-lg">SVG 로딩 중...</p>
+                  <p className="text-lg">{isImageFile ? '이미지' : 'SVG'} 로딩 중...</p>
                 </div>
               </div>
             )}
@@ -329,11 +351,17 @@ const MaskPictureViewer = ({ onClose }) => {
       
       if (response.ok) {
         const fileList = await response.json();
-        const svgFiles = fileList
-          .filter(file => file.type === 'file' && file.name.endsWith('.svg'))
+        
+        // SVG, PNG, JPG, JPEG 파일을 모두 지원
+        const imageFiles = fileList
+          .filter(file => file.type === 'file' && 
+            (file.name.endsWith('.svg') || 
+             file.name.endsWith('.png') || 
+             file.name.endsWith('.jpg') || 
+             file.name.endsWith('.jpeg')))
           .map(file => file.name);
         
-        setFiles(prev => ({ ...prev, [selectedFolder]: svgFiles }));
+        setFiles(prev => ({ ...prev, [selectedFolder]: imageFiles }));
       } else {
         setFiles(prev => ({ ...prev, [selectedFolder]: [] }));
       }
@@ -344,22 +372,33 @@ const MaskPictureViewer = ({ onClose }) => {
     }
   };
 
-  const loadSVGFile = async (fileName) => {
+  const loadImageFile = async (fileName) => {
     setLoading(true);
     try {
-      const response = await fetch(
-        `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/${selectedFolder}/${fileName}`
-      );
+      const fileExtension = fileName.toLowerCase().split('.').pop();
       
-      if (response.ok) {
-        const svgText = await response.text();
-        setSvgContent(svgText);
+      if (fileExtension === 'svg') {
+        // SVG 파일은 텍스트로 로드
+        const fileUrl = `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/${selectedFolder}/${fileName}`;
+        const response = await fetch(fileUrl);
+        
+        if (response.ok) {
+          const svgText = await response.text();
+          setSvgContent(svgText);
+        } else {
+          createExampleSVG(fileName);
+        }
+      } else if (['png', 'jpg', 'jpeg'].includes(fileExtension)) {
+        // PNG/JPG 파일은 img 태그로 직접 표시
+        setSvgContent('image'); // 이미지 파일임을 표시하는 플래그
       } else {
+        // 지원하지 않는 파일 형식
         createExampleSVG(fileName);
       }
       
       setSelectedFile(fileName);
     } catch (error) {
+      console.error('파일 로딩 오류:', error);
       createExampleSVG(fileName);
       setSelectedFile(fileName);
     } finally {
@@ -369,46 +408,74 @@ const MaskPictureViewer = ({ onClose }) => {
 
   const createExampleSVG = (fileName) => {
     const isPhoto = selectedFolder === 'picture';
+    const fileExtension = fileName.toLowerCase().split('.').pop();
+    const isImageFile = ['png', 'jpg', 'jpeg'].includes(fileExtension);
     
     const exampleSVG = `
-      <svg width="600" height="400" xmlns="http://www.w3.org/2000/svg">
+      <svg width="800" height="600" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
             <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#e5e7eb" stroke-width="1"/>
           </pattern>
+          <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#f8fafc;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#e2e8f0;stop-opacity:1" />
+          </linearGradient>
         </defs>
         
-        <rect width="100%" height="100%" fill="white"/>
-        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <rect width="100%" height="100%" fill="url(#bgGradient)"/>
+        <rect width="100%" height="100%" fill="url(#grid)" opacity="0.3"/>
         
-        ${isPhoto ? `
-          <rect x="50" y="50" width="500" height="300" fill="#f3f4f6" stroke="#6b7280" stroke-width="2" rx="10"/>
-          <circle cx="150" cy="150" r="30" fill="#3b82f6" stroke="#1e40af" stroke-width="2"/>
-          <circle cx="300" cy="200" r="25" fill="#ef4444" stroke="#dc2626" stroke-width="2"/>
-          <circle cx="450" cy="180" r="35" fill="#10b981" stroke="#059669" stroke-width="2"/>
+        ${isPhoto && isImageFile ? `
+          <!-- TFT 측정 구역 시뮬레이션 -->
+          <rect x="100" y="100" width="600" height="400" fill="#ffffff" stroke="#1f2937" stroke-width="3" rx="10"/>
           
-          <line x1="150" y1="150" x2="300" y2="200" stroke="#6b7280" stroke-width="2" stroke-dasharray="5,5"/>
-          <text x="225" y="170" text-anchor="middle" font-size="12" fill="#374151">픽셀 측정으로 확인하세요</text>
+          <!-- 측정 구역들 -->
+          <rect x="150" y="150" width="120" height="80" fill="#dbeafe" stroke="#3b82f6" stroke-width="2" rx="5"/>
+          <text x="210" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#1e40af">구역 1</text>
           
-          <line x1="300" y1="200" x2="450" y2="180" stroke="#6b7280" stroke-width="2" stroke-dasharray="5,5"/>
-          <text x="375" y="185" text-anchor="middle" font-size="12" fill="#374151">픽셀 측정 모드 사용</text>
+          <rect x="300" y="150" width="120" height="80" fill="#dcfce7" stroke="#22c55e" stroke-width="2" rx="5"/>
+          <text x="360" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#166534">구역 2</text>
+          
+          <rect x="450" y="150" width="120" height="80" fill="#fef3c7" stroke="#f59e0b" stroke-width="2" rx="5"/>
+          <text x="510" y="195" text-anchor="middle" font-size="14" font-weight="bold" fill="#92400e">구역 3</text>
+          
+          <rect x="225" y="280" width="120" height="80" fill="#fce7f3" stroke="#ec4899" stroke-width="2" rx="5"/>
+          <text x="285" y="325" text-anchor="middle" font-size="14" font-weight="bold" fill="#be185d">구역 4</text>
+          
+          <rect x="375" y="280" width="120" height="80" fill="#e0e7ff" stroke="#8b5cf6" stroke-width="2" rx="5"/>
+          <text x="435" y="325" text-anchor="middle" font-size="14" font-weight="bold" fill="#6b21a8">구역 5</text>
+          
+          <!-- 측정 표시선 -->
+          <line x1="210" y1="230" x2="360" y2="150" stroke="#ef4444" stroke-width="3" stroke-dasharray="8,4"/>
+          <text x="285" y="185" text-anchor="middle" font-size="11" fill="#dc2626" font-weight="bold">픽셀 측정 예시</text>
+          
+          <!-- 좌표 표시 -->
+          <circle cx="210" cy="230" r="4" fill="#ef4444"/>
+          <circle cx="360" cy="150" r="4" fill="#ef4444"/>
+          
+          <text x="210" y="250" text-anchor="middle" font-size="10" fill="#6b7280">(210, 230)</text>
+          <text x="360" y="140" text-anchor="middle" font-size="10" fill="#6b7280">(360, 150)</text>
         ` : `
-          <rect x="100" y="100" width="400" height="200" fill="none" stroke="#000000" stroke-width="3"/>
-          <rect x="150" y="130" width="100" height="60" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
-          <rect x="350" y="130" width="100" height="60" fill="#34d399" stroke="#10b981" stroke-width="2"/>
+          <rect x="150" y="150" width="500" height="300" fill="none" stroke="#000000" stroke-width="3"/>
+          <rect x="200" y="180" width="100" height="60" fill="#fbbf24" stroke="#f59e0b" stroke-width="2"/>
+          <rect x="450" y="180" width="100" height="60" fill="#34d399" stroke="#10b981" stroke-width="2"/>
           
-          <circle cx="200" cy="250" r="20" fill="none" stroke="#000000" stroke-width="2"/>
-          <circle cx="400" cy="250" r="20" fill="none" stroke="#000000" stroke-width="2"/>
+          <circle cx="250" cy="320" r="20" fill="none" stroke="#000000" stroke-width="2"/>
+          <circle cx="500" cy="320" r="20" fill="none" stroke="#000000" stroke-width="2"/>
           
-          <line x1="220" y1="160" x2="350" y2="160" stroke="#000000" stroke-width="2"/>
-          <text x="285" y="155" text-anchor="middle" font-size="10" fill="#000000">픽셀 측정 모드로 확인</text>
+          <line x1="300" y1="210" x2="450" y2="210" stroke="#000000" stroke-width="2"/>
+          <text x="375" y="205" text-anchor="middle" font-size="10" fill="#000000">픽셀 측정 모드로 확인</text>
         `}
         
-        <text x="300" y="380" text-anchor="middle" font-size="16" font-weight="bold" fill="#374151">
+        <text x="400" y="550" text-anchor="middle" font-size="18" font-weight="bold" fill="#374151">
           ${fileName}
         </text>
-        <text x="300" y="395" text-anchor="middle" font-size="12" fill="#6b7280">
-          ${isPhoto ? '측정 결과 예시' : '마스크 디자인 예시'} - 픽셀 측정 모드를 사용하세요
+        <text x="400" y="570" text-anchor="middle" font-size="14" fill="#6b7280">
+          ${isImageFile ? `${fileExtension.toUpperCase()} 이미지 파일` : 'SVG 파일'} - 픽셀 측정 모드를 사용하세요
+        </text>
+        <text x="400" y="585" text-anchor="middle" font-size="12" fill="#9ca3af">
+          GitHub에서 실제 파일을 불러올 수 없어 예시를 표시합니다
         </text>
       </svg>
     `;
@@ -484,7 +551,7 @@ const MaskPictureViewer = ({ onClose }) => {
                   {files[selectedFolder].map((fileName) => (
                     <button
                       key={fileName}
-                      onClick={() => loadSVGFile(fileName)}
+                      onClick={() => loadImageFile(fileName)}
                       className="p-4 border-2 border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all duration-200 text-left group hover:shadow-lg"
                     >
                       <div className="flex items-center mb-3">
@@ -495,7 +562,9 @@ const MaskPictureViewer = ({ onClose }) => {
                           <div className="text-sm font-medium text-gray-700 group-hover:text-green-700 truncate">
                             {fileName}
                           </div>
-                          <div className="text-xs text-gray-500">SVG 파일</div>
+                          <div className="text-xs text-gray-500">
+                            {fileName.toLowerCase().endsWith('.svg') ? 'SVG 파일' : '이미지 파일'}
+                          </div>
                         </div>
                       </div>
                       <div className="text-xs text-gray-400 group-hover:text-green-600">
@@ -509,7 +578,7 @@ const MaskPictureViewer = ({ onClose }) => {
               {!loading && files[selectedFolder].length === 0 && (
                 <div className="text-center py-12 text-gray-500">
                   <FolderOpen className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                  <p className="text-lg mb-2">해당 폴더에 SVG 파일이 없습니다</p>
+                  <p className="text-lg mb-2">해당 폴더에 이미지 파일이 없습니다</p>
                   <p className="text-sm">
                     <a 
                       href={`https://github.com/cosmosalad/hightech_tft/tree/main/data/${selectedFolder}`}
@@ -519,7 +588,7 @@ const MaskPictureViewer = ({ onClose }) => {
                     >
                       GitHub data/{selectedFolder}/ 폴더
                     </a>
-                    <br />에 SVG 파일을 추가해보세요
+                    <br />에 SVG, PNG, JPG 파일을 추가해보세요
                   </p>
                 </div>
               )}
@@ -529,9 +598,10 @@ const MaskPictureViewer = ({ onClose }) => {
       )}
 
       {selectedFile && (
-        <SVGViewer
+        <ImageViewer
           svgContent={svgContent}
           fileName={selectedFile}
+          selectedFolder={selectedFolder}
           onClose={() => {
             setSelectedFile(null);
             setSvgContent('');
