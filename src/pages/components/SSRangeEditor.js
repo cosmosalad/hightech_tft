@@ -3,6 +3,40 @@ import { X, Calculator, TrendingUp, AlertTriangle, CheckCircle, Flame } from 'lu
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { calculateSS } from '../parameters/ss.js';
 
+// 스크롤바 스타일을 컴포넌트에 직접 추가
+const scrollbarStyles = `
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 12px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 12px;
+    margin: 8px;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+    border-radius: 12px;
+    border: 2px solid #f1f5f9;
+    transition: all 0.3s ease;
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-thumb:active {
+    background: linear-gradient(135deg, #1d4ed8 0%, #6d28d9 100%);
+  }
+  
+  .custom-scrollbar::-webkit-scrollbar-corner {
+    background: #f1f5f9;
+  }
+`;
+
 const SSRangeEditor = ({
   isOpen,
   onClose,
@@ -20,6 +54,39 @@ const SSRangeEditor = ({
   const [dragStartX, setDragStartX] = useState(null);
   const [dragEndX, setDragEndX] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+
+  // 스크롤바 스타일 추가
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = scrollbarStyles;
+    styleElement.id = 'ss-editor-scrollbar-styles';
+    
+    if (!document.getElementById('ss-editor-scrollbar-styles')) {
+      document.head.appendChild(styleElement);
+    }
+    
+    return () => {
+      const existingStyle = document.getElementById('ss-editor-scrollbar-styles');
+      if (existingStyle) {
+        existingStyle.remove();
+      }
+    };
+  }, []);
+
+  // ESC 키로 모달 닫기
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    if (isOpen) {
+      document.addEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.removeEventListener('keydown', handleEsc);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
   // 초기값 설정 및 미리보기 데이터 생성
   useEffect(() => {
@@ -287,9 +354,19 @@ const SSRangeEditor = ({
   const pointsInCurrentRange = previewData.filter(d => d.VG >= currentSelectedMinVG && d.VG <= currentSelectedMaxVG).length;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4">
-      {/* 모달 전체 컨테이너: 그림자 및 둥근 모서리 강화, 최대 너비 확장 (max-w-7xl로 확장) */}
-      <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-y-auto transform scale-100 transition-all duration-300">
+    <div
+      className="bg-black bg-opacity-60 flex items-center justify-center p-4"
+      style={{
+        position: 'fixed',
+        top: `${window.scrollY}px`,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9998
+      }}
+    >
+      {/* 모달 전체 컨테이너: 크기를 90%로 조정하고 스크롤바 스타일링 */}
+      <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-[90%] max-h-[90vh] overflow-y-auto transform scale-100 transition-all duration-300 custom-scrollbar">
         {/* 헤더 */}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-100 to-purple-100 rounded-t-2xl">
           <div className="flex items-center">

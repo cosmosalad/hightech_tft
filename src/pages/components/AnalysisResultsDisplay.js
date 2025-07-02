@@ -18,6 +18,9 @@ import {
   trackEngagement
 } from '../utils/analytics';
 
+// 1. 상단 import 섹션에 추가
+import SampleDetailModal from './SampleDetailModal';
+
 // 사이드바의 축소된 너비와 확장된 너비 정의
 const COLLAPSED_WIDTH = 64; // px 단위로 변경
 const EXPANDED_WIDTH = 240; // px 단위로 변경
@@ -227,6 +230,31 @@ const AnalysisResultsDisplay = ({
   const defaultTextColor = 'text-gray-200';
   const hoverBgColor = 'hover:bg-gray-700';
   const selectedBgColor = 'bg-blue-600';
+
+  // 2. AnalysisResultsDisplay 컴포넌트 내부에 상태 추가 (기존 useState들과 함께)
+  const [sampleDetailModal, setSampleDetailModal] = useState({
+    isOpen: false,
+    sampleName: null,
+    measurementType: null
+  });
+
+  // 3. 샘플 상세 모달 열기 함수 추가
+  const openSampleDetailModal = (sampleName, measurementType = 'IDVG-Linear') => {
+    setSampleDetailModal({
+      isOpen: true,
+      sampleName: sampleName,
+      measurementType: measurementType
+    });
+  };
+
+  // 4. 샘플 상세 모달 닫기 함수 추가
+  const closeSampleDetailModal = () => {
+    setSampleDetailModal({
+      isOpen: false,
+      sampleName: null,
+      measurementType: null
+    });
+  };
 
   if (!currentSession) {
     return (
@@ -568,6 +596,7 @@ const AnalysisResultsDisplay = ({
                 analysisResults={analysisResults}
                 openSSEditor={openSSEditor}
                 uploadedFiles={uploadedFiles}
+                openSampleDetailModal={openSampleDetailModal} 
               />
             </div>
           )}
@@ -577,17 +606,18 @@ const AnalysisResultsDisplay = ({
             const resultArray = analysisResults[type];
             if (resultArray.length === 0) return null;
             return (
-              <IndividualAnalysisSection
-                key={type}
-                type={type}
-                resultArray={resultArray}
-                openSSEditor={openSSEditor}
-                getSSQualityIcon={getSSQualityIcon}
-                sortByValue={sortByValue}
-                showLogScale={showLogScale}
-                setShowLogScale={(newValue) => handleLogScaleToggle(type)}
-                formatLinearCurrent={formatLinearCurrent}
-              />
+            <IndividualAnalysisSection
+              key={type}
+              type={type}
+              resultArray={resultArray}
+              openSSEditor={openSSEditor}
+              getSSQualityIcon={getSSQualityIcon}
+              sortByValue={sortByValue}
+              showLogScale={showLogScale}
+              setShowLogScale={(newValue) => handleLogScaleToggle(type)}
+              formatLinearCurrent={formatLinearCurrent}
+              openSampleDetailModal={openSampleDetailModal}
+            />
             );
           })}
 
@@ -618,6 +648,16 @@ const AnalysisResultsDisplay = ({
             onApplyResult={handleSSUpdate} 
           />
           
+          {/* 6. 메인 컴포넌트 return 문 맨 마지막에 모달 추가 (기존 SSRangeEditor 아래) */}
+          <SampleDetailModal
+            isOpen={sampleDetailModal.isOpen}
+            onClose={closeSampleDetailModal}
+            sampleName={sampleDetailModal.sampleName}
+            measurementType={sampleDetailModal.measurementType}
+            analysisResults={analysisResults}
+            completeAnalysisResult={sampleDetailModal.sampleName ? completeAnalysisResults[sampleDetailModal.sampleName] : null}
+          />
+
           {/* 스크롤 버튼들 */}
           {showScrollButtons && (
             <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">
@@ -653,7 +693,14 @@ const AnalysisResultsDisplay = ({
 };
 
 // CompleteAnalysisSection 컴포넌트
-const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analysisResults, openSSEditor, uploadedFiles }) => {
+const CompleteAnalysisSection = ({
+  completeAnalysisResults,
+  deviceParams,
+  analysisResults,
+  openSSEditor,
+  uploadedFiles,
+  openSampleDetailModal
+}) => {
 
  // 샘플별 개별 파라미터 가져오는 함수
  const getSampleParams = (sampleName) => {
@@ -671,13 +718,25 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 
          return (
            <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
+             {/* 5. CompleteAnalysisSection 컴포넌트 수정 (샘플명을 클릭 가능하게) */}
              <div className="flex items-center justify-between mb-4">
-               <h3 className="text-xl font-bold text-gray-800">
-                 {sampleName}
-                 <span className="text-sm font-normal text-gray-600 ml-3">
-                   (W={(sampleParams.W * 1e6).toFixed(1)}μm, L={(sampleParams.L * 1e6).toFixed(1)}μm, tox={(sampleParams.tox * 1e9).toFixed(1)}nm)
-                 </span>
-               </h3>
+               <button
+                 onClick={() => openSampleDetailModal(sampleName, 'IDVG-Linear')}
+                 className="group flex items-center hover:bg-blue-50 rounded-lg p-2 transition-colors cursor-pointer"
+                 title={`${sampleName} 상세 그래프 보기`}
+               >
+                 <h3 className="text-xl font-bold text-gray-800 group-hover:text-blue-600 transition-colors">
+                   {sampleName}
+                   <span className="text-sm font-normal text-gray-600 ml-3">
+                     (W={(sampleParams.W * 1e6).toFixed(1)}μm, L={(sampleParams.L * 1e6).toFixed(1)}μm, tox={(sampleParams.tox * 1e9).toFixed(1)}nm)
+                   </span>
+                 </h3>
+                 <div className="ml-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                   <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                   </svg>
+                 </div>
+               </button>
                <div className="flex items-center space-x-4">
                  <span className={`px-3 py-1 rounded-full text-sm font-semibold ${result.quality.grade === 'A' ? 'bg-green-100 text-green-800' : result.quality.grade === 'B' ? 'bg-blue-100 text-blue-800' : result.quality.grade === 'C' ? 'bg-yellow-100 text-yellow-800' : result.quality.grade === 'D' ? 'bg-orange-100 text-orange-800' : 'bg-red-100 text-red-800'}`}>{result.quality.grade}</span>
                  <div className="flex space-x-2">
@@ -759,7 +818,7 @@ const CompleteAnalysisSection = ({ completeAnalysisResults, deviceParams, analys
 };
 
 // IndividualAnalysisSection 컴포넌트
-const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
+const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent, openSampleDetailModal }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
   return (
@@ -786,7 +845,19 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
           <h3 className="text-lg font-semibold mb-4">개별 계산 파라미터</h3>
           {resultArray.map((result, index) => (
             <div key={index} className="mb-6">
-              {hasMultipleFiles && <h4 className="font-medium text-gray-700 mb-2 bg-gray-100 p-2 rounded text-sm">{result.displayName}</h4>}
+              {hasMultipleFiles && (
+                <h4
+                  className={`font-medium text-gray-700 mb-2 bg-gray-100 p-2 rounded text-sm ${
+                    type === 'IDVD' || type === 'IDVG-Hysteresis'
+                      ? 'cursor-default'
+                      : 'cursor-pointer hover:bg-blue-100 hover:text-blue-600 transition-colors'
+                  }`}
+                  onClick={type === 'IDVD' || type === 'IDVG-Hysteresis' ? undefined : () => openSampleDetailModal(result.displayName, type)}
+                  title={type === 'IDVD' || type === 'IDVG-Hysteresis' ? result.displayName : `${result.displayName} 상세 그래프 보기`}
+                >
+                  {result.displayName}
+                </h4>
+              )}
               <div className="bg-gray-50 p-4 rounded-lg">
                 {Object.entries(result.parameters).map(([key, value]) => (
                   <div key={key} className="flex justify-between items-center py-2 border-b border-gray-200 last:border-b-0">
