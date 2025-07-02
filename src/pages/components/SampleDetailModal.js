@@ -117,8 +117,8 @@ const SampleDetailModal = ({
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">{sampleName} - 상세 분석</h2>
-            <p className="text-sm text-gray-600 mt-1">ID (파랑), gm (빨강), IG (검정) 통합 그래프</p>
+            <h2 className="text-2xl font-bold text-gray-800">{sampleName} 그래프</h2>
+            <p className="text-sm text-gray-600 mt-1">ID (파랑), gm (빨강), IG (검정)</p>
           </div>
           <button
             onClick={onClose}
