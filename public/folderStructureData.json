@@ -833,25 +833,25 @@
               "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
             ],
             "children": {
-              "before_after_anneal(100)": {
+              "before_after_anneal100": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal100_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal100_2.xls"
                 ]
               },
-              "before_after_anneal(200)": {
+              "before_after_anneal200": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal200_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal200_2.xls"
                 ]
               },
-              "before_after_anneal(300)": {
+              "before_after_anneal300": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal300_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal300_2.xls"
                 ]
               }
             }
@@ -871,25 +871,25 @@
               "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
             ],
             "children": {
-              "before_after_anneal(100)": {
+              "before_after_anneal100": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal100_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal100_2.xls"
                 ]
               },
-              "before_after_anneal(200)": {
+              "before_after_anneal200": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal200_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal200_2.xls"
                 ]
               },
-              "before_after_anneal(300)": {
+              "before_after_anneal300": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal300_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal300_2.xls"
                 ]
               }
             }
@@ -903,38 +903,38 @@
               "anneal50": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(50)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(50)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal_50_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_50_2.xls"
                 ]
               },
               "anneal100": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal_100_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_100_2.xls"
                 ]
               },
               "anneal150": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_2.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_3.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal_150_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_150_2.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_150_3.xls"
                 ]
               },
               "anneal200": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_3.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal_200_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_200_2.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_200_3.xls"
                 ]
               },
               "anneal300": {
                 "type": "folder",
                 "files": [
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
-                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                  "IDVG_Lin_Ar_O2_20_1_anneal_300_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal_300_2.xls"
                 ]
               }
             }
