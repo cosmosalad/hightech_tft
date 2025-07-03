@@ -72,7 +72,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
           
           <p className="text-xl md:text-2xl text-gray-700 mb-8 font-light leading-relaxed max-w-4xl mx-auto">
-            Probe Station 측정 데이터를 분석하여 TFT 파라미터를 자동으로 계산해 보세요!
+            Probe Station 측정 데이터를 분석하여 MOSFET 파라미터를 자동으로 계산해 보세요!
           </p>
 
           <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
@@ -113,7 +113,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
 
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-800 rounded-full text-lg font-medium shadow-lg border border-white/50">
             <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
-            두 가지 분석 모드를 제공합니다
+            태블릿과 데스크톱에서 최적화된 사용자 경험을 제공합니다
           </div>
         </header>
 
