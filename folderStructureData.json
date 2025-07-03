@@ -830,7 +830,7 @@
           "3mtorr100w": {
             "type": "folder",
             "children": {
-              "before_anneal": {
+              "beforeanneal": {
                 "type": "folder",
                 "files": [
                   "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
