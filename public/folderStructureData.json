@@ -829,9 +829,6 @@
         "children": {
           "3mtorr_100w": {
             "type": "folder",
-            "files": [
-              "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
-            ],
             "children": {
               "before_after_anneal100": {
                 "type": "folder",
@@ -852,6 +849,12 @@
                 "files": [
                   "IDVG_Lin_Ar_O2_20_1_anneal300_1.xls",
                   "IDVG_Lin_Ar_O2_20_1_anneal300_2.xls"
+                ]
+              },
+              "before_anneal": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
                 ]
               }
             }
