@@ -362,7 +362,97 @@
             ]
           }
         }
+      },
+      "0703": {
+      "type": "folder",
+      "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 7m30s",
+      "children": {
+        "IDVG_Lin_1_120": {
+          "type": "folder",
+          "description": "Plasma Cleaning\nAr: 120sccm\nCleaning time: 120s",
+          "files": [
+            "IDVG_Lin_1_120_1.xls",
+            "IDVG_Lin_1_120_2.xls",
+            "IDVG_Lin_1_120_3.xls",
+            "IDVG_Lin_1_120_4.xls",
+            "IDVG_Lin_1_120_5.xls",
+            "IDVG_Lin_1_120_6.xls",
+            "IDVG_Lin_1_120_7.xls",
+            "IDVG_Lin_1_120_8.xls"
+          ]
+        },
+        "IDVG_Lin_2_120": {
+          "type": "folder",
+          "description": "Plasma Cleaning\nAr: 120sccm\nCleaning time: 120s",
+          "files": [
+            "IDVG_Lin_2_120_1.xls",
+            "IDVG_Lin_2_120_2.xls",
+            "IDVG_Lin_2_120_3.xls",
+            "IDVG_Lin_2_120_4.xls",
+            "IDVG_Lin_2_120_5.xls",
+            "IDVG_Lin_2_120_6.xls",
+            "IDVG_Lin_2_120_7.xls",
+            "IDVG_Lin_2_120_8.xls"
+          ]
+        },
+        "IDVG_Lin_3_060": {
+          "type": "folder",
+          "description": "Plasma Cleaning\nAr: 120sccm\nCleaning time: 60s",
+          "files": [
+            "IDVG_Lin_3_060_1.xls",
+            "IDVG_Lin_3_060_2.xls",
+            "IDVG_Lin_3_060_3.xls",
+            "IDVG_Lin_3_060_4.xls",
+            "IDVG_Lin_3_060_5.xls",
+            "IDVG_Lin_3_060_6.xls",
+            "IDVG_Lin_3_060_7.xls",
+            "IDVG_Lin_3_060_8.xls"
+          ]
+        },
+        "IDVG_Lin_4_060": {
+          "type": "folder",
+          "description": "Plasma Cleaning\nAr: 120sccm\nCleaning time: 60s",
+          "files": [
+            "IDVG_Lin_4_060_1.xls",
+            "IDVG_Lin_4_060_2.xls",
+            "IDVG_Lin_4_060_3.xls",
+            "IDVG_Lin_4_060_4.xls",
+            "IDVG_Lin_4_060_5.xls",
+            "IDVG_Lin_4_060_6.xls",
+            "IDVG_Lin_4_060_7.xls",
+            "IDVG_Lin_4_060_8.xls"
+          ]
+        },
+        "IDVG_Lin_5_000": {
+          "type": "folder",
+          "description": "No cleaning",
+          "files": [
+            "IDVG_Lin_5_000_1.xls",
+            "IDVG_Lin_5_000_2.xls",
+            "IDVG_Lin_5_000_3.xls",
+            "IDVG_Lin_5_000_4.xls",
+            "IDVG_Lin_5_000_5.xls",
+            "IDVG_Lin_5_000_6.xls",
+            "IDVG_Lin_5_000_7.xls",
+            "IDVG_Lin_5_000_8.xls"
+          ]
+        },
+        "IDVG_Lin_6_000": {
+          "type": "folder",
+          "description": "No cleaning",
+          "files": [
+            "IDVG_Lin_6_000_1.xls",
+            "IDVG_Lin_6_000_2.xls",
+            "IDVG_Lin_6_000_3.xls",
+            "IDVG_Lin_6_000_4.xls",
+            "IDVG_Lin_6_000_5.xls",
+            "IDVG_Lin_6_000_6.xls",
+            "IDVG_Lin_6_000_7.xls",
+            "IDVG_Lin_6_000_8.xls"
+          ]
+        }
       }
+    }
     }
   },
   "2team": {
