@@ -458,6 +458,45 @@
   "2team": {
     "type": "folder",
     "children": {
+      "0619": {
+        "type": "folder",
+        "description": "O2: 1sccm\nPressure: 7mTorr\nPower: 50,70,100W",
+        "children": {
+          "100W": {
+            "type": "folder",
+            "files": [
+              "DK-TFT-IDVG_Linear_Annealing 100C_100w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 200C_100w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 300C_100W.xls",
+              "DK-TFT-IDVG_Linear_Before anealing 200_100w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 100_100w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 300_100w.xls"
+            ]
+          },
+          "50W": {
+            "type": "folder",
+            "files": [
+              "DK-TFT-IDVG_Linear_Annealing 100C_50w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 200C_50w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 300C_50W.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 100C_50w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 200C_50w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 300C_50w.xls"
+            ]
+          },
+          "70W": {
+            "type": "folder",
+            "files": [
+              "DK-TFT-IDVG_Linear_Annealing 100C_70w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 200_70w.xls",
+              "DK-TFT-IDVG_Linear_Annealing 300C_70W.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 100C_70w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 200C_70w.xls",
+              "DK-TFT-IDVG_Linear_Before annealing 300C_70w.xls"
+            ]
+          }
+        }
+      },
       "0628": {
         "type": "folder",
         "description": "O2: 2sccm\nPressure: 7mTorr\nPower: 70W\nsputtering time: 11m 40s\nShield O",
@@ -615,6 +654,33 @@
   "K6": {
     "type": "folder",
     "children": {
+      "0622": {
+        "type": "folder",
+        "description": "O2: 1sccm\nPressure: 5,7,10mTorr\nPower: 70W",
+        "files": [
+          "K6_IDVG_Lin_10T_000_annealing_X.xls",
+          "K6_IDVG_Lin_10T_100_annealing_O.xls",
+          "K6_IDVG_Lin_10T_100_annealing_X.xls",
+          "K6_IDVG_Lin_10T_200_annealing_O.xls",
+          "K6_IDVG_Lin_10T_200_annealing_X.xls",
+          "K6_IDVG_Lin_10T_300_annealing_O.xls",
+          "K6_IDVG_Lin_10T_300_annealing_X.xls",
+          "K6_IDVG_Lin_5T_000_annealing_X.xls",
+          "K6_IDVG_Lin_5T_100_annealing_O.xls",
+          "K6_IDVG_Lin_5T_100_annealing_X.xls",
+          "K6_IDVG_Lin_5T_200_annealing_O.xls",
+          "K6_IDVG_Lin_5T_200_annealing_X.xls",
+          "K6_IDVG_Lin_5T_300_annealing_O.xls",
+          "K6_IDVG_Lin_5T_300_annealing_X.xls",
+          "K6_IDVG_Lin_7T_000_annealing_X.xls",
+          "K6_IDVG_Lin_7T_100_annealing_O.xls",
+          "K6_IDVG_Lin_7T_100_annealing_X.xls",
+          "K6_IDVG_Lin_7T_200_annealing_O.xls",
+          "K6_IDVG_Lin_7T_200_annealing_X.xls",
+          "K6_IDVG_Lin_7T_300_annealing_O.xls",
+          "K6_IDVG_Lin_7T_300_annealing_X.xls"
+        ]
+      },
       "0629": {
         "type": "folder",
         "description": "O2: 2sccm\nPressure: 7mTorr\nPower: 70W\nsputtering time: 11m 40s\nShield X",
@@ -757,6 +823,124 @@
   "4team": {
     "type": "folder",
     "children": {
+      "0617": {
+        "type": "folder",
+        "description": "O2: 1sccm",
+        "children": {
+          "3mtorr_100w": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
+            ],
+            "children": {
+              "before_after_anneal(100)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                ]
+              },
+              "before_after_anneal(200)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls"
+                ]
+              },
+              "before_after_anneal(300)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                ]
+              }
+            }
+          },
+          "5mtorr_100w": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_Ar_O2_20_1_anneal0.xls",
+              "IDVG_Lin_Ar_O2_20_1_anneal100.xls",
+              "IDVG_Lin_Ar_O2_20_1_anneal200.xls",
+              "IDVG_Lin_Ar_O2_20_1_anneal300.xls"
+            ]
+          },
+          "7mtorr_100w": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_Ar_O2_20_1_anneal0.xls"
+            ],
+            "children": {
+              "before_after_anneal(100)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                ]
+              },
+              "before_after_anneal(200)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls"
+                ]
+              },
+              "before_after_anneal(300)": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                ]
+              }
+            }
+          },
+          "7mtorr_70w": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_Ar_O2_20_1_anneal0_same_Length.xls"
+            ],
+            "children": {
+              "anneal50": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(50)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(50)_2.xls"
+                ]
+              },
+              "anneal100": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(100)_2.xls"
+                ]
+              },
+              "anneal150": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_2.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(150)_3.xls"
+                ]
+              },
+              "anneal200": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_2.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(200)_3.xls"
+                ]
+              },
+              "anneal300": {
+                "type": "folder",
+                "files": [
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_1.xls",
+                  "IDVG_Lin_Ar_O2_20_1_anneal(300)_2.xls"
+                ]
+              }
+            }
+          }
+        }
+      },
       "0627": {
         "type": "folder",
         "description": "O2: 1sccm\nPressure: 5mTorr\nPower: 100W\nsputtering time: 5m45s\nMeasured\nShield X",
