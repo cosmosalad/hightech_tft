@@ -13,6 +13,8 @@
  * - Performance: Ion/Ioff, Ron, ID_sat
  * - Stability: ΔVth
  * - Utilities: Cox, linearRegression, CONSTANTS
+ * 
+ * - TLM Analysis: Rc, Rsh, LT, ρc (접촉 저항 분석)
  */
 
 // Transconductance 관련
@@ -41,3 +43,15 @@ export { calculateDeltaVth } from './dvth.js';
 
 // 유틸리티 함수들
 export { linearRegression, calculateCox, CONSTANTS } from './utils.js';
+
+// TLM (Transfer Length Method) 관련 - 추가되는 부분
+export { 
+  TLM_CONSTANTS,
+  generatePotentialDistances,
+  parseDistanceFromSheetName,
+  calculateResistanceFromIV,
+  calculateTLMParameters,
+  analyzeSingleFile,
+  performTLMAnalysis,
+  exportResultsToCSV
+} from './tlm.js';

@@ -26,7 +26,6 @@ const AnimatedPanel = ({ children }) => (
   </motion.div>
 );
 
-// 💀 코드 로딩 중 표시될 스켈레톤 UI 컴포넌트
 const CodeSkeleton = () => (
   <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto animate-pulse">
     <div className="h-4 bg-gray-700 rounded w-3/4 mb-4"></div>
@@ -239,6 +238,75 @@ const DynamicFormulaInspector = () => {
           { name: 'Cox (Gate Capacitance)', fileName: 'utils.js', measurement: '디바이스 파라미터', formula: 'Cox = (ε₀ × εr) / tox', unit: 'F/m²', description: '게이트 산화막 정전용량', actualFunction: TFTParams.calculateCox, codeLocation: 'src/pages/parameters/utils.js' },
           { name: 'Linear Regression', fileName: 'utils.js', measurement: '수학적 계산', formula: 'y = mx + b', unit: '', description: '선형 회귀 계산 (모든 외삽법의 기초)', actualFunction: TFTParams.linearRegression, codeLocation: 'src/pages/parameters/utils.js' },
           { name: 'CONSTANTS (Physical Constants)', fileName: 'utils.js', measurement: '물리 상수', formula: 'ε₀, εᵣ, q, kᵦ, T', unit: '다양', description: '정확한 계산을 위한 표준 물리 상수들', actualFunction: () => TFTParams.CONSTANTS, codeLocation: 'src/pages/parameters/utils.js' }
+        ]
+      },
+      {
+        id: 'tlm_group',
+        title: '+번외 TLM (Transfer Length Method) 분석',
+        description: '접촉 저항 분석 - Rc, Rsh, LT, ρc 파라미터 계산',
+        icon: <BarChart3 className="w-6 h-6" />,
+        color: 'orange',
+        parameters: [
+          { 
+            name: 'TLM 선형 회귀 분석', 
+            fileName: 'tlm.js', 
+            measurement: '수학적 계산', 
+            formula: 'y = mx + b, R² = 1 - SSres/SStot', 
+            unit: '기울기, 절편, R²', 
+            description: '거리-저항 데이터의 선형 회귀 분석 및 R² 계산', 
+            actualFunction: TFTParams.linearRegression,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          },
+          { 
+            name: 'I-V 저항 추출', 
+            fileName: 'tlm.js', 
+            measurement: 'I-V 특성 곡선 (-2V~+2V)', 
+            formula: 'R = 1/slope = ΔV/ΔI', 
+            unit: 'Ω', 
+            description: '각 거리에서 I-V 곡선의 기울기로부터 저항값 계산', 
+            actualFunction: TFTParams.calculateResistanceFromIV,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          },
+          { 
+            name: 'TLM 파라미터 계산', 
+            fileName: 'tlm.js', 
+            measurement: '저항 vs 거리 관계', 
+            formula: 'RT = 2Rc + (Rsh/W)×d', 
+            unit: 'Ω, Ω/sq, cm, Ω·cm²', 
+            description: 'Rc(접촉저항), Rsh(면저항), LT(전달길이), ρc(접촉비저항) 계산', 
+            actualFunction: TFTParams.calculateTLMParameters,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          },
+          { 
+            name: '워크시트 거리 파싱', 
+            fileName: 'tlm.js', 
+            measurement: 'Excel 워크시트명 분석', 
+            formula: 'distance = parseFloat(match)', 
+            unit: 'mm', 
+            description: '워크시트명에서 거리값 자동 추출 (동적 간격 지원)', 
+            actualFunction: TFTParams.parseDistanceFromSheetName,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          },
+          { 
+            name: '거리 배열 생성', 
+            fileName: 'tlm.js', 
+            measurement: '사용자 설정 거리 간격', 
+            formula: 'distances = [step, step×2, step×3, ...]', 
+            unit: 'mm 배열', 
+            description: '사용자 정의 거리 간격에 따른 잠재적 거리 배열 생성', 
+            actualFunction: TFTParams.generatePotentialDistances,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          },
+          { 
+            name: 'TLM 통합 분석 엔진', 
+            fileName: 'tlm.js', 
+            measurement: 'Excel 파일 → TLM 결과', 
+            formula: 'Excel → I-V → R(d) → TLM params', 
+            unit: '종합 분석', 
+            description: 'Excel 파일에서 완전한 TLM 분석까지 전체 워크플로우', 
+            actualFunction: TFTParams.performTLMAnalysis,  // 변경됨
+            codeLocation: 'src/pages/parameters/tlm.js' 
+          }
         ]
       }
   ], []);
