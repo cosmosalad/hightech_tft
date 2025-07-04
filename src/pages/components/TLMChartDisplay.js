@@ -181,14 +181,14 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
                 </h4>
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
-                    <RechartsLineChart data={chart.data}>
+                    <RechartsLineChart data={chart.data} margin={{ left: 18, bottom: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis 
                         dataKey="AV"
                         label={{ value: 'AV (V)', position: 'insideBottom', offset: -5 }}
                       />
                       <YAxis 
-                        label={{ value: 'AI (A)', angle: -90, position: 'insideLeft' }}
+                        label={{ value: 'AI (A)', angle: -90, position: 'insideLeft', textAnchor: 'middle', dx: -15 }}
                         tickFormatter={(value) => value.toExponential(1)}
                       />
                       <Tooltip content={<IVTooltip />} />
@@ -340,20 +340,20 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
         {/* 통합 TLM 차트 */}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            TLM 분석 - Total Resistance vs Distance
+            TLM 분석 - Total Resistance & Distance
           </h3>
           <div className="h-96">
-            <ResponsiveContainer width="100%" height="100%">
-              <RechartsLineChart data={integratedChartData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="distance"
-                  label={{ value: 'Distance (d) [mm]', position: 'insideBottom', offset: -5 }}
-                />
-                <YAxis 
-                  label={{ value: 'Total Resistance [Ω]', angle: -90, position: 'insideLeft' }}
-                  tickFormatter={(value) => value.toExponential(1)}
-                />
+          <ResponsiveContainer width="100%" height="100%">
+            <RechartsLineChart data={integratedChartData} margin={{ left: 45, right: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                dataKey="distance"
+                label={{ value: 'Distance (d) [mm]', position: 'insideBottom', offset: 0 }}
+              />
+              <YAxis 
+                label={{ value: 'Total Resistance [Ω]', angle: -90, position: 'insideLeft', textAnchor: 'middle', dx: -40 }}
+                tickFormatter={(value) => value.toExponential(1)}
+              />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend />
                 {results.individualResults.map((file, index) => (
