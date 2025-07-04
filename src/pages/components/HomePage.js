@@ -982,24 +982,36 @@ const EnhancedFileUploadSection = ({
                   <Star className="w-8 h-8 text-green-600 mr-3" />
                   <h2 className="text-2xl font-bold text-gray-800">새로운 분석 방식</h2>
                 </div>
-                <div className="space-y-4 text-gray-600">
-                  <div className="flex items-start">
-                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">1</span>
-                    <p><strong>샘플명으로 그룹화:</strong> 같은 샘플명의 파일들을 하나의 샘플로 인식</p>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">2</span>
-                    <p><strong>데이터 융합:</strong> Linear의 gm_max + Vth + Y-function μ0 = μeff</p>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">3</span>
-                    <p><strong>완벽한 계산:</strong> 각 측정의 장점을 조합하여 최고 정확도</p>
-                  </div>
-                  <div className="flex items-start">
-                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold mr-3 mt-1">4</span>
-                    <p><strong>품질 평가:</strong> 데이터 완성도와 신뢰도 자동 평가</p>
-                  </div>
-                </div>
+<div className="space-y-4 text-gray-600">
+  <div className="flex items-start">
+    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">1</span>
+    <div>
+      <p className="font-bold text-gray-800 text-left">샘플명으로 그룹화</p>
+      <p className="text-sm">같은 샘플명의 파일들을 하나의 샘플로 인식</p>
+    </div>
+  </div>
+  <div className="flex items-start">
+    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">2</span>
+    <div>
+      <p className="font-bold text-gray-800 text-left">다중 측정값 분석</p>
+      <p className="text-sm">Linear, Saturation, IDVD, Hysteresis 특성 추출</p>
+    </div>
+  </div>
+  <div className="flex items-start">
+    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">3</span>
+    <div>
+      <p className="font-bold text-gray-800 text-left">통합 파라미터 계산</p>
+      <p className="text-sm">Vth, SS, μFE, Ion/Ioff, Ron 등 자동 산출</p>
+    </div>
+  </div>
+  <div className="flex items-start">
+    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">4</span>
+    <div>
+      <p className="font-bold text-gray-800 text-left">품질 평가 및 검증</p>
+      <p className="text-sm">데이터 완성도와 신뢰도 자동 평가</p>
+    </div>
+  </div>
+</div>
 
                 <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
                   <h4 className="font-semibold text-yellow-800 mb-2">📁 파일명 규칙</h4>
