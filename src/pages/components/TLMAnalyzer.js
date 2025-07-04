@@ -1,11 +1,111 @@
-import React, { useState, useRef, useCallback } from 'react';
-import { 
-  X, Upload, FileSpreadsheet, BarChart3, Play, Trash2, 
-  AlertCircle, CheckCircle, Loader2, Settings, Info
+import React, { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import {
+  X, Upload, FileSpreadsheet, BarChart3, Play, Trash2,
+  AlertCircle, CheckCircle, Loader2, Settings, Info, Github, Download,
+  Search, Folder, FolderOpen, AlertTriangle
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import TLMChartDisplay from './TLMChartDisplay';
 import { performTLMAnalysis } from '../parameters/tlm';
+import {
+  loadTLMFolderStructure,
+  getTLMFilesFromPath,
+  getTLMFolderTree,
+  searchTLMFiles,
+  generateTLMSampleName,
+  getTLMFileTypeIcon,
+  loadTLMFileFromGitHub,
+  formatFileSize
+} from './fileConfig_tlm';
+
+
+const TLMFileTree = ({ folderStructure, onSelectFolder, selectedFolder, isFolderStructureLoading, hasLoadError }) => {
+
+  const FolderNode = ({ node, level }) => {
+    const [isOpen, setIsOpen] = useState(selectedFolder.startsWith(node.path));
+    const isSelected = selectedFolder === node.path;
+    const hasChildren = node.children && node.children.length > 0;
+
+    const handleToggle = () => {
+      setIsOpen(!isOpen);
+      onSelectFolder(node.path);
+    };
+
+    return (
+      <div>
+        <div
+          className={`flex items-center cursor-pointer py-2 px-3 rounded hover:bg-gray-100 transition-colors duration-150 ${
+            isSelected ? 'bg-orange-100 text-orange-800' : ''
+          }`}
+          style={{ paddingLeft: `${12 + level * 20}px` }}
+          onClick={handleToggle}
+          title={node.path}
+        >
+          {hasChildren ? (
+            (isOpen || isSelected) ? (
+              <FolderOpen className="w-4 h-4 mr-2 text-orange-600 flex-shrink-0" />
+            ) : (
+              <Folder className="w-4 h-4 mr-2 text-orange-600 flex-shrink-0" />
+            )
+          ) : (
+            isSelected ? (
+              <FolderOpen className="w-4 h-4 mr-2 text-orange-600 flex-shrink-0" />
+            ) : (
+              <Folder className="w-4 h-4 mr-2 text-gray-400 flex-shrink-0" />
+            )
+          )}
+          <span className="font-medium text-sm truncate">{node.name}</span>
+        </div>
+
+        {isOpen && hasChildren && (
+          <div className="mt-1">
+            {node.children.map(childNode => (
+              <FolderNode key={childNode.path} node={childNode} level={level + 1} />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  if (isFolderStructureLoading) {
+    return (
+      <div className="border border-gray-200 rounded-md p-2 max-h-60 overflow-y-auto bg-white flex justify-center items-center" style={{ minHeight: '100px' }}>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-orange-600 mr-2"></div>
+        <span className="text-gray-600">TLM 폴더 구조 로딩 중...</span>
+      </div>
+    );
+  }
+
+  if (hasLoadError) {
+    return (
+      <div className="border border-red-300 rounded-md p-2 max-h-60 overflow-y-auto bg-red-50 text-red-700 text-center flex justify-center items-center" style={{ minHeight: '100px' }}>
+        <AlertTriangle className="w-5 h-5 mr-2" />
+        TLM 폴더 구조를 불러오는데 실패했습니다.
+      </div>
+    );
+  }
+
+  if (!folderStructure || folderStructure.length === 0) {
+    return (
+      <div className="border border-gray-200 rounded-md p-2 max-h-60 overflow-y-auto bg-gray-50 text-gray-500 text-center flex justify-center items-center" style={{ minHeight: '100px' }}>
+        <Folder className="w-5 h-5 mr-2" />
+        표시할 TLM 폴더가 없습니다.
+      </div>
+    );
+  }
+
+  return (
+    <div className="border border-gray-200 rounded-md p-2 max-h-60 overflow-y-auto bg-white">
+      <div className="space-y-1">
+        {folderStructure.map(node => (
+          <FolderNode key={node.path} node={node} level={0} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 
 const TLMAnalyzer = ({ onClose }) => {
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -17,8 +117,76 @@ const TLMAnalyzer = ({ onClose }) => {
   const [showUsageGuide, setShowUsageGuide] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [dragOver, setDragOver] = useState(false);
-  
+
+  // GitHub 관련 상태
+  const [activeTab, setActiveTab] = useState('local');
+  const [selectedFolder, setSelectedFolder] = useState('');
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showGlobalResults, setShowGlobalResults] = useState(false);
+  const [isFolderStructureLoading, setIsFolderStructureLoading] = useState(false);
+  const [hasFolderLoadError, setHasFolderLoadError] = useState(false);
+  const [folderTreeData, setFolderTreeData] = useState([]);
+
   const fileInputRef = useRef(null);
+
+  useEffect(() => {
+    const fetchTLMFolderStructure = async () => {
+      setIsFolderStructureLoading(true);
+      setHasFolderLoadError(false);
+      try {
+        const data = await loadTLMFolderStructure();
+        if (data) {
+          const tree = getTLMFolderTree();
+          setFolderTreeData(tree);
+        } else {
+          setHasFolderLoadError(true);
+          setFolderTreeData([]);
+          setSelectedFolder('');
+        }
+      } catch (error) {
+        console.error("Error in fetching TLM folder structure:", error);
+        setHasFolderLoadError(true);
+        setFolderTreeData([]);
+        setSelectedFolder('');
+      } finally {
+        setIsFolderStructureLoading(false);
+      }
+    };
+
+    if (activeTab === 'github') {
+      fetchTLMFolderStructure();
+    }
+  }, [activeTab]);
+
+  // 현재 폴더의 파일 목록
+  const currentFolderFiles = useMemo(() => {
+    if (isFolderStructureLoading || hasFolderLoadError || !selectedFolder) return [];
+    return getTLMFilesFromPath(selectedFolder) || [];
+  }, [selectedFolder, isFolderStructureLoading, hasFolderLoadError, folderTreeData]);
+
+  // 필터링된 파일 목록
+  const filteredFiles = useMemo(() => {
+    if (isFolderStructureLoading || hasFolderLoadError) return [];
+    if (!searchTerm.trim()) {
+      return currentFolderFiles;
+    }
+
+    const searchLower = searchTerm.toLowerCase().trim();
+    return currentFolderFiles.filter(filename => {
+      const filenameLower = filename.toLowerCase();
+      const sampleName = generateTLMSampleName(filename).toLowerCase();
+      return filenameLower.includes(searchLower) || sampleName.includes(searchLower);
+    });
+  }, [currentFolderFiles, searchTerm, isFolderStructureLoading, hasFolderLoadError]);
+
+  // 전역 검색 결과
+  const globalSearchResults = useMemo(() => {
+    if (isFolderStructureLoading || hasFolderLoadError) return [];
+    if (!searchTerm.trim()) return [];
+    return searchTLMFiles(searchTerm);
+  }, [searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
   // 파일 검증
   const validateFile = (file) => {
@@ -29,7 +197,7 @@ const TLMAnalyzer = ({ onClose }) => {
   // 파일 업로드 처리
   const handleFileUpload = useCallback((files) => {
     const validFiles = Array.from(files).filter(validateFile);
-    
+
     if (validFiles.length === 0) {
       setErrorMessage('Excel 파일(.xls, .xlsx)만 업로드 가능합니다.');
       return;
@@ -37,7 +205,7 @@ const TLMAnalyzer = ({ onClose }) => {
 
     const existingNames = uploadedFiles.map(f => f.name);
     const newFiles = validFiles.filter(file => !existingNames.includes(file.name));
-    
+
     if (newFiles.length === 0) {
       setErrorMessage('이미 업로드된 파일입니다.');
       return;
@@ -48,7 +216,9 @@ const TLMAnalyzer = ({ onClose }) => {
       file,
       name: file.name,
       size: file.size,
-      status: 'ready'
+      status: 'ready',
+      source: 'local',
+      alias: generateTLMSampleName(file.name)
     }));
 
     setUploadedFiles(prev => [...prev, ...fileInfos]);
@@ -90,6 +260,85 @@ const TLMAnalyzer = ({ onClose }) => {
     setErrorMessage('');
   };
 
+  // 파일 별칭 업데이트
+  const updateFileAlias = (fileId, newAlias) => {
+    setUploadedFiles(prev =>
+      prev.map(file =>
+        file.id === fileId ? { ...file, alias: newAlias } : file
+      )
+    );
+  };
+
+  // 파일 선택 토글
+  const toggleFileSelection = (filename) => {
+    setSelectedFiles(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(filename)) {
+        newSet.delete(filename);
+      } else {
+        newSet.add(filename);
+      }
+      return newSet;
+    });
+  };
+
+  // 전체 선택 토글
+  const toggleSelectAll = useCallback(() => {
+    if (filteredFiles.length === 0) return;
+    if (selectedFiles.size === filteredFiles.length) {
+      setSelectedFiles(new Set());
+    } else {
+      setSelectedFiles(new Set(filteredFiles));
+    }
+  }, [selectedFiles.size, filteredFiles]);
+
+  // 폴더 변경 처리
+  const handleFolderChange = (folder) => {
+    setSelectedFolder(folder);
+    setSelectedFiles(new Set());
+    setSearchTerm('');
+    setShowGlobalResults(false);
+  };
+
+  // 검색어 변경 처리
+  const handleSearchChange = useCallback((value) => {
+    setSearchTerm(value);
+  }, []);
+
+  // GitHub 파일 로드
+  const loadSelectedFiles = async () => {
+    if (selectedFiles.size === 0) {
+      setErrorMessage('불러올 파일을 선택해주세요.');
+      return;
+    }
+
+    setIsLoadingFiles(true);
+    const filesToLoad = Array.from(selectedFiles);
+    const loadedFiles = [];
+
+    try {
+      for (const filename of filesToLoad) {
+        try {
+          const fileInfo = await loadTLMFileFromGitHub(filename, selectedFolder);
+          loadedFiles.push(fileInfo);
+        } catch (error) {
+          console.error(`TLM 파일 로드 실패: ${filename}`, error);
+          setErrorMessage(`파일 '${filename}' 로드에 실패했습니다.`);
+        }
+      }
+
+      if (loadedFiles.length > 0) {
+        setUploadedFiles(prev => [...prev, ...loadedFiles]);
+        setErrorMessage('');
+        setSelectedFiles(new Set());
+      }
+    } catch (error)      {
+      setErrorMessage(`파일 로드 중 오류가 발생했습니다: ${error.message}`);
+    } finally {
+      setIsLoadingFiles(false);
+    }
+  };
+
   // TLM 분석 실행
   const executeAnalysis = async () => {
     if (uploadedFiles.length === 0) {
@@ -101,18 +350,16 @@ const TLMAnalyzer = ({ onClose }) => {
     setErrorMessage('');
 
     try {
-      // 파일 상태 업데이트
       setUploadedFiles(prev => prev.map(f => ({ ...f, status: 'processing' })));
 
-      // TLM 분석 수행
       const finalContactWidth = contactWidth || 1.0;
       const finalDistanceStep = distanceStep || 0.5;
       const results = await performTLMAnalysis(uploadedFiles, finalContactWidth, finalDistanceStep);
-      
+
       setAnalysisResults(results);
       setShowResults(true);
       setUploadedFiles(prev => prev.map(f => ({ ...f, status: 'completed' })));
-      
+
     } catch (error) {
       console.error('TLM 분석 오류:', error);
       setErrorMessage(`분석 중 오류가 발생했습니다: ${error.message}`);
@@ -120,15 +367,6 @@ const TLMAnalyzer = ({ onClose }) => {
     } finally {
       setIsAnalyzing(false);
     }
-  };
-
-  // 파일 크기 포맷팅
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // 파일 상태 아이콘
@@ -239,62 +477,267 @@ const TLMAnalyzer = ({ onClose }) => {
                   </div>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-blue-50 p-3 rounded-lg">
-                  <p className="text-xs text-blue-700">
-                    접촉 폭은 면저항(Rsh) 계산에 사용됩니다.
-                  </p>
-                </div>
-                <div className="bg-green-50 p-3 rounded-lg">
-                  <p className="text-xs text-green-700">
-                    거리 간격: {distanceStep || 0.5}mm 기준으로 워크시트를 인식합니다.<br />
-                    (예: {distanceStep || 0.5}, {((distanceStep || 0.5) * 2).toFixed(1)}, {((distanceStep || 0.5) * 3).toFixed(1)}, {((distanceStep || 0.5) * 4).toFixed(1)} ...)
-                  </p>
-                </div>
-              </div>
             </div>
           </div>
 
-          {/* 파일 업로드 영역 */}
+          {/* 탭 메뉴 */}
           <div className="mb-6">
             <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
               <Upload className="w-5 h-5 mr-2" />
-              Excel 파일 업로드
+              파일 불러오기
             </h3>
-            
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-all ${
-                dragOver
-                  ? 'border-orange-500 bg-orange-50'
-                  : 'border-gray-300 hover:border-gray-400'
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600 mb-2">
-                Excel 파일을 여기에 끌어다 놓거나 클릭하여 선택하세요
-              </p>
-              <p className="text-sm text-gray-500 mb-4">
-                지원 형식: .xls, .xlsx<br />
-                각 파일의 워크시트 이름은 거리({distanceStep || 0.5}, {((distanceStep || 0.5) * 2).toFixed(1)}, {((distanceStep || 0.5) * 3).toFixed(1)}, {((distanceStep || 0.5) * 4).toFixed(1)} 등)로 설정해주세요
-              </p>
+            <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
               <button
-                onClick={() => fileInputRef.current?.click()}
-                className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2 rounded-lg transition-colors"
+                onClick={() => setActiveTab('local')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === 'local'
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
               >
-                파일 선택
+                <Upload className="w-4 h-4 inline mr-2" />
+                로컬 파일
               </button>
-              <input
-                ref={fileInputRef}
-                type="file"
-                multiple
-                accept=".xls,.xlsx"
-                onChange={handleFileSelect}
-                className="hidden"
-              />
+              <button
+                onClick={() => setActiveTab('github')}
+                className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
+                  activeTab === 'github'
+                    ? 'bg-white text-orange-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-800'
+                }`}
+              >
+                <Github className="w-4 h-4 inline mr-2" />
+                GitHub TLM 파일
+              </button>
             </div>
+
+            {/* 로컬 파일 탭 */}
+            {activeTab === 'local' && (
+              <div>
+                <p className="text-gray-600 mb-6">
+                  컴퓨터에서 TLM 측정 엑셀 파일을 직접 업로드하세요
+                </p>
+                <input
+                  type="file"
+                  accept=".xls,.xlsx"
+                  multiple
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="tlm-file-upload"
+                  ref={fileInputRef}
+                />
+                <label
+                  htmlFor="tlm-file-upload"
+                  className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 transition-colors cursor-pointer flex items-center justify-center mb-4"
+                >
+                  <Upload className="w-5 h-5 mr-2" />
+                  TLM 엑셀 파일 선택
+                </label>
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  className={`
+                    w-full border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200
+                    ${dragOver
+                      ? 'border-orange-500 bg-orange-50 scale-105'
+                      : 'border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-gray-100'
+                    }
+                  `}
+                >
+                  <div className={`flex flex-col items-center space-y-3 ${dragOver ? 'text-orange-600' : 'text-gray-500'}`}>
+                    <Upload className={`w-12 h-12 ${dragOver ? 'animate-bounce' : ''}`} />
+                    <div className="space-y-1">
+                      <p className="text-lg font-medium">
+                        {dragOver ? '파일을 놓아주세요!' : 'TLM 파일을 여기로 드래그하세요'}
+                      </p>
+                      <p className="text-sm">
+                        또는 위의 버튼을 클릭하여 파일을 선택하세요
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        지원 형식: .xls, .xlsx
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* GitHub 파일 탭 */}
+            {activeTab === 'github' && (
+              <div>
+                <p className="text-gray-600 mb-6">
+                  GitHub 저장소에서 TLM 측정 파일을 선택해서 불러오세요
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    TLM 폴더 선택:
+                  </label>
+                  <TLMFileTree
+                    folderStructure={folderTreeData}
+                    onSelectFolder={handleFolderChange}
+                    selectedFolder={selectedFolder}
+                    isFolderStructureLoading={isFolderStructureLoading}
+                    hasLoadError={hasFolderLoadError}
+                  />
+                </div>
+
+                {!hasFolderLoadError && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      TLM 파일 검색:
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400" />
+                      </div>
+                      <input
+                        type="text"
+                        value={searchTerm}
+                        onChange={(e) => handleSearchChange(e.target.value)}
+                        placeholder="파일명, 샘플명으로 검색..."
+                        className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                      />
+                      {searchTerm && (
+                        <button
+                          onClick={() => handleSearchChange('')}
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                        >
+                          <X className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                        </button>
+                      )}
+                    </div>
+                    {searchTerm && (
+                      <div className="text-sm text-gray-500 mt-1 space-y-1">
+                        <p>"{searchTerm}" 현재 폴더 검색 결과: {filteredFiles.length}개 파일</p>
+                        {globalSearchResults.length > filteredFiles.length && (
+                          <p className="text-orange-600">
+                            전체에서 {globalSearchResults.length}개 파일 발견
+                            <button
+                              onClick={() => setShowGlobalResults(!showGlobalResults)}
+                              className="ml-2 text-xs underline hover:no-underline"
+                            >
+                              {showGlobalResults ? '숨기기' : '전체 결과 보기'}
+                            </button>
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 전체 검색 결과 */}
+                <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
+                  searchTerm && showGlobalResults && !hasFolderLoadError
+                    ? 'max-h-96 opacity-100 mb-4'
+                    : 'max-h-0 opacity-0'
+                }`}>
+                  <h4 className="text-sm font-bold text-gray-800 mb-2 p-2 bg-orange-50 rounded-md border border-orange-200">
+                    🔍 전체 폴더 검색 결과 "{searchTerm}" ({globalSearchResults.length}개)
+                  </h4>
+                  {globalSearchResults.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto border border-orange-200 rounded-lg p-3 bg-orange-50">
+                      {globalSearchResults.map((result, index) => (
+                        <div key={index} className="flex items-center justify-between p-2 bg-white rounded-lg border border-gray-100 shadow-sm">
+                          <div className="flex items-center min-w-0">
+                            <span className="text-lg mr-2 flex-shrink-0">{getTLMFileTypeIcon()}</span>
+                            <div className="min-w-0">
+                              <div className="font-medium text-sm text-gray-800 truncate" title={result.filename}>
+                                {result.filename}
+                              </div>
+                              <div className="text-xs text-gray-500 truncate" title={`📁 ${result.folderPath}`}>
+                                📁 {result.folderPath} · 샘플: {result.sampleName}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            onClick={() => {
+                              handleFolderChange(result.folderPath);
+                              setShowGlobalResults(false);
+                            }}
+                            className="text-xs bg-orange-600 text-white px-3 py-1 rounded-md hover:bg-orange-700 transition-colors flex-shrink-0"
+                          >
+                            폴더로 이동
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 text-gray-500 bg-orange-50 border border-orange-200 rounded-lg">
+                      검색어 "{searchTerm}"에 대한 TLM 파일이 전체 폴더에서 발견되지 않았습니다.
+                    </div>
+                  )}
+                </div>
+
+                {/* 파일 목록 */}
+                {!hasFolderLoadError && selectedFolder ? (
+                  filteredFiles.length > 0 ? (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={selectedFiles.size === filteredFiles.length && filteredFiles.length > 0}
+                            onChange={toggleSelectAll}
+                            className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                          />
+                          <span className="ml-2 text-sm font-medium text-gray-700">전체 선택</span>
+                        </label>
+                        <span className="text-sm text-orange-600 font-medium">
+                          {selectedFiles.size}개 선택됨
+                        </span>
+                      </div>
+
+                      <div className="space-y-2 max-h-60 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+                        {filteredFiles.map((filename) => {
+                          const isSelected = selectedFiles.has(filename);
+                          return (
+                            <label key={filename} className={`flex items-center p-2 cursor-pointer transition-colors duration-150 rounded-lg ${
+                              isSelected ? 'bg-orange-50 border border-orange-200' : 'hover:bg-gray-50'
+                            }`}>
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                onChange={() => toggleFileSelection(filename)}
+                                className="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 mr-3"
+                              />
+                              <span className="text-lg mr-2">{getTLMFileTypeIcon()}</span>
+                              <div className="flex-1">
+                                <div className="font-medium text-sm text-gray-800">{filename}</div>
+                                <div className="text-xs text-gray-500">
+                                  샘플: {generateTLMSampleName(filename)}
+                                </div>
+                              </div>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="mb-4 text-center py-8 text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+                      📁 해당 폴더에 TLM 파일이 없습니다.
+                    </div>
+                  )
+                ) : (
+                  !isFolderStructureLoading && !hasFolderLoadError && (
+                     <div className="mb-4 text-center py-8 text-gray-500 border border-gray-200 rounded-lg bg-gray-50">
+                      ← 좌측 트리에서 파일을 보려는 폴더를 선택하세요.
+                    </div>
+                  )
+                )}
+
+
+                <button
+                  onClick={loadSelectedFiles}
+                  disabled={isLoadingFiles || selectedFiles.size === 0 || hasFolderLoadError}
+                  className="w-full bg-orange-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-orange-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
+                >
+                  <Download className="w-5 h-5 mr-2" />
+                  {isLoadingFiles ? '불러오는 중...' : `선택한 ${selectedFiles.size}개 파일 불러오기`}
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 업로드된 파일 목록 */}
@@ -313,20 +756,35 @@ const TLMAnalyzer = ({ onClose }) => {
                   모두 제거
                 </button>
               </div>
-              
+
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {uploadedFiles.map((file) => (
                   <div
                     key={file.id}
-                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                   >
                     <div className="flex items-center flex-1">
                       {getStatusIcon(file.status)}
                       <div className="ml-3 flex-1">
-                        <p className="font-medium text-gray-800">{file.name}</p>
-                        <p className="text-sm text-gray-500">
-                          {formatFileSize(file.size)}
-                        </p>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="font-medium text-sm">{file.name}</span>
+                          {file.source === 'github' && (
+                            <span className="px-2 py-1 bg-orange-100 text-orange-700 text-xs rounded flex items-center">
+                              <Github className="w-3 h-3 mr-1" />
+                              {file.folder}
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-2">
+                          <label className="text-xs text-gray-600">샘플명:</label>
+                          <input
+                            type="text"
+                            value={file.alias}
+                            onChange={(e) => updateFileAlias(file.id, e.target.value)}
+                            placeholder="샘플명 입력"
+                            className="ml-2 px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-orange-500 focus:border-transparent"
+                          />
+                        </div>
                       </div>
                     </div>
                     <button
@@ -341,7 +799,7 @@ const TLMAnalyzer = ({ onClose }) => {
             </div>
           )}
 
-          {/* 분석 방법 안내 - 간단 버전 + 토글 버튼 */}
+          {/* 사용법 안내 */}
           <div className="mb-6">
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <div className="flex items-center justify-between mb-3">
@@ -364,25 +822,21 @@ const TLMAnalyzer = ({ onClose }) => {
                   </motion.div>
                 </button>
               </div>
-              
-              {/* 기본 요구사항 (항상 표시) */}
+
               <ul className="text-sm text-blue-700 space-y-1">
                 <li>• 워크시트명에 거리값 포함 필수: {distanceStep || 0.5}, {((distanceStep || 0.5) * 2).toFixed(1)}, {((distanceStep || 0.5) * 3).toFixed(1)} 등</li>
                 <li>• 각 워크시트에 AV(전압), AI(전류) 컬럼 필요</li>
                 <li>• Excel 파일명은 자유롭게 설정 가능</li>
               </ul>
 
-              {/* 상세 사용방법 (토글) */}
-              <motion.div
-                initial={false}
-                animate={{ 
-                  height: showUsageGuide ? 'auto' : 0,
-                  opacity: showUsageGuide ? 1 : 0 
-                }}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                style={{ overflow: 'hidden' }}
-              >
-                <div className="mt-4 space-y-4">
+              {showUsageGuide && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="mt-4 space-y-4"
+                >
                   {/* 파일명 예시 */}
                   <div>
                     <h5 className="font-medium text-blue-700 mb-2">✅ 1. Excel 파일명은 자유롭게 설정 가능</h5>
@@ -424,7 +878,7 @@ const TLMAnalyzer = ({ onClose }) => {
                         <span className="text-xs text-gray-500">↑ Excel 파일 내부의 워크시트 탭들</span>
                       </div>
                     </div>
-                    
+
                     <div className="bg-amber-50 p-3 rounded-lg border border-amber-200">
                       <p className="text-sm text-amber-700 mb-2">
                         <strong>중요:</strong> 워크시트명에 거리값이 포함되어야 합니다!
@@ -462,8 +916,8 @@ const TLMAnalyzer = ({ onClose }) => {
                       <li>• 최종적으로 저항 vs 거리 그래프로 TLM 파라미터 추출</li>
                     </ul>
                   </div>
-                </div>
-              </motion.div>
+                </motion.div>
+              )}
             </div>
           </div>
 
