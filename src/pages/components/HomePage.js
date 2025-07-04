@@ -4,7 +4,7 @@ import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react'
 import {
   ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download,
   CheckCircle, AlertTriangle, Search, Folder, FolderOpen, FileText, PlusCircle, Save, Trash2,
-  Database, FileUp
+  Database, FileUp, Info
 } from 'lucide-react';
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
@@ -38,6 +38,8 @@ import {
   initializeSession,
   trackFeatureUsage
 } from '../utils/analytics';
+import TFTUsageGuide from './TFTUsageGuide';
+import { motion } from 'framer-motion';
 
 
 // --- FileTreeItem Component ---
@@ -883,11 +885,40 @@ const EnhancedFileUploadSection = ({
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
       const [showAnalysisOptionsModal, setShowAnalysisOptionsModal] = useState(false);
+      // TFTUsageGuide 모달 상태 추가 (기존 showUsageGuide와 별도로 관리)
+      const [showUsageGuideModal, setShowUsageGuideModal] = useState(false);
 
       useEffect(() => {
         trackPageView('/tft-analyzer/home', 'TFT Analyzer - File Upload & Configuration');
         initializeSession();
       }, []);
+
+      // 모달 열릴 때 body 스크롤 방지
+      useEffect(() => {
+        if (showUsageGuideModal) {
+          const originalOverflow = document.body.style.overflow;
+          document.body.style.overflow = 'hidden';
+      
+          return () => {
+            document.body.style.overflow = originalOverflow;
+          };
+        }
+      }, [showUsageGuideModal]);
+
+      // ESC 키로 모달 닫기
+      useEffect(() => {
+        const handleEscape = (event) => {
+          if (event.key === 'Escape' && showUsageGuideModal) {
+            setShowUsageGuideModal(false);
+          }
+        };
+      
+        document.addEventListener('keydown', handleEscape);
+        return () => {
+          document.removeEventListener('keydown', handleEscape);
+        };
+      }, [showUsageGuideModal]);
+
 
       const handleFileUpload = useCallback((event) => {
         const startTime = performance.now();
@@ -982,39 +1013,48 @@ const EnhancedFileUploadSection = ({
                   <Star className="w-8 h-8 text-green-600 mr-3" />
                   <h2 className="text-2xl font-bold text-gray-800">새로운 분석 방식</h2>
                 </div>
-<div className="space-y-4 text-gray-600">
-  <div className="flex items-start">
-    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">1</span>
-    <div>
-      <p className="font-bold text-gray-800 text-left">샘플명으로 그룹화</p>
-      <p className="text-sm">같은 샘플명의 파일들을 하나의 샘플로 인식</p>
-    </div>
-  </div>
-  <div className="flex items-start">
-    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">2</span>
-    <div>
-      <p className="font-bold text-gray-800 text-left">다중 측정값 분석</p>
-      <p className="text-sm">Linear, Saturation, IDVD, Hysteresis 특성 추출</p>
-    </div>
-  </div>
-  <div className="flex items-start">
-    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">3</span>
-    <div>
-      <p className="font-bold text-gray-800 text-left">통합 파라미터 계산</p>
-      <p className="text-sm">Vth, SS, μFE, Ion/Ioff, Ron 등 자동 산출</p>
-    </div>
-  </div>
-  <div className="flex items-start">
-    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">4</span>
-    <div>
-      <p className="font-bold text-gray-800 text-left">품질 평가 및 검증</p>
-      <p className="text-sm">데이터 완성도와 신뢰도 자동 평가</p>
-    </div>
-  </div>
-</div>
+                <div className="space-y-4 text-gray-600">
+                  <div className="flex items-start">
+                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">1</span>
+                    <div>
+                      <p className="font-bold text-gray-800 text-left">샘플명으로 그룹화</p>
+                      <p className="text-sm">같은 샘플명의 파일들을 하나의 샘플로 인식</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">2</span>
+                    <div>
+                      <p className="font-bold text-gray-800 text-left">다중 측정값 분석</p>
+                      <p className="text-sm">Linear, Saturation, IDVD, Hysteresis 특성 추출</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">3</span>
+                    <div>
+                      <p className="font-bold text-gray-800 text-left">통합 파라미터 계산</p>
+                      <p className="text-sm">Vth, SS, μFE, Ion/Ioff, Ron 등 자동 산출</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start">
+                    <span className="bg-purple-100 text-purple-800 rounded-full w-6 h-6 min-w-6 flex items-center justify-center text-sm font-bold mr-3 mt-1 flex-shrink-0">4</span>
+                    <div>
+                      <p className="font-bold text-gray-800 text-left">품질 평가 및 검증</p>
+                      <p className="text-sm">데이터 완성도와 신뢰도 자동 평가</p>
+                    </div>
+                  </div>
+                </div>
 
                 <div className="mt-6 p-4 bg-yellow-50 border-l-4 border-yellow-400 rounded-lg">
-                  <h4 className="font-semibold text-yellow-800 mb-2">📁 파일명 규칙</h4>
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold text-yellow-800">📁 파일명 규칙</h4>
+                    <button
+                      onClick={() => setShowUsageGuideModal(true)}
+                      className="bg-yellow-100 hover:bg-yellow-200 text-yellow-700 px-3 py-1 rounded-lg text-xs font-medium flex items-center transition-all duration-200 border border-yellow-200 hover:border-yellow-300 shadow-sm"
+                    >
+                      <Info className="w-3 h-3 mr-1" />
+                      📖 상세 사용법 보기
+                    </button>
+                  </div>
                   <div className="text-sm text-yellow-700 space-y-1">
                     <p><strong>• IDVD 측정:</strong> 파일명에 "IDVD" 포함 (예: T1_IDVD.xlsx)</p>
                     <p><strong>• Linear 측정:</strong> "IDVG"와 "Linear" 또는 "Lin" 포함 (예: T1_IDVG_Linear.xlsx)</p>
@@ -1023,7 +1063,7 @@ const EnhancedFileUploadSection = ({
                     <p className="text-xs text-yellow-600 mt-2">💡 같은 샘플명의 파일들이 하나로 통합 분석됩니다</p>
                   </div>
                 </div>
-
+                
                 <button
                   onClick={() => setShowParamInput(!showParamInput)}
                   className="w-full mt-6 bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 transition-colors flex items-center justify-center"
@@ -1051,7 +1091,7 @@ const EnhancedFileUploadSection = ({
                 <FormulaCodeInspector />
               </div>
             )}
-{uploadedFiles.length > 0 && (
+            {uploadedFiles.length > 0 && (
               <div className="text-center">
                 <button
                   onClick={handleStartAnalysisClick}
@@ -1116,6 +1156,50 @@ const EnhancedFileUploadSection = ({
                   </p>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* TFT 사용법 모달 */}
+          {showUsageGuideModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
+                  style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}
+                 onClick={(e) => {
+                   if (e.target === e.currentTarget) {
+                     setShowUsageGuideModal(false);
+                   }
+                 }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                transition={{ duration: 0.2 }}
+                className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* 모달 헤더 */}
+                <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <Info className="w-6 h-6 mr-3" />
+                      <h2 className="text-xl font-bold">TFT 분석기 사용 가이드</h2>
+                    </div>
+                    <button
+                      onClick={() => setShowUsageGuideModal(false)}
+                      className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/20 rounded-lg"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                </div>
+                      
+                {/* 스크롤 가능한 컨텐츠 영역 */}
+                <div className="overflow-y-auto p-6">
+                  <TFTUsageGuide
+                     showUsageGuide={true}
+                     setShowUsageGuide={() => {}} // 모달에서는 사용하지 않음
+                  />
+                </div>
+              </motion.div>
             </div>
           )}
         </div>
