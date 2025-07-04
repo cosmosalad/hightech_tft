@@ -1,0 +1,51 @@
+{
+  "1team": {
+    "type": "folder",
+    "children": {
+      "0525": {
+        "type": "folder",
+        "children": {
+          "T1_Ti_Al": {
+            "type": "folder",
+            "files": [
+              "T1_Ti_Al_000.xls",
+              "T1_Ti_Al_100.xls",
+              "T1_Ti_Al_200.xls",
+              "T1_Ti_Al_300.xls"
+            ]
+          },
+          "T1_Ti_Cu": {
+            "type": "folder",
+            "files": [
+              "T1_Ti_Cu_000.xls",
+              "T1_Ti_Cu_100.xls",
+              "T1_Ti_Cu_200.xls",
+              "T1_Ti_Cu_300.xls"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "공통": {
+    "type": "folder",
+    "children": {
+      "0613": {
+        "type": "folder",
+        "files": [
+          "0613_0sccm_300_TLM.xls",
+          "0613_0sccm_350_TLM.xls"
+        ]
+      },
+      "0616": {
+        "type": "folder",
+        "files": [
+          "0616_1sccm_000_TLM.xls",
+          "0616_1sccm_100_TLM.xls",
+          "0616_1sccm_200_TLM.xls",
+          "0616_1sccm_300_TLM.xls"
+        ]
+      }
+    }
+  }
+}
