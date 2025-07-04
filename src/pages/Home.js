@@ -1,14 +1,15 @@
 import React, { useState, useMemo } from 'react';
 import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye } from 'lucide-react';
-// ✨ framer-motion 라이브러리 import
 import { motion, AnimatePresence } from 'framer-motion';
 import FormulaCodeInspector from './components/FormulaCodeInspector';
 import MaskPictureViewer from './components/MaskPictureViewer';
+import TLMAnalyzer from './components/TLMAnalyzer';
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [showMaskViewer, setShowMaskViewer] = useState(false);
+  const [showTLMAnalyzer, setShowTLMAnalyzer] = useState(false);
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -105,6 +106,24 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 <div className="text-left">
                   <h3 className="text-lg font-bold mb-1">Mask/Image Viewer</h3>
                   <p className="text-cyan-100 text-sm">마스크 및 이미지 뷰어</p>
+                </div>
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+
+            {/* 🚀 TLM 분석 버튼 추가 */}
+            <button
+              onClick={() => setShowTLMAnalyzer(true)}
+              className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
+                  <BarChart3 className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-bold mb-1">TLM 분석</h3>
+                  <p className="text-orange-100 text-sm">접촉 저항 계산</p>
                 </div>
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -471,6 +490,11 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
       
       {showMaskViewer && (
         <MaskPictureViewer onClose={() => setShowMaskViewer(false)} />
+      )}
+
+      {/* 🚀 TLM 분석 모달 렌더링 추가 */}
+      {showTLMAnalyzer && (
+        <TLMAnalyzer onClose={() => setShowTLMAnalyzer(false)} />
       )}
     </div>
   );
