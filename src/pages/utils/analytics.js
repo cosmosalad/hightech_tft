@@ -243,7 +243,7 @@ export const initializeSession = () => {
 class GoogleSheetsTracker {
   constructor() {
     // Google Apps Script 웹앱 URL
-    this.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUoMV4fQugS_gnZxMkpGAd3mWFpzy5sHm6esm6CX21iqgIrg1H9JfHb5TGc4E7V3ZC/exec';
+    this.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUoMV4fQugS_gnZxMkpGAd3mWFpzy5sHm6esm6CX21iqgIrg1H9JfHb5TGc4E7V3ZC/exechttps://script.google.com/macros/s/AKfycbwwXcsFYQpEDL3FgM838k4Xf4VqoGphzN6l7tmiCIScFmY10b5dgf94po9ufGfrfD72mA/exec';
     this.userId = this.getUserId();
     this.sessionId = this.generateSessionId();
     this.startTracking();
