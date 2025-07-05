@@ -5,9 +5,9 @@ export const GA_TRACKING_ID = 'G-CQHN7V0XZT';
 // 기본 이벤트 추적 함수 (안전한 실행)
 const trackEvent = (eventName, parameters = {}) => {
   try {
-    if (typeof window !== 'undefined' && 
-        window.gtag && 
-        window.location.hostname !== 'localhost' && 
+    if (typeof window !== 'undefined' &&
+        window.gtag &&
+        window.location.hostname !== 'localhost' &&
         window.location.hostname !== '127.0.0.1') {
       window.gtag('event', eventName, parameters);
     }
@@ -19,9 +19,9 @@ const trackEvent = (eventName, parameters = {}) => {
 // 페이지뷰 추적
 export const trackPageView = (pageName, pageTitle) => {
   try {
-    if (typeof window !== 'undefined' && 
-        window.gtag && 
-        window.location.hostname !== 'localhost' && 
+    if (typeof window !== 'undefined' &&
+        window.gtag &&
+        window.location.hostname !== 'localhost' &&
         window.location.hostname !== '127.0.0.1') {
       window.gtag('config', GA_TRACKING_ID, {
         page_title: pageTitle,
@@ -209,9 +209,9 @@ export const trackFeatureUsage = (featureName, usageCount = 1) => {
 // 사용자 속성 설정 (선택적)
 export const setUserProperties = (properties) => {
   try {
-    if (typeof window !== 'undefined' && 
-        window.gtag && 
-        window.location.hostname !== 'localhost' && 
+    if (typeof window !== 'undefined' &&
+        window.gtag &&
+        window.location.hostname !== 'localhost' &&
         window.location.hostname !== '127.0.0.1') {
       window.gtag('config', GA_TRACKING_ID, {
         user_properties: properties
@@ -228,7 +228,7 @@ let sessionStartTime = null;
 export const initializeSession = () => {
   sessionStartTime = Date.now();
   trackSessionStart();
-  
+
   // 페이지 언로드 시 세션 종료 추적
   window.addEventListener('beforeunload', () => {
     if (sessionStartTime) {
@@ -238,7 +238,109 @@ export const initializeSession = () => {
   });
 };
 
-// ===== 🔍 Enhanced User Activity Logger (새로 추가된 부분) =====
+// ===== 🎯 Google Sheets 실시간 추적 시스템 =====
+
+class GoogleSheetsTracker {
+  constructor() {
+    // Google Apps Script 웹앱 URL
+    this.SCRIPT_URL = 'https://docs.google.com/spreadsheets/d/17kynI9hX3AxX11UGGhdu8MTbZddAEL_fO2IX62-VoRE/edit?usp=sharing';
+    this.userId = this.getUserId();
+    this.sessionId = this.generateSessionId();
+    this.startTracking();
+  }
+
+  getUserId() {
+    let userId = localStorage.getItem('sheetsUserId');
+    if (!userId) {
+      userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+      localStorage.setItem('sheetsUserId', userId);
+    }
+    return userId;
+  }
+
+  generateSessionId() {
+    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+  }
+
+  // 📤 Google Sheets로 데이터 전송
+  async sendToSheet(action, page, details = '') {
+    try {
+      const data = {
+        userId: this.userId,
+        sessionId: this.sessionId,
+        action: action,
+        page: page,
+        details: details,
+        timestamp: new Date().toISOString()
+      };
+
+      // Google Apps Script로 POST 요청
+      const response = await fetch(this.SCRIPT_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+        mode: 'no-cors' // CORS 문제 해결
+      });
+
+      console.log('📊 Google Sheets 전송:', action);
+    } catch (error) {
+      console.warn('📡 Sheets 전송 실패:', error);
+    }
+  }
+
+  // 🔄 자동 추적 시작
+  startTracking() {
+    // 페이지 방문 기록
+    this.sendToSheet('page_visit', window.location.pathname, document.referrer || '직접 접속');
+
+    // 버튼 클릭 추적
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        const button = target.closest('button') || target;
+        const buttonText = button.textContent.trim().substring(0, 20);
+        this.sendToSheet('button_click', window.location.pathname, buttonText);
+      }
+    });
+
+    // 링크 클릭 추적
+    document.addEventListener('click', (event) => {
+      const target = event.target;
+      if (target.tagName === 'A' || target.closest('a')) {
+        const link = target.closest('a') || target;
+        const linkText = link.textContent.trim().substring(0, 20);
+        this.sendToSheet('link_click', window.location.pathname, linkText);
+      }
+    });
+
+    // 파일 업로드 추적
+    document.addEventListener('change', (event) => {
+      if (event.target.type === 'file') {
+        const fileCount = event.target.files.length;
+        const fileNames = Array.from(event.target.files).map(f => f.name).join(', ').substring(0, 50);
+        this.sendToSheet('file_upload', window.location.pathname, `${fileCount}개 파일: ${fileNames}`);
+      }
+    });
+
+    // 5분마다 생존 신호 전송 (활성 사용자 추적용)
+    setInterval(() => {
+      this.sendToSheet('heartbeat', window.location.pathname, '활성 상태');
+    }, 5 * 60 * 1000);
+
+    // 페이지 떠날 때 세션 종료
+    window.addEventListener('beforeunload', () => {
+      const sessionDuration = Date.now() - parseInt(this.sessionId.split('_')[1], 10);
+      this.sendToSheet('session_end', window.location.pathname, `${Math.round(sessionDuration / 60000)}분`);
+    });
+
+    console.log('🎯 Google Sheets 실시간 추적 시작!');
+    console.log('📊 데이터는 Google Sheets에 자동 저장됩니다.');
+  }
+}
+
+// ===== 🔍 Enhanced User Activity Logger (로컬 추적용) =====
 
 class UserActivityLogger {
   constructor() {
@@ -256,13 +358,12 @@ class UserActivityLogger {
       sessionId: this.sessionId,
       timestamp: new Date().toISOString(),
       koreanTime: new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }),
-      userAgent: navigator.userAgent,
       url: window.location.href,
       action: action,
       details: details,
       userId: this.getUserId()
     };
-    
+
     this.logs.push(logEntry);
     this.saveLog(logEntry);
     return logEntry;
@@ -285,12 +386,12 @@ class UserActivityLogger {
     try {
       const existingLogs = JSON.parse(localStorage.getItem('userActivityLogs') || '[]');
       existingLogs.push(logEntry);
-      
-      // 최대 1000개까지만 저장
-      if (existingLogs.length > 1000) {
-        existingLogs.splice(0, existingLogs.length - 1000);
+
+      // 최대 500개까지만 저장 (용량 절약)
+      if (existingLogs.length > 500) {
+        existingLogs.splice(0, existingLogs.length - 500);
       }
-      
+
       localStorage.setItem('userActivityLogs', JSON.stringify(existingLogs));
     } catch (error) {
       console.warn('로컬스토리지 저장 실패:', error);
@@ -309,7 +410,7 @@ class UserActivityLogger {
   // 📊 현재 활성 사용자 수
   getCurrentActiveUsers() {
     const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-    const recentLogs = this.logs.filter(log => 
+    const recentLogs = this.logs.filter(log =>
       new Date(log.timestamp) >= fiveMinutesAgo
     );
     return new Set(recentLogs.map(log => log.userId)).size;
@@ -319,7 +420,7 @@ class UserActivityLogger {
   generateActivityStats(timeRange = '1day') {
     const now = new Date();
     const startTime = new Date();
-    
+
     switch(timeRange) {
       case '1hour':
         startTime.setHours(now.getHours() - 1);
@@ -330,9 +431,11 @@ class UserActivityLogger {
       case '1week':
         startTime.setDate(now.getDate() - 7);
         break;
+      default:
+        startTime.setDate(now.getDate() - 1);
     }
 
-    const filteredLogs = this.logs.filter(log => 
+    const filteredLogs = this.logs.filter(log =>
       new Date(log.timestamp) >= startTime
     );
 
@@ -369,7 +472,7 @@ class UserActivityLogger {
       시간: log.koreanTime,
       활동: log.action,
       상세: log.details,
-      사용자: log.userId.split('_')[1] // 사용자 ID 일부만 표시
+      사용자: log.userId.split('_')[1]
     }));
 
     return {
@@ -383,25 +486,6 @@ class UserActivityLogger {
   // 📤 로그 내보내기
   exportLogs(format = 'json') {
     const logs = JSON.parse(localStorage.getItem('userActivityLogs') || '[]');
-    
-    if (format === 'csv') {
-      if (logs.length === 0) return '';
-      
-      const headers = ['한국시간', '세션ID', '사용자ID', '활동', 'URL', '상세정보'];
-      const csvContent = [
-        headers.join(','),
-        ...logs.map(log => [
-          log.koreanTime,
-          log.sessionId,
-          log.userId,
-          log.action,
-          log.url,
-          JSON.stringify(log.details).replace(/,/g, ';')
-        ].join(','))
-      ].join('\n');
-      
-      return csvContent;
-    }
     return JSON.stringify(logs, null, 2);
   }
 
@@ -424,7 +508,7 @@ class UserActivityLogger {
           페이지: window.location.pathname
         });
       }
-      
+
       // 링크 클릭도 추적
       if (target.tagName === 'A' || target.closest('a')) {
         const link = target.closest('a') || target;
@@ -449,19 +533,19 @@ class UserActivityLogger {
 
     // 페이지 떠날 때 세션 종료 로그
     window.addEventListener('beforeunload', () => {
-      const sessionDuration = Date.now() - parseInt(this.sessionId.split('_')[1]);
+      const sessionDuration = Date.now() - parseInt(this.sessionId.split('_')[1], 10);
       this.createLog('session_end', {
         세션시간_분: Math.round(sessionDuration / 60000),
         마지막페이지: window.location.pathname
       });
     });
 
-    console.log('✅ 사용자 활동 추적이 시작되었습니다!');
-    console.log('📊 실시간 현황 보기: getRealTimeDashboard()');
+    console.log('✅ 로컬 사용자 활동 추적이 시작되었습니다!');
   }
 }
 
-// 🚀 전역 로거 인스턴스 생성
+// 🚀 추적 시스템 초기화
+const googleSheetsTracker = new GoogleSheetsTracker();
 const globalUserLogger = new UserActivityLogger();
 
 // 🎯 편리한 사용을 위한 헬퍼 함수들
@@ -487,19 +571,16 @@ if (typeof window !== 'undefined') {
   window.getUserStats = getUserStats;
   window.getRealTimeDashboard = getRealTimeDashboard;
   window.exportUserLogs = exportUserLogs;
-  
-  // 5초마다 현재 상황 요약 출력
+
+  // 간단한 요약 출력 (10초마다)
   setInterval(() => {
     const dashboard = getRealTimeDashboard();
     if (dashboard.현재활성사용자 > 0) {
-      console.log(`🟢 현재 활성 사용자: ${dashboard.현재활성사용자}명, 오늘 총 활동: ${dashboard.오늘통계.총활동수}회`);
+      console.log(`🟢 활성 사용자: ${dashboard.현재활성사용자}명, 오늘 활동: ${dashboard.오늘통계.총활동수}회`);
     }
-  }, 5000);
+  }, 10000);
 }
 
-console.log('🎉 Enhanced User Activity Logger 활성화 완료!');
-console.log('🔍 사용법:');
-console.log('  - getRealTimeDashboard() : 실시간 대시보드');
-console.log('  - getUserStats("1day") : 오늘 통계');
-console.log('  - exportUserLogs("csv") : CSV로 내보내기');
-console.log('  - 모든 활동이 콘솔에 실시간으로 표시됩니다!');
+console.log('🎉 사용자 추적 시스템 활성화 완료!');
+console.log('📊 Google Sheets에서 실시간 확인 가능');
+console.log('🔍 로컬 확인: getRealTimeDashboard()');
