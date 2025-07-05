@@ -243,7 +243,7 @@ export const initializeSession = () => {
 class GoogleSheetsTracker {
   constructor() {
     // Google Apps Script 웹앱 URL
-    this.SCRIPT_URL = 'https://docs.google.com/spreadsheets/d/17kynI9hX3AxX11UGGhdu8MTbZddAEL_fO2IX62-VoRE/edit?usp=sharing';
+    this.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyUoMV4fQugS_gnZxMkpGAd3mWFpzy5sHm6esm6CX21iqgIrg1H9JfHb5TGc4E7V3ZC/exec';
     this.userId = this.getUserId();
     this.sessionId = this.generateSessionId();
     this.startTracking();
