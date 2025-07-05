@@ -5,7 +5,7 @@
 class GoogleSheetsTracker {
   constructor() {
     // Google Apps Script 웹앱 URL
-    this.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbz10fLLl9qpZdSy0NCD5Bh6Wb_5Velev0dxxOhA9y-lNQfIwjO59XdDLftvNY_z_dO2iA/exec';
+    this.SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxda0mXlDsHmpn3xTIY7peVc0OKuIH67H66785qdRrvJ-M3N5sftVmiyd_rWm3-pM6xvg/exec';
     this.userId = this.getUserId();
     this.sessionId = this.generateSessionId();
     this.startTracking();
