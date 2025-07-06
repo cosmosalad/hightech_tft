@@ -1,15 +1,17 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye } from 'lucide-react';
+import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye, Headphones } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FormulaCodeInspector from './components/FormulaCodeInspector';
 import MaskPictureViewer from './components/MaskPictureViewer';
 import TLMAnalyzer from './components/TLMAnalyzer';
+import TFTEducationPodcast from './components/TFTEducationPodcast';
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [showMaskViewer, setShowMaskViewer] = useState(false);
   const [showTLMAnalyzer, setShowTLMAnalyzer] = useState(false);
+  const [showTFTPodcast, setShowTFTPodcast] = useState(false);
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -124,6 +126,24 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                 <div className="text-left">
                   <h3 className="text-lg font-bold mb-1">TLM 분석</h3>
                   <p className="text-orange-100 text-sm">접촉 저항 계산</p>
+                </div>
+                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </button>
+
+            {/* 🎧 TFT 팟캐스트 버튼 */}
+            <button
+              onClick={() => setShowTFTPodcast(true)}
+              className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+              <div className="relative z-10 flex items-center">
+                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
+                  <Headphones className="w-6 h-6" />
+                </div>
+                <div className="text-left">
+                  <h3 className="text-lg font-bold mb-1">TFT 학습 팟캐스트</h3>
+                  <p className="text-emerald-100 text-sm">오디오로 TFT 이론 학습</p>
                 </div>
                 <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
               </div>
@@ -495,6 +515,11 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
       {/* 🚀 TLM 분석 모달 렌더링 추가 */}
       {showTLMAnalyzer && (
         <TLMAnalyzer onClose={() => setShowTLMAnalyzer(false)} />
+      )}
+
+      {/* TFT 팟캐스트 모달 */}
+      {showTFTPodcast && (
+        <TFTEducationPodcast onClose={() => setShowTFTPodcast(false)} />
       )}
     </div>
   );
