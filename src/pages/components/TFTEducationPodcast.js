@@ -145,35 +145,44 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 시간 기반 단어별 순차 표시 함수
+  // 시간 기반 단어별 순차 표시 함수 (수정된 버전)
   const showWordsSequentially = (text, startTime, endTime, currentTime) => {
     clearAllTimersAndStates();
-  
     if (!text || !isPlaying) {
       return;
     }
-  
     const words = splitTextByLanguage(text, currentLanguage);
-    const duration = endTime - startTime;
-    const timePerWord = duration / words.length;
+    const totalDuration = endTime - startTime;
+    // 마지막 1초는 모든 단어가 표시되도록 예약
+    const wordAnimationDuration = totalDuration > 1 ? totalDuration - 1.0 : totalDuration; // 마지막 1초 제외
+    const timePerWord = words.length > 0 ? wordAnimationDuration / words.length : 0;
     const elapsedTime = currentTime - startTime;
-  
     const minInterval = 0.15;
     const maxInterval = 0.6;
     const adjustedTimePerWord = Math.max(minInterval, Math.min(timePerWord, maxInterval));
-  
-    const wordsToShowImmediately = Math.floor(elapsedTime / adjustedTimePerWord);
+
+    // 현재 시간이 마지막 1초 구간에 있거나 애니메이션 시간이 0 이하일 경우 모든 단어 표시
+    if (elapsedTime >= wordAnimationDuration || wordAnimationDuration <= 0) {
+      const allWords = words.map((word, index) => ({ word, index }));
+      setVisibleWords(allWords);
+      return;
+    }
+
+    // 일반적인 순차 표시 로직
+    const wordsToShowImmediately = adjustedTimePerWord > 0 ? Math.floor(elapsedTime / adjustedTimePerWord) : words.length;
     const initialWords = words.slice(0, Math.min(wordsToShowImmediately + 1, words.length)).map((word, index) => ({ word, index }));
     setVisibleWords(initialWords);
-  
+
     words.slice(wordsToShowImmediately + 1).forEach((word, index) => {
       const actualIndex = wordsToShowImmediately + 1 + index;
       let showTime = (adjustedTimePerWord * actualIndex - elapsedTime) * 1000;
-  
       const smoothDelay = 120 + (index * 80);
       showTime = Math.max(showTime, smoothDelay);
-  
-      if (showTime > 0 && actualIndex < words.length) {
+      
+      // 마지막 1초 전까지만 단어별 애니메이션
+      const timeUntilComplete = (wordAnimationDuration - elapsedTime) * 1000;
+      
+      if (showTime > 0 && showTime < timeUntilComplete && actualIndex < words.length) {
         const timer = setTimeout(() => {
           if (isPlaying) {
             setVisibleWords(prev => {
@@ -185,10 +194,21 @@ const TFTEducationPodcast = ({ onClose }) => {
             });
           }
         }, showTime);
-  
         wordTimersRef.current.push(timer);
       }
     });
+
+    // 마지막 1초 전에 모든 단어를 표시하는 타이머
+    const timeToShowAll = (wordAnimationDuration - elapsedTime) * 1000;
+    if (timeToShowAll > 0) {
+      const completeTimer = setTimeout(() => {
+        if (isPlaying) {
+          const allWords = words.map((word, index) => ({ word, index }));
+          setVisibleWords(allWords);
+        }
+      }, timeToShowAll);
+      wordTimersRef.current.push(completeTimer);
+    }
   };
 
   // 현재 시간에 맞는 자막 찾기
@@ -614,13 +634,13 @@ const TFTEducationPodcast = ({ onClose }) => {
                         className="inline-block mb-1 relative opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]"
                         style={{
                           marginRight: currentLanguage === 'korean' || currentLanguage === 'english' ? '0.4rem' : '0.1rem',
-                          animationDelay: `${index * 0.05}s`
+                          animationDelay: `${index * 0.02}s`
                         }}
                       >
                         <span className="relative z-10">{wordObj.word}</span>
                         <div
                           className="absolute inset-0 bg-blue-500/20 rounded opacity-0 animate-[highlight_0.6s_ease-out_forwards]"
-                          style={{ animationDelay: `${index * 0.05 + 0.2}s` }}
+                          style={{ animationDelay: `${index * 0.05 + 0.05}s` }}
                         />
                       </span>
                     ))}
