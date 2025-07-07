@@ -434,7 +434,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               <Headphones className="w-5 h-5 mr-2" />
               <div>
                 <h2 className="text-lg font-bold">TFT 학습 팟캐스트</h2>
-                <p className="text-white/90 text-xs">오디오 & 자막 학습</p>
+                <p className="text-white/90 text-xs">대화형 TFT 지식 탐구</p>
               </div>
             </div>
             <button
