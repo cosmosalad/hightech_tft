@@ -211,7 +211,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               <Headphones className="w-6 h-6 mr-2" />
               <div>
                 <h2 className="text-xl font-bold">TFT 학습 팟캐스트</h2>
-                <p className="text-white/90 text-xs">강의자와 함께하는 오디오 학습</p>
+                <p className="text-white/90 text-xs">오디오 학습</p>
               </div>
             </div>
             <button
