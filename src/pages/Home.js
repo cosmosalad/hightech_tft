@@ -78,77 +78,77 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             Probe Station 측정 데이터를 분석하여 MOSFET 파라미터를 자동으로 계산해 보세요!
           </p>
 
-          <div className="flex flex-wrap justify-center items-center gap-4 mb-8">
-            <button
-              onClick={() => onNavigate('simulator-intro')}
-              className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="relative z-10 flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
-                  <Zap className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold mb-1">공정 시뮬레이터</h3>
-                  <p className="text-purple-100 text-sm">TFT 제조 공정을 시각화로 학습</p>
-                </div>
-                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-            
-            <button
-              onClick={() => setShowMaskViewer(true)}
-              className="group relative overflow-hidden bg-gradient-to-br from-teal-500 to-cyan-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="relative z-10 flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
-                  <Eye className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold mb-1">Mask/Image Viewer</h3>
-                  <p className="text-cyan-100 text-sm">마스크 및 이미지 뷰어</p>
-                </div>
-                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
+          <div className="flex flex-wrap justify-center items-center gap-2 mb-8">
+           {/* 🎧 TFT 팟캐스트 버튼 */}
+           <button
+             onClick={() => setShowTFTPodcast(true)}
+             className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-green-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+           >
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+             <div className="relative z-10 flex items-center">
+               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors">
+                 <Headphones className="w-5 h-5" />
+               </div>
+               <div className="text-left">
+                 <h3 className="text-base font-bold mb-1">TFT 학습 팟캐스트</h3>
+                 <p className="text-emerald-100 text-xs">오디오로 TFT 이론 학습</p>
+               </div>
+               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+             </div>
+           </button>
 
-            {/* 🚀 TLM 분석 버튼 추가 */}
-            <button
-              onClick={() => setShowTLMAnalyzer(true)}
-              className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="relative z-10 flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
-                  <BarChart3 className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold mb-1">TLM 분석</h3>
-                  <p className="text-orange-100 text-sm">접촉 저항 계산</p>
-                </div>
-                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
+           <button
+             onClick={() => onNavigate('simulator-intro')}
+             className="group relative overflow-hidden bg-gradient-to-br from-purple-500 to-pink-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+           >
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+             <div className="relative z-10 flex items-center">
+               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors">
+                 <Zap className="w-5 h-5" />
+               </div>
+               <div className="text-left">
+                 <h3 className="text-base font-bold mb-1">공정 시뮬레이터</h3>
+                 <p className="text-purple-100 text-xs">TFT 제조 공정을 시각화로 학습</p>
+               </div>
+               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+             </div>
+           </button>
+           
+           <button
+             onClick={() => setShowMaskViewer(true)}
+             className="group relative overflow-hidden bg-gradient-to-br from-teal-500 to-cyan-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+           >
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+             <div className="relative z-10 flex items-center">
+               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors">
+                 <Eye className="w-5 h-5" />
+               </div>
+               <div className="text-left">
+                 <h3 className="text-base font-bold mb-1">Mask/Image Viewer</h3>
+                 <p className="text-cyan-100 text-xs">마스크 및 이미지 뷰어</p>
+               </div>
+               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+             </div>
+           </button>
 
-            {/* 🎧 TFT 팟캐스트 버튼 */}
-            <button
-              onClick={() => setShowTFTPodcast(true)}
-              className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-green-600 text-white px-6 py-4 rounded-2xl shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-300"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-              <div className="relative z-10 flex items-center">
-                <div className="flex items-center justify-center w-12 h-12 bg-white/20 rounded-xl mr-3 group-hover:bg-white/30 transition-colors">
-                  <Headphones className="w-6 h-6" />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-bold mb-1">TFT 학습 팟캐스트</h3>
-                  <p className="text-emerald-100 text-sm">오디오로 TFT 이론 학습</p>
-                </div>
-                <ArrowRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-              </div>
-            </button>
-          </div>
+           {/* 🚀 TLM 분석 버튼 */}
+           <button
+             onClick={() => setShowTLMAnalyzer(true)}
+             className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+           >
+             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+             <div className="relative z-10 flex items-center">
+               <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors">
+                 <BarChart3 className="w-5 h-5" />
+               </div>
+               <div className="text-left">
+                 <h3 className="text-base font-bold mb-1">TLM 분석</h3>
+                 <p className="text-orange-100 text-xs">접촉 저항 계산</p>
+               </div>
+               <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+             </div>
+           </button>
+         </div>
 
           <div className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-100 to-purple-100 text-gray-800 rounded-full text-lg font-medium shadow-lg border border-white/50">
             <BarChart3 className="w-5 h-5 mr-2 text-blue-600" />
