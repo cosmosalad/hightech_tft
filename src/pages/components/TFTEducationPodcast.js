@@ -26,7 +26,7 @@ const TFTEducationPodcast = ({ onClose }) => {
       flag: '🇰🇷',
       audioPath: getAudioUrl('TFT_kr.mp3'),
       description: 'TFT의 기본 원리부터 전기적 특성까지 상세하게 설명합니다',
-      aiName: 'TFT 박사',
+      aiName: 'TFT 연구팀',
       color: 'from-blue-500 to-purple-600'
     },
     english: {
@@ -34,24 +34,24 @@ const TFTEducationPodcast = ({ onClose }) => {
       flag: '🇺🇸',
       audioPath: getAudioUrl('TFT_en.mp3'),
       description: 'Comprehensive explanation of TFT principles and electrical characteristics',
-      aiName: 'Dr. TFT',
+      aiName: 'TFT Research Team',
       color: 'from-emerald-500 to-teal-600'
-    },
-    chinese: {
-      name: '中文',
-      flag: '🇨🇳',
-      audioPath: getAudioUrl('TFT_cn.mp3'),
-      description: '从TFT基本原理到电学特性的详细说明',
-      aiName: 'TFT 博士',
-      color: 'from-red-500 to-pink-600'
     },
     japanese: {
       name: '日本語',
       flag: '🇯🇵',
       audioPath: getAudioUrl('TFT_jp.mp3'),
       description: 'TFTの基本原理から電気的特性まで詳しく説明します',
-      aiName: 'TFT博士',
+      aiName: 'TFT 研究团队',
       color: 'from-purple-500 to-indigo-600'
+    },
+    chinese: {
+      name: '中文',
+      flag: '🇨🇳',
+      audioPath: getAudioUrl('TFT_cn.mp3'),
+      description: '从TFT基本原理到电学特性的详细说明',
+      aiName: 'TFT研究チーム',
+      color: 'from-red-500 to-pink-600'
     }
   };
 
@@ -211,7 +211,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               <Headphones className="w-6 h-6 mr-2" />
               <div>
                 <h2 className="text-xl font-bold">TFT 학습 팟캐스트</h2>
-                <p className="text-white/90 text-xs">AI와 함께하는 오디오 학습</p>
+                <p className="text-white/90 text-xs">강의자와 함께하는 오디오 학습</p>
               </div>
             </div>
             <button
@@ -283,7 +283,7 @@ const TFTEducationPodcast = ({ onClose }) => {
             <p className="text-sm text-gray-600">
               {audioError ? '오디오 로드 실패' : 
                aiSpeaking ? '설명 중입니다...' : 
-               'TFT 전문가가 상세하게 설명해드립니다'}
+               'TFT 연구팀이 상세하게 설명해드립니다'}
             </p>
           </div>
 
