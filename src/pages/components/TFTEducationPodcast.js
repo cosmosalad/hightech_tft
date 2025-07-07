@@ -1,7 +1,5 @@
-// TFTEducationPodcast.js
 import React, { useState, useRef, useEffect } from 'react';
 import { X, Play, Pause, Volume2, RotateCcw, Headphones, Globe, Mic, MessageCircle, AlertCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
 
 const TFTEducationPodcast = ({ onClose }) => {
   const [currentLanguage, setCurrentLanguage] = useState('korean');
@@ -38,25 +36,25 @@ const TFTEducationPodcast = ({ onClose }) => {
       flag: '🇰🇷',
       audioPath: getAudioUrl('TFT_kr.mp3'),
       subtitlePath: getSubtitleUrl('TFT_kr.srt'),
-      description: 'TFT의 기본 원리부터 전기적 특성까지 상세하게 설명합니다',
+      description: 'TFT 기본 원리 설명',
       aiName: 'TFT 연구팀',
-      color: 'from-blue-500 to-purple-600'
+      color: 'from-emerald-500 to-teal-600'
     },
     english: {
       name: 'English',
       flag: '🇺🇸',
       audioPath: getAudioUrl('TFT_en.mp3'),
       subtitlePath: getSubtitleUrl('TFT_en.srt'),
-      description: 'Comprehensive explanation of TFT principles and electrical characteristics',
+      description: 'TFT Principles Explained',
       aiName: 'TFT Research Team',
-      color: 'from-emerald-500 to-teal-600'
+      color: 'from-blue-500 to-purple-600'
     },
     japanese: {
       name: '日本語',
       flag: '🇯🇵',
       audioPath: getAudioUrl('TFT_jp.mp3'),
       subtitlePath: getSubtitleUrl('TFT_jp.srt'),
-      description: 'TFTの基本原理から電気的特性まで詳しく説明します',
+      description: 'TFT基本原理',
       aiName: 'TFT 研究团队',
       color: 'from-purple-500 to-indigo-600'
     },
@@ -65,7 +63,7 @@ const TFTEducationPodcast = ({ onClose }) => {
       flag: '🇨🇳',
       audioPath: getAudioUrl('TFT_cn.mp3'),
       subtitlePath: getSubtitleUrl('TFT_cn.srt'),
-      description: '从TFT基本原理到电学特性的详细说明',
+      description: 'TFT基本原理',
       aiName: 'TFT研究チーム',
       color: 'from-red-500 to-pink-600'
     }
@@ -81,7 +79,6 @@ const TFTEducationPodcast = ({ onClose }) => {
       const timeString = lines[1];
       const text = lines.slice(2).join('\n');
       
-      // 시간 파싱 (00:00:10,500 --> 00:00:13,400)
       const timeMatch = timeString.match(/(\d{2}):(\d{2}):(\d{2}),(\d{3})\s*-->\s*(\d{2}):(\d{2}):(\d{2}),(\d{3})/);
       if (!timeMatch) return null;
       
@@ -91,7 +88,7 @@ const TFTEducationPodcast = ({ onClose }) => {
       return {
         startTime,
         endTime,
-        text: text.replace(/<[^>]+>/g, '') // HTML 태그 제거
+        text: text.replace(/<[^>]+>/g, '')
       };
     }).filter(Boolean);
   };
@@ -100,8 +97,6 @@ const TFTEducationPodcast = ({ onClose }) => {
   const loadSubtitles = async (subtitleUrl) => {
     try {
       setSubtitleError(null);
-      console.log(`Loading subtitles from: ${subtitleUrl}`);
-      
       const response = await fetch(subtitleUrl);
       if (!response.ok) {
         throw new Error(`자막 파일을 불러올 수 없습니다: ${response.status}`);
@@ -109,7 +104,6 @@ const TFTEducationPodcast = ({ onClose }) => {
       const srtText = await response.text();
       const parsedSubtitles = parseSRT(srtText);
       setSubtitles(parsedSubtitles);
-      console.log(`Loaded ${parsedSubtitles.length} subtitle entries for ${subtitleUrl}`);
     } catch (error) {
       console.error('Subtitle loading error:', error);
       setSubtitleError('자막을 불러오는데 실패했습니다.');
@@ -119,11 +113,8 @@ const TFTEducationPodcast = ({ onClose }) => {
 
   // 모든 타이머와 상태 초기화 함수
   const clearAllTimersAndStates = () => {
-    // 모든 단어 타이머 정리
     wordTimersRef.current.forEach(timer => clearTimeout(timer));
     wordTimersRef.current = [];
-    
-    // 자막 관련 상태 초기화
     setCurrentSubtitle('');
     setCurrentSubtitleIndex(-1);
     setVisibleWords([]);
@@ -137,20 +128,16 @@ const TFTEducationPodcast = ({ onClose }) => {
     switch (language) {
       case 'korean':
       case 'english':
-        // 한국어와 영어는 공백 기준으로 분할
         return text.split(' ').filter(word => word.trim() !== '');
       
       case 'japanese':
-        // 일본어는 공백이 있으면 공백 기준, 없으면 문자 기준으로 분할
         if (text.includes(' ')) {
           return text.split(' ').filter(word => word.trim() !== '');
         } else {
-          // 히라가나, 카타카나, 한자 등을 고려한 분할
           return text.match(/[\u3040-\u309F]+|[\u30A0-\u30FF]+|[\u4E00-\u9FAF]+|[A-Za-z0-9]+|[^\s]/g) || [text];
         }
       
       case 'chinese':
-        // 중국어는 문자 단위로 분할하여 한 글자씩 표시
         return text.split('');
       
       default:
@@ -158,11 +145,11 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 시간 기반 단어별 순차 표시 함수 (수정됨)
+  // 시간 기반 단어별 순차 표시 함수
   const showWordsSequentially = (text, startTime, endTime, currentTime) => {
     clearAllTimersAndStates();
   
-    if (!text || !isPlaying) { // isPlaying 조건 추가
+    if (!text || !isPlaying) {
       return;
     }
   
@@ -188,7 +175,6 @@ const TFTEducationPodcast = ({ onClose }) => {
   
       if (showTime > 0 && actualIndex < words.length) {
         const timer = setTimeout(() => {
-          // 타이머 실행 시점에도 재생 중인지 확인
           if (isPlaying) {
             setVisibleWords(prev => {
               const exists = prev.some(w => w.index === actualIndex);
@@ -205,9 +191,9 @@ const TFTEducationPodcast = ({ onClose }) => {
     });
   };
 
-  // 현재 시간에 맞는 자막 찾기 (수정됨)
+  // 현재 시간에 맞는 자막 찾기
   const updateCurrentSubtitle = (currentTime) => {
-    if (subtitles.length === 0 || !isPlaying) { // isPlaying 조건 추가
+    if (subtitles.length === 0 || !isPlaying) {
       return;
     }
   
@@ -236,7 +222,7 @@ const TFTEducationPodcast = ({ onClose }) => {
 
     const updateTime = () => {
       setCurrentTime(audio.currentTime);
-      updateCurrentSubtitle(audio.currentTime); // 자막 업데이트
+      updateCurrentSubtitle(audio.currentTime);
     };
     const updateDuration = () => setDuration(audio.duration);
     const handleLoadStart = () => {
@@ -253,7 +239,7 @@ const TFTEducationPodcast = ({ onClose }) => {
       setIsLoading(false);
       setIsPlaying(false);
       setAiSpeaking(false);
-      setAudioError('오디오 파일을 불러올 수 없습니다. 네트워크 연결을 확인해주세요.');
+      setAudioError('오디오 파일을 불러올 수 없습니다.');
       console.error('Audio error:', e);
     };
     const handleLoadedData = () => {
@@ -276,11 +262,9 @@ const TFTEducationPodcast = ({ onClose }) => {
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
       audio.removeEventListener('loadeddata', handleLoadedData);
-      
-      // 컴포넌트 언마운트 시 정리
       clearAllTimersAndStates();
     };
-  }, [currentLanguage, subtitles, isPlaying]); // isPlaying 의존성 추가
+  }, [currentLanguage, subtitles, isPlaying]);
 
   // 볼륨 조절
   useEffect(() => {
@@ -300,14 +284,10 @@ const TFTEducationPodcast = ({ onClose }) => {
 
   // 언어 변경 시 완전 초기화 및 자막 로드
   useEffect(() => {
-    console.log(`Language changed to: ${currentLanguage}`);
-    
-    // 완전한 상태 초기화
     setAudioError(null);
     setSubtitleError(null);
     clearAllTimersAndStates();
     
-    // 재생 중이었다면 일시정지
     if (isPlaying && audioRef.current) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -316,17 +296,15 @@ const TFTEducationPodcast = ({ onClose }) => {
     
     setCurrentTime(0);
     setDuration(0);
-    setSubtitles([]); // 자막 배열 완전 초기화
+    setSubtitles([]);
     
-    // 새 언어의 자막 로드
     const currentLang = languages[currentLanguage];
     if (currentLang && currentLang.subtitlePath) {
-      console.log(`Loading subtitles for language: ${currentLanguage}`);
       loadSubtitles(currentLang.subtitlePath);
     }
   }, [currentLanguage]);
 
-  // 재생/일시정지 함수 (수정됨)
+  // 재생/일시정지 함수
   const handlePlayPause = () => {
     const audio = audioRef.current;
     if (!audio || audioError) return;
@@ -334,7 +312,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     if (isPlaying) {
       audio.pause();
       setIsPlaying(false);
-      // 추가: 일시정지 시 단어 타이머들 정리
       wordTimersRef.current.forEach(timer => clearTimeout(timer));
       wordTimersRef.current = [];
     } else {
@@ -343,12 +320,11 @@ const TFTEducationPodcast = ({ onClose }) => {
         playPromise
           .then(() => {
             setIsPlaying(true);
-            // 재생 재개 시 현재 시간에 맞는 자막으로 다시 시작
             updateCurrentSubtitle(audio.currentTime);
           })
           .catch((error) => {
             console.error('Play failed:', error);
-            setAudioError('재생에 실패했습니다. 다시 시도해주세요.');
+            setAudioError('재생에 실패했습니다.');
           });
       }
     }
@@ -363,18 +339,16 @@ const TFTEducationPodcast = ({ onClose }) => {
     const newTime = percent * duration;
     audio.currentTime = newTime;
     setCurrentTime(newTime);
-    // 탐색 후 즉시 자막 업데이트
     if (isPlaying) {
         updateCurrentSubtitle(newTime);
     } else {
-        // 일시정지 상태에서 탐색한 경우, 단어 표시를 위해 상태를 강제로 업데이트
         const currentSubIndex = subtitles.findIndex(sub => newTime >= sub.startTime && newTime <= sub.endTime);
         if (currentSubIndex !== -1) {
             const currentSub = subtitles[currentSubIndex];
-            clearAllTimersAndStates(); // 기존 타이머 정리
+            clearAllTimersAndStates();
             setCurrentSubtitle(currentSub.text);
             const words = splitTextByLanguage(currentSub.text, currentLanguage);
-            setVisibleWords(words.map((word, index) => ({word, index}))); // 전체 문장 즉시 표시
+            setVisibleWords(words.map((word, index) => ({word, index})));
         } else {
             clearAllTimersAndStates();
         }
@@ -397,7 +371,7 @@ const TFTEducationPodcast = ({ onClose }) => {
           })
           .catch((error) => {
             console.error('Restart play failed:', error);
-            setAudioError('재생에 실패했습니다. 다시 시도해주세요.');
+            setAudioError('재생에 실패했습니다.');
           });
       }
     } else {
@@ -413,9 +387,8 @@ const TFTEducationPodcast = ({ onClose }) => {
     
     const audio = audioRef.current;
     if (audio) {
-      audio.load(); // 오디오 파일 다시 로드
+      audio.load();
     }
-    // 자막도 다시 로드
     const currentLang = languages[currentLanguage];
     if (currentLang && currentLang.subtitlePath) {
       loadSubtitles(currentLang.subtitlePath);
@@ -432,21 +405,15 @@ const TFTEducationPodcast = ({ onClose }) => {
   const currentLang = languages[currentLanguage];
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2 sm:p-4">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, y: 20 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        transition={{ duration: 0.3 }}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl h-[95vh] max-h-[700px] overflow-hidden flex flex-col"
-      >
-        {/* 헤더 */}
-        <div className={`bg-gradient-to-r ${currentLang.color} text-white p-4 flex-shrink-0`}>
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
+        {/* 헤더 - 높이 줄임 */}
+        <div className={`bg-gradient-to-r ${currentLang.color} text-white p-3 flex-shrink-0 transition-all duration-500 ease-in-out`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Headphones className="w-6 h-6 mr-2" />
+              <Headphones className="w-5 h-5 mr-2" />
               <div>
-                <h2 className="text-xl font-bold">TFT 학습 팟캐스트</h2>
+                <h2 className="text-lg font-bold">TFT 학습 팟캐스트</h2>
                 <p className="text-white/90 text-xs">오디오 & 자막 학습</p>
               </div>
             </div>
@@ -459,223 +426,333 @@ const TFTEducationPodcast = ({ onClose }) => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {/* 언어 선택 */}
-          <div>
-            <h3 className="text-base font-semibold text-gray-800 mb-3 flex items-center">
-              <Globe className="w-4 h-4 mr-2" />
-              언어 선택
-            </h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {Object.entries(languages).map(([key, lang]) => (
-                <button
-                  key={key}
-                  onClick={() => setCurrentLanguage(key)}
-                  className={`p-3 rounded-lg border-2 transition-all duration-300 ${
-                    currentLanguage === key
-                      ? `border-blue-500 bg-gradient-to-r ${lang.color} text-white shadow-lg`
-                      : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
-                  }`}
-                >
-                  <div className="flex items-center mb-1">
-                    <span className="text-lg mr-2">{lang.flag}</span>
-                    <span className="font-semibold text-sm">{lang.name}</span>
-                  </div>
-                  <p className={`text-xs ${currentLanguage === key ? 'text-white/90' : 'text-gray-600'}`}>
-                    {lang.description}
-                  </p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* AI 캐릭터 섹션 */}
-          <div className="text-center">
-            <motion.div
-              animate={{
-                scale: aiSpeaking ? [1, 1.05, 1] : 1,
-              }}
-              transition={{
-                duration: 1.5,
-                repeat: aiSpeaking ? Infinity : 0,
-                ease: "easeInOut"
-              }}
-              className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r ${currentLang.color} mb-3 shadow-xl`}
-            >
-              <div className="relative">
-                <MessageCircle className="w-10 h-10 text-white" />
-                {aiSpeaking && (
-                  <motion.div
-                    className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full flex items-center justify-center"
-                    animate={{ scale: [1, 1.2, 1] }}
-                    transition={{ duration: 0.8, repeat: Infinity }}
-                  >
-                    <Mic className="w-2 h-2 text-white" />
-                  </motion.div>
-                )}
-              </div>
-            </motion.div>
-            <h4 className="text-lg font-bold text-gray-800 mb-1">{currentLang.aiName}</h4>
-            <p className="text-sm text-gray-600">
-              {audioError ? '오디오 로드 실패' : 
-               aiSpeaking ? '설명 중입니다...' : 
-               'TFT 연구팀이 상세하게 설명해드립니다'}
-            </p>
-          </div>
-
-          {/* 자막 표시 영역 */}
-          <div className="bg-gray-900 rounded-xl p-4 min-h-[120px] flex items-center justify-center">
-            <div className="w-full max-w-3xl">
-              {subtitleError ? (
-                <p className="text-red-400 text-sm text-center">{subtitleError}</p>
-              ) : visibleWords.length > 0 ? (
-                <div className="text-white text-lg leading-relaxed text-left px-4">
-                  {visibleWords.map((wordObj, index) => (
-                    <motion.span
-                      key={`${currentLanguage}-${currentSubtitleIndex}-${wordObj.index}`}
-                      initial={{ 
-                        opacity: 0
-                      }}
-                      animate={{ 
-                        opacity: 1
-                      }}
-                      transition={{ 
-                        duration: 1.2,
-                        ease: [0.25, 0.1, 0.25, 1] // 매우 부드러운 베지어 곡선
-                      }}
-                      className="inline-block mb-1"
-                      style={{
-                        // 언어별 다른 간격 설정
-                        marginRight: currentLanguage === 'korean' || currentLanguage === 'english' ? '0.4rem' : '0.1rem'
-                      }}
-                    >
-                      {wordObj.word}
-                    </motion.span>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-sm text-center">
-                  {isPlaying ? '자막을 로딩중입니다...' : '재생을 시작하면 자막이 표시됩니다'}
-                </p>
-              )}
-            </div>
-          </div>
-
-          {/* 오디오 에러 표시 */}
-          {audioError && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-              <div className="flex items-center">
-                <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
-                <div className="flex-1">
-                  <p className="text-sm text-red-800">{audioError}</p>
-                </div>
-                <button
-                  onClick={handleRetry}
-                  className="ml-2 px-3 py-1 bg-red-100 hover:bg-red-200 text-red-800 text-xs rounded transition-colors"
-                >
-                  다시 시도
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* 오디오 플레이어 */}
-          <div className={`bg-gradient-to-r ${currentLang.color} rounded-xl p-4 text-white shadow-lg ${audioError ? 'opacity-50' : ''}`}>
-            <audio
-              ref={audioRef}
-              src={currentLang.audioPath}
-              preload="metadata"
-              crossOrigin="anonymous"
-            />
-            
-            {/* 진행 바 */}
+        <div className="flex-1 flex overflow-hidden">
+          {/* 왼쪽 패널: 언어 선택 + AI 시각화 */}
+          <div className="w-1/3 p-3 border-r bg-gray-50 overflow-hidden">
+            {/* 언어 선택 - 컴팩트하게 */}
             <div className="mb-4">
-              <div
-                className={`w-full h-2 bg-white/20 rounded-full overflow-hidden ${audioError ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={handleSeek}
-              >
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-200"
-                  style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
-                />
-              </div>
-              <div className="flex justify-between text-xs mt-1 text-white/80">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
+              <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
+                <Globe className="w-4 h-4 mr-1" />
+                언어 선택
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                {Object.entries(languages).map(([key, lang]) => (
+                  <button
+                    key={key}
+                    onClick={() => setCurrentLanguage(key)}
+                    className={`p-2 rounded-lg border-2 transition-all duration-300 min-w-0 ${
+                      currentLanguage === key
+                        ? `border-blue-500 bg-gradient-to-r ${lang.color} text-white shadow-lg`
+                        : 'border-gray-200 hover:border-gray-300 bg-white text-gray-700'
+                    }`}
+                  >
+                    <div className="flex items-center mb-1 justify-center">
+                      <span className="text-sm mr-1">{lang.flag}</span>
+                      <span className="font-semibold text-xs truncate">{lang.name}</span>
+                    </div>
+                    <p className={`text-xs truncate ${currentLanguage === key ? 'text-white/90' : 'text-gray-600'}`}>
+                      {lang.description}
+                    </p>
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* 컨트롤 버튼 */}
-            <div className="flex items-center justify-center space-x-4">
-              <button
-                onClick={handleRestart}
-                disabled={audioError}
-                className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                title="처음부터"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </button>
+            {/* AI 파형 시각화 - 크기 줄임 */}
+            <div className="text-center">
+              <div className="relative mb-4">
+                <div className={`absolute inset-0 bg-gradient-to-r ${currentLang.color} rounded-2xl blur-xl opacity-20 scale-110 transition-all duration-500 ease-in-out`}></div>
+                
+                <div className={`relative bg-gradient-to-br ${currentLang.color} rounded-2xl p-4 shadow-lg border border-white/20 transition-all duration-500 ease-in-out`}>
+                  {/* 상단 상태 표시 */}
+                  <div className="flex items-center justify-center mb-3">
+                    <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
+                      <div className={`w-2 h-2 rounded-full mr-2 ${audioError ? 'bg-red-400' : aiSpeaking ? 'bg-green-400' : 'bg-gray-300'}`}>
+                        {aiSpeaking && (
+                          <div
+                            className="w-2 h-2 bg-green-400 rounded-full animate-pulse"
+                          />
+                        )}
+                      </div>
+                      <span className="text-white/90 text-xs font-medium">
+                        {audioError ? 'Offline' : aiSpeaking ? 'Speaking' : 'Ready'}
+                      </span>
+                    </div>
+                  </div>
 
-              <button
-                onClick={handlePlayPause}
-                disabled={isLoading || audioError}
-                className="p-3 bg-white/20 hover:bg-white/30 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isLoading ? (
-                  <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                ) : isPlaying ? (
-                  <Pause className="w-6 h-6" />
+                  {/* 중앙 파형 시각화 - 높이 줄임 */}
+                  <div className="relative h-20 mb-3 overflow-hidden">
+                    {/* 파형 라인들 */}
+                    {Array.from({ length: 7 }, (_, i) => (
+                      <div
+                        key={i}
+                        className={`absolute bg-white/40 rounded-full transition-all duration-300 ${
+                          aiSpeaking ? 'animate-[waveform_1.5s_ease-in-out_infinite]' : ''
+                        }`}
+                        style={{
+                          left: `${15 + i * 12}%`,
+                          top: '50%',
+                          width: '2px',
+                          height: aiSpeaking 
+                            ? `${20 + Math.sin(i * 0.5) * 15}px`
+                            : '6px',
+                          transform: 'translateY(-50%)',
+                          animationDelay: `${i * 0.2}s`
+                        }}
+                      />
+                    ))}
+
+                    {/* 역방향 파형 라인들 */}
+                    {Array.from({ length: 7 }, (_, i) => (
+                      <div
+                        key={`reverse-${i}`}
+                        className={`absolute bg-white/40 rounded-full transition-all duration-300 ${
+                          aiSpeaking ? 'animate-[waveform_1.8s_ease-in-out_infinite]' : ''
+                        }`}
+                        style={{
+                          right: `${15 + i * 12}%`,
+                          top: '50%',
+                          width: '2px',
+                          height: aiSpeaking 
+                            ? `${25 + Math.sin(i * 0.7 + Math.PI) * 20}px`
+                            : '6px',
+                          transform: 'translateY(-50%)',
+                          animationDelay: `${i * 0.15}s`
+                        }}
+                      />
+                    ))}
+
+                    {/* 원형 파동 효과 */}
+                    {aiSpeaking && Array.from({ length: 3 }, (_, i) => (
+                      <div
+                        key={`ripple-${i}`}
+                        className="absolute top-1/2 left-1/2 border border-white/30 rounded-full animate-[ripple_3s_ease-out_infinite]"
+                        style={{
+                          width: '32px',
+                          height: '32px',
+                          marginLeft: '-16px',
+                          marginTop: '-16px',
+                          animationDelay: `${i * 1}s`
+                        }}
+                      />
+                    ))}
+
+                    {/* 주파수 스펙트럼 효과 */}
+                    {aiSpeaking && (
+                      <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center space-x-1 h-6">
+                        {Array.from({ length: 15 }, (_, i) => (
+                          <div
+                            key={`spectrum-${i}`}
+                            className="bg-white/30 rounded-t-sm animate-[spectrum_0.8s_ease-in-out_infinite]"
+                            style={{ 
+                              width: '1px',
+                              height: `${5 + Math.sin(i * 0.8) * 8}px`,
+                              animationDelay: `${i * 0.05}s`
+                            }}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 하단 정보 */}
+                  <div className="text-center">
+                    <h4 className="text-sm font-bold text-white mb-1">{currentLang.aiName}</h4>
+                    <p className="text-white/90 text-xs">
+                      {audioError ? 'Audio System Offline' : 
+                       aiSpeaking ? 'AI Processing...' : 
+                       'TFT Analysis Ready'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 학습 팁 - 간소화 */}
+            <div className="p-2 bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
+              <h4 className="font-semibold text-gray-800 mb-1 text-xs flex items-center">
+                💡 학습 팁
+              </h4>
+              <div className="text-xs text-gray-600 space-y-1">
+                <div className="truncate">• 이어폰 사용 권장</div>
+                <div className="truncate">• 자막과 함께 학습</div>
+                <div className="truncate">• 반복 재생으로 이해도 향상</div>
+              </div>
+            </div>
+          </div>
+
+          {/* 오른쪽 패널: 자막 + 플레이어 */}
+          <div className="flex-1 flex flex-col p-3 min-w-0 overflow-hidden">
+            {/* 자막 표시 영역 - 높이 최적화 */}
+            <div className="bg-gray-900 rounded-xl p-4 flex-1 flex items-center justify-center mb-3 min-h-0 relative">
+              {/* 로딩 오버레이 */}
+              {isLoading && !audioError && (
+                <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-[fadeIn_0.3s_ease-out] transition-all duration-300">
+                  <div className="text-center">
+                    <p className="text-white/90 text-sm mb-2">GitHub에서 콘텐츠를 로딩중...</p>
+                    <div className="flex justify-center space-x-1">
+                      {Array.from({ length: 3 }, (_, i) => (
+                        <div
+                          key={i}
+                          className="w-2 h-2 bg-white/60 rounded-full animate-[loadingDot_1.4s_ease-in-out_infinite]"
+                          style={{ animationDelay: `${i * 0.2}s` }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className={`w-full max-w-3xl h-full flex items-center justify-center transition-all duration-500 ${isLoading ? 'opacity-30 scale-95' : 'opacity-100 scale-100'}`}>
+                {subtitleError ? (
+                  <p className="text-red-400 text-sm text-center animate-[fadeIn_0.5s_ease-out]">{subtitleError}</p>
+                ) : visibleWords.length > 0 ? (
+                  <div className="text-white text-base leading-relaxed text-left w-full animate-[fadeIn_0.5s_ease-out]">
+                    {visibleWords.map((wordObj, index) => (
+                      <span
+                        key={`${currentLanguage}-${currentSubtitleIndex}-${wordObj.index}`}
+                        className="inline-block mb-1 relative opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]"
+                        style={{
+                          marginRight: currentLanguage === 'korean' || currentLanguage === 'english' ? '0.4rem' : '0.1rem',
+                          animationDelay: `${index * 0.05}s`
+                        }}
+                      >
+                        <span className="relative z-10">{wordObj.word}</span>
+                        <div
+                          className="absolute inset-0 bg-blue-500/20 rounded opacity-0 animate-[highlight_0.6s_ease-out_forwards]"
+                          style={{ animationDelay: `${index * 0.05 + 0.2}s` }}
+                        />
+                      </span>
+                    ))}
+                  </div>
                 ) : (
-                  <Play className="w-6 h-6 ml-0.5" />
+                  <div className="text-center animate-[fadeIn_0.5s_ease-out]">
+                    <div className="text-gray-400 text-sm">
+                      {isPlaying ? '자막을 로딩중입니다...' : '재생을 시작하면 자막이 표시됩니다'}
+                    </div>
+                  </div>
                 )}
-              </button>
-
-              <div className="flex items-center space-x-2">
-                <Volume2 className="w-4 h-4" />
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.1"
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  disabled={audioError}
-                  className="w-16 h-1 bg-white/20 rounded-lg appearance-none slider disabled:opacity-50"
-                />
               </div>
             </div>
 
-            {/* 로딩/상태 표시 */}
-            {isLoading && !audioError && (
-              <div className="text-center mt-3">
-                <p className="text-white/80 text-xs">GitHub에서 콘텐츠를 로딩중...</p>
+            {/* 오디오 에러 표시 */}
+            {audioError && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
+                <div className="flex items-center">
+                  <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
+                  <div className="flex-1">
+                    <p className="text-sm text-red-800">{audioError}</p>
+                  </div>
+                  <button
+                    onClick={handleRetry}
+                    className="ml-2 px-2 py-1 bg-red-100 hover:bg-red-200 text-red-800 text-xs rounded transition-colors"
+                  >
+                    재시도
+                  </button>
+                </div>
               </div>
             )}
-          </div>
 
-          {/* 학습 팁 */}
-          <div className="p-3 bg-gray-50 rounded-lg">
-            <h4 className="font-semibold text-gray-800 mb-2 text-sm">💡 학습 팁</h4>
-            <ul className="text-xs text-gray-600 space-y-1">
-              <li>• 이어폰이나 헤드폰 사용을 권장합니다</li>
-              <li>• 자막과 함께 들으면 이해도가 높아집니다</li>
-              <li>• 중요한 부분은 여러 번 반복해서 들어보세요</li>
-              <li>• 처음 로딩 시 시간이 조금 걸릴 수 있습니다</li>
-              <li>• 4개 언어로 다양한 학습 경험을 즐겨보세요</li>
-            </ul>
-          </div>
+            {/* 오디오 플레이어 - 높이 줄임 */}
+            <div className={`bg-gradient-to-r ${currentLang.color} rounded-xl p-3 text-white shadow-lg transition-all duration-500 ease-in-out ${audioError ? 'opacity-50' : ''} flex-shrink-0`}>
+              <audio
+                ref={audioRef}
+                src={currentLang.audioPath}
+                preload="metadata"
+                crossOrigin="anonymous"
+              />
+              
+              {/* 진행 바 */}
+              <div className="mb-3">
+                <div
+                  className={`w-full h-2 bg-white/20 rounded-full overflow-hidden relative ${audioError ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                  onClick={handleSeek}
+                >
+                  <div
+                    className="h-full bg-white rounded-full relative transition-all duration-100"
+                    style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
+                  >
+                    {isPlaying && (
+                      <div className="absolute right-0 top-0 h-full w-4 bg-white/50 rounded-full blur-sm"></div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between text-xs mt-1 text-white/80 min-w-0">
+                  <span className="flex-shrink-0">{formatTime(currentTime)}</span>
+                  <span className="flex-shrink-0">{formatTime(duration)}</span>
+                </div>
+              </div>
 
-          {/* GitHub 정보 */}
-          <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-xs text-blue-700">
-              <span className="font-semibold">🔗 소스:</span> GitHub Repository에서 오디오와 자막을 실시간 로드합니다
-            </p>
-            <p className="text-xs text-blue-600 mt-1">
-              현재 언어: {currentLang.name} ({currentLang.flag}) | 자막: {subtitles.length > 0 ? `${subtitles.length}개 로드됨` : '로딩중...'}
-            </p>
+              {/* 컨트롤 버튼 */}
+              <div className="flex items-center justify-center space-x-3">
+                <button
+                  onClick={handleRestart}
+                  disabled={audioError}
+                  className="p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm"
+                  title="처음부터"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={handlePlayPause}
+                  disabled={isLoading || audioError}
+                  className="p-3 bg-white/20 hover:bg-white/30 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed backdrop-blur-sm relative overflow-hidden"
+                >
+                  {isLoading ? (
+                    <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  ) : isPlaying ? (
+                    <Pause className="w-6 h-6" />
+                  ) : (
+                    <Play className="w-6 h-6 ml-0.5" />
+                  )}
+                </button>
+
+                <div className="flex items-center space-x-2">
+                  <Volume2 className="w-4 h-4" />
+                  <div className="relative">
+                    <input
+                      type="range"
+                      min="0"
+                      max="1"
+                      step="0.1"
+                      value={volume}
+                      onChange={(e) => setVolume(parseFloat(e.target.value))}
+                      disabled={audioError}
+                      className="w-16 h-1 bg-white/20 rounded-lg appearance-none slider disabled:opacity-50"
+                    />
+                    <div 
+                      className="absolute top-0 left-0 h-1 bg-white rounded-lg pointer-events-none"
+                      style={{ width: `${volume * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* 로딩/상태 표시 - 제거됨 (자막창 오버레이로 이동) */}
+            </div>
+
+            {/* GitHub 정보 - 간소화 */}
+            <div className="p-2 bg-blue-50 rounded-lg border border-blue-200 mt-3 flex-shrink-0 min-h-[3rem]">
+              <div className="flex items-center justify-between h-full">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-blue-700 flex items-center">
+                    <span className="font-semibold flex-shrink-0">🔗 소스:</span> 
+                    <span className="ml-1 truncate">GitHub Repository</span>
+                  </p>
+                  <p className="text-xs text-blue-600 truncate">
+                    <span className="flex-shrink-0">{currentLang.name} ({currentLang.flag}) |</span>
+                    <span className="ml-1">자막: {subtitles.length > 0 ? `${subtitles.length}개` : '로딩중...'}</span>
+                  </p>
+                </div>
+                <div className="text-blue-500 animate-spin flex-shrink-0 ml-2" style={{ animationDuration: '20s' }}>
+                  ⚙️
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       <style jsx>{`
         .slider::-webkit-slider-thumb {
@@ -703,6 +780,78 @@ const TFTEducationPodcast = ({ onClose }) => {
         .slider:disabled::-moz-range-thumb {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        @keyframes highlight {
+          from {
+            opacity: 0;
+            transform: scaleX(0);
+          }
+          to {
+            opacity: 1;
+            transform: scaleX(1);
+          }
+        }
+        
+        @keyframes loadingDot {
+          0%, 80%, 100% {
+            transform: scale(0.8);
+            opacity: 0.5;
+          }
+          40% {
+            transform: scale(1.2);
+            opacity: 1;
+          }
+        }
+        
+        @keyframes waveform {
+          0%, 100% {
+            height: 6px;
+          }
+          25% {
+            height: 25px;
+          }
+          50% {
+            height: 15px;
+          }
+          75% {
+            height: 30px;
+          }
+        }
+        
+        @keyframes ripple {
+          0% {
+            transform: translate(-50%, -50%) scale(0.5);
+            opacity: 0.8;
+          }
+          50% {
+            transform: translate(-50%, -50%) scale(2);
+            opacity: 0.4;
+          }
+          100% {
+            transform: translate(-50%, -50%) scale(3);
+            opacity: 0;
+          }
+        }
+        
+        @keyframes spectrum {
+          0%, 100% {
+            height: 3px;
+          }
+          50% {
+            height: 15px;
+          }
         }
       `}</style>
     </div>
