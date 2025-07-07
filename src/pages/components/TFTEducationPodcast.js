@@ -710,22 +710,17 @@ const TFTEducationPodcast = ({ onClose }) => {
 
                 <div className="flex items-center space-x-2">
                   <Volume2 className="w-4 h-4" />
-                  <div className="relative">
-                    <input
-                      type="range"
-                      min="0"
-                      max="1"
-                      step="0.1"
-                      value={volume}
-                      onChange={(e) => setVolume(parseFloat(e.target.value))}
-                      disabled={audioError}
-                      className="w-16 h-1 bg-white/20 rounded-lg appearance-none slider disabled:opacity-50"
-                    />
-                    <div 
-                      className="absolute top-0 left-0 h-1 bg-white rounded-lg pointer-events-none"
-                      style={{ width: `${volume * 100}%` }}
-                    />
-                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    disabled={audioError}
+                    className="w-16 h-1 bg-white/20 rounded-lg appearance-none slider disabled:opacity-50"
+                    style={{ '--volume-percent': `${volume * 100}%` }}
+                  />
                 </div>
               </div>
 
@@ -755,6 +750,12 @@ const TFTEducationPodcast = ({ onClose }) => {
       </div>
 
       <style jsx>{`
+        .slider {
+          position: relative;
+          background: rgba(255, 255, 255, 0.2);
+          outline: none;
+        }
+        
         .slider::-webkit-slider-thumb {
           appearance: none;
           width: 12px;
@@ -763,7 +764,10 @@ const TFTEducationPodcast = ({ onClose }) => {
           background: white;
           cursor: pointer;
           box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          position: relative;
+          z-index: 2;
         }
+        
         .slider::-moz-range-thumb {
           width: 12px;
           height: 12px;
@@ -772,14 +776,46 @@ const TFTEducationPodcast = ({ onClose }) => {
           cursor: pointer;
           border: none;
           box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+          position: relative;
+          z-index: 2;
         }
+        
         .slider:disabled::-webkit-slider-thumb {
           opacity: 0.5;
           cursor: not-allowed;
         }
+        
         .slider:disabled::-moz-range-thumb {
           opacity: 0.5;
           cursor: not-allowed;
+        }
+        
+        .slider::-webkit-slider-track {
+          height: 4px;
+          border-radius: 2px;
+          background: transparent;
+        }
+        
+        .slider::-moz-range-track {
+          height: 4px;
+          border-radius: 2px;
+          background: transparent;
+          border: none;
+        }
+        
+        /* 진행 바를 위한 가상 요소 */
+        .slider::before {
+          content: '';
+          position: absolute;
+          top: 50%;
+          left: 0;
+          height: 4px;
+          border-radius: 2px;
+          background: white;
+          transform: translateY(-50%);
+          width: var(--volume-percent, 80%);
+          z-index: 1;
+          pointer-events: none;
         }
         
         @keyframes fadeIn {
