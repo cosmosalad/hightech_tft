@@ -2,7 +2,7 @@
 00:00:00,000 --> 00:00:09,832
 Welcome to the deep dive.
 Today we're digging into your sources on thin film transistors, TFTS.
-They're kind of the unsung heroes behind almost every screen you
+They're kind of the unsung heroes behind almost every screen you at
 
 2
 00:00:09,832 --> 00:00:12,310
@@ -10,11 +10,11 @@ absolutely hidden in plain sight really.
 
 3
 00:00:12,310 --> 00:00:28,180
-So our mission today is well to peel back the layers on how these things evolved and where else they pop up beyond just the displays we all know okay let's get started for anyone maybe not familiar, what exactly is a thin film transistor like at its core
+So our mission today is well to peel back the layers on how these things evolved and where else they pop up beyond just the displays we all know okay let's get started. For anyone maybe not familiar, what exactly is a thin film transistor like at its core, right?
 
 4
 00:00:28,180 --> 00:00:46,439
-right? So a TFT is basically a microscopic on off switch.
+So a TFT is basically a microscopic on off switch.
 Think of it controlling a single pixel on your screen.
 Technically it's a type of field effect transistor, an FET but the key part is that all its active bits, the semiconductor, the insulator, the electrodes they're all deposited as really thin film
 
@@ -48,7 +48,7 @@ okay so stepping back a bit, how are these TFTS fundamentally different from say
 11
 00:01:48,338 --> 00:02:02,360
 Well, the big difference is the structure in a traditional MOSFET the silicon chip is the semiconductor substrate.
-Everything's built into with TFTS you start with an inert base so that glass or plastic and you build the semiconductor on top of it as a thin layer.
+Everything's built into it. With TFTs, you start with an inert base so that glass or plastic and you build the semiconductor on top of it as a thin layer.
 
 12
 00:02:02,360 --> 00:02:04,587
@@ -60,7 +60,7 @@ exactly. And that thin film approach isn't just about making things small it's w
 
 14
 00:02:11,312 --> 00:02:13,553
-for us the users What is that on?
+For us the users What is that on?
 
 15
 00:02:13,553 --> 00:02:21,399
@@ -73,7 +73,7 @@ the foldable phones we're seeing now
 17
 00:02:23,080 --> 00:02:29,804
 precisely and even transparent electronics things you couldn't dream of doing with traditional silicon chips.
-It really is a paradigm.
+It really is a paradigm shift.
 
 18
 00:02:29,804 --> 00:02:42,693
@@ -92,9 +92,9 @@ Okay break that down for us let's start with aSi amorphous silicon
 
 21
 00:02:54,460 --> 00:03:17,440
-right? Asigh That's your workhorse.
+right? a-Si That's your workhorse.
 It's cheap it's relatively easy to make and huge sheets screens think affordable TVS, monitors.
-The catch is performance it's electron mobility basically how fast electrons move through it is pretty low maybe one centimeter serves.
+The catch is performance it's electron mobility basically how fast electrons move through it is pretty low maybe one cm²/Vs.
 So it limits things like resolution and refresh rate.
 Not great for high end gaming displays or super sharp phone screens.
 
@@ -104,13 +104,13 @@ Okay then there's LTPS,
 
 23
 00:03:19,677 --> 00:03:37,420
-LTPS low temperature polycrystalline silicon much faster mobility around 100 centimeter survey is so way higher.
+LTPS low temperature polycrystalline silicon much faster mobility around 100 cm²/Vs is so way higher.
 That's why you find it in premium stuff flagship smartphones, Highres VR headsets.
 It allows for those really crisp, smooth, power efficient displays
 
 24
 00:03:37,420 --> 00:03:39,100
-must be more expensive or harder.
+It must be more expensive or harder to make.
 
 25
 00:03:39,100 --> 00:03:47,500
@@ -125,10 +125,10 @@ Brings us to the oxide ones like Igzo,
 00:03:49,740 --> 00:04:17,869
 IGZO indium gallium zinc oxide is the common one.
 These kind of hit a sweet spot.
-Their mobility is better than a side maybe over 10 centimeters RVS so good enough for high resolutions like a 4k, 8k.
+Their mobility is better than a-Si, typically over 10 cm²/Vs so good enough for high resolutions like a 4k, 8k.
 But the really clever bit is their off current it's incredibly low meaning when a pixel is supposed to be off or just holding an image, it leaks very little electricity.
 This saves a ton of power especially for still images.
-And let's displays use lower refresh rates without flickering
+And it lets displays use lower refresh rates without flickering
 
 28
 00:04:17,869 --> 00:04:26,109
@@ -174,8 +174,7 @@ like on some high end phone screens that can vary their refresh rate
 
 36
 00:05:45,799 --> 00:05:56,412
-exactly that it gives you that smooth motion when you need it but SIPS power when you don't.
-It's all about expanding what they can do, making them more efficient, integrating more functions directly onto the display panel.
+Exactly. It gives you that smooth motion when you need it but sips power when you don't. It's all about expanding what they can do, making them more efficient, integrating more functions directly onto the display panel.
 
 37
 00:05:56,412 --> 00:06:07,275
@@ -183,7 +182,7 @@ Wrapping this up from that first patent in 57 to these sophisticated hybrid disp
 
 38
 00:06:07,275 --> 00:06:14,008
-soolutely pivotal? They're these incredibly versatile little switches that just keep getting better, enabling all the visual and interactive Tech we rely on.
+Absolutely pivotal. They're these incredibly versatile little switches that just keep getting better, enabling all the visual and interactive Tech we rely on.
 
 39
 00:06:14,008 --> 00:06:33,649
