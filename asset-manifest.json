@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/hightech_tft/static/css/main.65a4c9a2.css",
-    "main.js": "/hightech_tft/static/js/main.c25bf8b6.js",
+    "main.js": "/hightech_tft/static/js/main.01d051ad.js",
     "static/js/453.1f1762c5.chunk.js": "/hightech_tft/static/js/453.1f1762c5.chunk.js",
     "index.html": "/hightech_tft/index.html",
     "main.65a4c9a2.css.map": "/hightech_tft/static/css/main.65a4c9a2.css.map",
-    "main.c25bf8b6.js.map": "/hightech_tft/static/js/main.c25bf8b6.js.map",
+    "main.01d051ad.js.map": "/hightech_tft/static/js/main.01d051ad.js.map",
     "453.1f1762c5.chunk.js.map": "/hightech_tft/static/js/453.1f1762c5.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.65a4c9a2.css",
-    "static/js/main.c25bf8b6.js"
+    "static/js/main.01d051ad.js"
   ]
 }
