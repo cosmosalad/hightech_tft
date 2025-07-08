@@ -10,11 +10,11 @@ absolutely hidden in plain sight really.
 
 3
 00:00:12,310 --> 00:00:28,180
-So our mission today is well to peel back the layers on how these things evolved and where else they pop up beyond just the displays we all know okay let's get started. For anyone maybe not familiar, what exactly is a thin film transistor like at its core, right?
+So our mission today is well to peel back the layers on how these things evolved and where else they pop up beyond just the displays we all know okay let's get started. For anyone maybe not familiar, what exactly is a thin film transistor like at its core.
 
 4
 00:00:28,180 --> 00:00:46,439
-So a TFT is basically a microscopic on off switch.
+right So a TFT is basically a microscopic on off switch.
 Think of it controlling a single pixel on your screen.
 Technically it's a type of field effect transistor, an FET but the key part is that all its active bits, the semiconductor, the insulator, the electrodes they're all deposited as really thin film
 
