@@ -509,6 +509,33 @@
               "IDVG_Lin_6_010_3.xls",
               "IDVG_Lin_6_010_4.xls"
             ]
+          },
+          "IDVG_Lin_7_000": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_7_000_1d.xls",
+              "IDVG_Lin_7_000_2d.xls",
+              "IDVG_Lin_7_000_3d.xls",
+              "IDVG_Lin_7_000_4d.xls"
+            ]
+          },
+          "IDVG_Lin_8_005": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_8_005_1d.xls",
+              "IDVG_Lin_8_005_2d.xls",
+              "IDVG_Lin_8_005_3d.xls",
+              "IDVG_Lin_8_005_4d.xls"
+            ]
+          },
+          "IDVG_Lin_9_010": {
+            "type": "folder",
+            "files": [
+              "IDVG_Lin_9_010_1d.xls",
+              "IDVG_Lin_9_010_2d.xls",
+              "IDVG_Lin_9_010_3d.xls",
+              "IDVG_Lin_9_010_4d.xls"
+            ]
           }
         }
       }
