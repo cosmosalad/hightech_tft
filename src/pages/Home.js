@@ -1,10 +1,11 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye, Headphones } from 'lucide-react';
+import { ArrowRight, Star, BarChart3, Zap, Settings, Users, Calculator, Search, X, ExternalLink, Eye, Headphones, Wrench } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import FormulaCodeInspector from './components/FormulaCodeInspector';
 import MaskPictureViewer from './components/MaskPictureViewer';
 import TLMAnalyzer from './components/TLMAnalyzer';
 import TFTEducationPodcast from './components/TFTEducationPodcast';
+import TFTUtilities from './TFTUtilities'; // 새로 추가
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
@@ -12,6 +13,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showMaskViewer, setShowMaskViewer] = useState(false);
   const [showTLMAnalyzer, setShowTLMAnalyzer] = useState(false);
   const [showTFTPodcast, setShowTFTPodcast] = useState(false);
+  const [showUtilities, setShowUtilities] = useState(false); // 새로 추가
 
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
@@ -52,11 +54,11 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 relative overflow-hidden">
       {/* 배경 장식 */}
       <div className="absolute inset-0 overflow-hidden">
-        <div 
+        <div
           className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
           style={{ transform: 'translate3d(0,0,0)' }}
         ></div>
-        <div 
+        <div
           className="absolute -bottom-40 -left-40 w-80 h-80 bg-blue-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
           style={{ transform: 'translate3d(0,0,0)' }}
         ></div>
@@ -79,6 +81,23 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </p>
 
           <div className="flex flex-wrap justify-center items-center gap-2 mb-8">
+           {/* 🔧 유틸리티 종합 버튼 - 정사각형 */}
+            <button  
+              onClick={() => setShowUtilities(true)}  
+              className="group relative overflow-hidden bg-gradient-to-br from-slate-500 to-gray-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+            >
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-12 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                <div className="relative z-10 flex items-center">
+                    <div className="flex items-center justify-center w-10 h-10 bg-white/20 rounded-lg mr-2 group-hover:bg-white/30 transition-colors">
+                        <Wrench className="w-5 h-5" />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="text-base font-bold mb-1">유틸리티</h3>
+                        <p className="text-slate-100 text-xs">종합 도구</p>
+                    </div>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                </div>
+            </button>
            {/* 🎧 TFT 팟캐스트 버튼 */}
            <button
              onClick={() => setShowTFTPodcast(true)}
@@ -108,7 +127,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                </div>
                <div className="text-left">
                  <h3 className="text-base font-bold mb-1">공정 시뮬레이터</h3>
-                 <p className="text-purple-100 text-xs">TFT 제조 공정을 시각화로 학습</p>
+                 <p className="text-purple-100 text-xs">TFT 제조 공정을 학습</p>
                </div>
                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
              </div>
@@ -124,8 +143,8 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                  <Eye className="w-5 h-5" />
                </div>
                <div className="text-left">
-                 <h3 className="text-base font-bold mb-1">Mask/Image Viewer</h3>
-                 <p className="text-cyan-100 text-xs">마스크 및 이미지 뷰어</p>
+                 <h3 className="text-base font-bold mb-1">Viewer</h3>
+                 <p className="text-cyan-100 text-xs">마스크 뷰어</p>
                </div>
                <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
              </div>
@@ -520,6 +539,14 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
       {/* TFT 팟캐스트 모달 */}
       {showTFTPodcast && (
         <TFTEducationPodcast onClose={() => setShowTFTPodcast(false)} />
+      )}
+
+      {/* 유틸리티 모달 */}
+      {showUtilities && (
+        <TFTUtilities
+          isOpen={showUtilities}
+          onClose={() => setShowUtilities(false)}
+        />
       )}
     </div>
   );
