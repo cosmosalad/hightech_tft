@@ -1,7 +1,7 @@
 // src/pages/components/TFTUsageGuide.js
 
 import React, { useState } from 'react';
-import { Info, X, CheckCircle, AlertTriangle, FileText, Zap, BarChart3, Activity, TrendingUp, RotateCcw } from 'lucide-react';
+import { Info, X, CheckCircle, AlertTriangle, FileText, Zap, BarChart3, Activity, TrendingUp, RotateCcw, FileUp, FileDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
@@ -29,24 +29,24 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
 
   // 측정 타입별 설명 컴포넌트
   const MeasurementTypeCard = ({ icon, title, bgColor, textColor, description, voltageRange, purpose }) => (
-    <div className={`${bgColor} p-4 rounded-xl border-2 border-opacity-30`} 
+    <div className={`${bgColor} p-4 rounded-xl border-2 border-opacity-30`}
          style={{ borderColor: textColor.replace('text-', '').replace('-800', '') }}>
       <div className="flex items-center mb-3">
         {icon}
         <h4 className={`font-bold ${textColor} text-lg ml-2`}>{title}</h4>
       </div>
-      
+
       <div className="space-y-3">
         <div>
           <p className={`text-sm ${textColor.replace('800', '700')} mb-2`}><strong>측정 목적:</strong></p>
           <p className="text-sm text-gray-700">{purpose}</p>
         </div>
-        
+
         <div>
           <p className={`text-sm ${textColor.replace('800', '700')} mb-2`}><strong>전압 범위(예):</strong></p>
           <p className="text-sm text-gray-700">{voltageRange}</p>
         </div>
-        
+
 
       </div>
     </div>
@@ -67,7 +67,8 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           { id: 'filenames', label: '📁 파일명 규칙', icon: <FileText className="w-4 h-4" /> },
           { id: 'measurements', label: '⚡ 측정 방식', icon: <Zap className="w-4 h-4" /> },
           { id: 'dataformat', label: '📊 데이터 형식', icon: <BarChart3 className="w-4 h-4" /> },
-          { id: 'workflow', label: '🔄 분석 흐름', icon: <Activity className="w-4 h-4" /> }
+          { id: 'workflow', label: '🔄 분석 흐름', icon: <Activity className="w-4 h-4" /> },
+          { id: 'saveload', label: '💾 전체 저장/불러오기', icon: <RotateCcw className="w-4 h-4" /> }
         ].map((tab) => (
           <button
             key={tab.id}
@@ -95,10 +96,10 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl">
             <h3 className="text-2xl font-bold mb-4">🎯 TFT 통합 분석 시스템</h3>
             <p className="text-lg mb-4">
-              Probe Station에서 측정한 TFT 전기적 특성 데이터를 자동으로 분석하여 
+              Probe Station에서 측정한 TFT 전기적 특성 데이터를 자동으로 분석하여
               핵심 파라미터를 추출하는 시스템입니다.
             </p>
-            
+
             <div className="grid md:grid-cols-2 gap-4 mt-6">
               <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
                 <h4 className="font-bold mb-2 flex items-center">
@@ -112,7 +113,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   <li>• 데이터 품질 평가 및 신뢰도 분석</li>
                 </ul>
               </div>
-              
+
               <div className="bg-white/10 backdrop-blur-sm p-4 rounded-lg">
                 <h4 className="font-bold mb-2 flex items-center">
                   <RotateCcw className="w-5 h-5 mr-2" />
@@ -143,7 +144,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <FileText className="w-6 h-6 mr-3" />
               파일명 자동 인식 규칙
             </h3>
-            
+
             {/* 측정 타입별 파일명 예시 */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {[
@@ -178,7 +179,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               ].map((typeInfo, index) => (
                 <div key={index} className={`${typeInfo.bgColor} p-4 rounded-lg border-2 border-opacity-30`}>
                   <h4 className={`font-bold ${typeInfo.textColor} mb-3 text-lg`}>{typeInfo.type}</h4>
-                  
+
                   <div className="mb-3">
                     <p className="text-sm font-semibold text-gray-700 mb-2">필수 키워드:</p>
                     <div className="flex flex-wrap gap-1">
@@ -189,7 +190,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div>
                     <p className="text-sm font-semibold text-gray-700 mb-2">파일명 예시:</p>
                     <div className="space-y-2">
@@ -213,14 +214,14 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <p className="text-sm text-amber-700 mb-4">
                 파일명에서 숫자와 측정 타입을 제거하여 샘플명을 자동 추출하고, 같은 샘플명끼리 그룹화합니다.
               </p>
-              
+
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                   <div className="flex items-center space-x-3">
-                    <ExcelFileIcon 
-                      filename="DK_TFT_IDVD.xls" 
-                      bgColor="bg-purple-50" 
-                      textColor="text-purple-700" 
+                    <ExcelFileIcon
+                      filename="DK_TFT_IDVD.xls"
+                      bgColor="bg-purple-50"
+                      textColor="text-purple-700"
                     />
                     <span className="text-gray-500">→</span>
                     <div className="bg-blue-100 px-3 py-2 rounded-lg">
@@ -228,13 +229,13 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center justify-between p-3 bg-white rounded-lg border">
                   <div className="flex items-center space-x-3">
-                    <ExcelFileIcon 
-                      filename="DK_TFT_IDVG_Linear.xls" 
-                      bgColor="bg-blue-50" 
-                      textColor="text-blue-700" 
+                    <ExcelFileIcon
+                      filename="DK_TFT_IDVG_Linear.xls"
+                      bgColor="bg-blue-50"
+                      textColor="text-blue-700"
                     />
                     <span className="text-gray-500">→</span>
                     <div className="bg-blue-100 px-3 py-2 rounded-lg">
@@ -242,7 +243,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-blue-600 text-white p-3 rounded-lg text-center">
                   <p className="font-bold">💡 같은 샘플명(DKTFT)으로 그룹화되어 통합 분석됩니다!</p>
                 </div>
@@ -265,7 +266,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <Zap className="w-6 h-6 mr-3" />
               TFT 4가지 핵심 측정 방식
             </h3>
-            
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <MeasurementTypeCard
                 icon={<BarChart3 className="w-6 h-6 text-blue-800" />}
@@ -275,7 +276,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 purpose="선형영역에서 전계효과 이동도, 문턱전압, Ion/Ioff 비율 측정"
                 voltageRange="VG: -10V → +20V (0.1V step), VD: 0.1V (일정)"
               />
-              
+
               <MeasurementTypeCard
                 icon={<TrendingUp className="w-6 h-6 text-green-800" />}
                 title="IDVG-Saturation"
@@ -284,7 +285,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 purpose="포화영역에서 문턱전압과 포화전류 특성 분석"
                 voltageRange="VG: -10V → +20V (0.1V step), VD: 20V (일정)"
               />
-              
+
               <MeasurementTypeCard
                 icon={<Activity className="w-6 h-6 text-purple-800" />}
                 title="IDVD"
@@ -293,7 +294,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 purpose="온저항(Ron) 측정"
                 voltageRange="VD: 0V → +30V (1V step), VG: -10V → +20V (2V step)"
               />
-              
+
               <MeasurementTypeCard
                 icon={<RotateCcw className="w-6 h-6 text-orange-800" />}
                 title="IDVG-Hysteresis"
@@ -343,7 +344,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <BarChart3 className="w-6 h-6 mr-3" />
               Excel 데이터 형식 요구사항
             </h3>
-            
+
             {/* 필수 컬럼 */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200 mb-6">
               <h4 className="font-bold text-blue-800 mb-3">📊 필수 데이터 컬럼</h4>
@@ -381,7 +382,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div>
                       <p className="text-sm font-medium text-purple-700 mb-2">IDVD 측정 파일:</p>
                       <div className="space-y-1">
@@ -412,7 +413,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="bg-amber-50 p-2 rounded border border-amber-200">
                       <p className="text-xs text-amber-700">
                         💡 <strong>참고:</strong> IDVD 파일은 여러 게이트 전압에서 측정하므로 컬럼명에 (1), (2), (3) 등의 번호가 붙습니다.
@@ -420,7 +421,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="bg-white p-3 rounded-lg border">
                   <h5 className="font-semibold text-red-700 mb-2">❌ 주의사항</h5>
                   <div className="space-y-2 text-sm text-gray-700">
@@ -520,7 +521,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   </table>
                 </div>
               </div>
-              
+
             <div className="mt-3 text-xs text-gray-600">
               <p>💡 <strong>팁:</strong> 실제 분석에는 DrainV, DrainI 컬럼이 주로 사용되며, 다른 컬럼들은 참고용입니다.</p>
             </div>
@@ -565,7 +566,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <Activity className="w-6 h-6 mr-3" />
               TFT 통합 분석 워크플로우
             </h3>
-            
+
             {/* 단계별 분석 흐름 */}
             <div className="space-y-4">
               {[
@@ -593,7 +594,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                     "측정 범위별 데이터 분할"
                   ],
                   bgColor: "bg-purple-50",
-                  borderColor: "border-purple-200", 
+                  borderColor: "border-purple-200",
                   textColor: "text-purple-800",
                   icon: <BarChart3 className="w-6 h-6 text-purple-600" />
                 },
@@ -609,7 +610,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   ],
                   bgColor: "bg-green-50",
                   borderColor: "border-green-200",
-                  textColor: "text-green-800", 
+                  textColor: "text-green-800",
                   icon: <Zap className="w-6 h-6 text-green-600" />
                 },
                 {
@@ -635,7 +636,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                         {workflow.icon}
                       </div>
                     </div>
-                    
+
                     <div className="flex-1">
                       <div className="flex items-center mb-2">
                         <span className={`inline-block w-6 h-6 rounded-full ${workflow.textColor.replace('text-', 'bg-').replace('800', '600')} text-white text-sm font-bold flex items-center justify-center mr-3`}>
@@ -645,11 +646,11 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                           {workflow.title}
                         </h4>
                       </div>
-                      
+
                       <p className={`${workflow.textColor.replace('800', '700')} mb-3`}>
                         {workflow.description}
                       </p>
-                      
+
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                         {workflow.details.map((detail, i) => (
                           <div key={i} className="flex items-center">
@@ -660,7 +661,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                       </div>
                     </div>
                   </div>
-                  
+
                   {index < 3 && (
                     <div className="flex justify-center mt-4">
                       <div className="w-0.5 h-8 bg-gradient-to-b from-gray-300 to-transparent"></div>
@@ -676,7 +677,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 <Info className="w-5 h-5 mr-2" />
                 분석 결과 해석 가이드
               </h4>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h5 className="font-semibold text-indigo-700 mb-3">핵심 성능 지표</h5>
@@ -699,7 +700,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div>
                   <h5 className="font-semibold text-indigo-700 mb-3">데이터 품질 지표</h5>
                   <div className="space-y-2 text-sm">
@@ -730,23 +731,23 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 <AlertTriangle className="w-5 h-5 mr-2" />
                 자주 발생하는 문제 및 해결책
               </h4>
-              
+
               <div className="space-y-3 text-sm">
                 <div className="bg-white p-3 rounded border">
                   <p className="font-semibold text-red-700 mb-1">❌ "파일 타입을 인식할 수 없습니다"</p>
                   <p className="text-gray-700">→ 파일명에 IDVD, IDVG, Linear, Saturation, Hysteresis 키워드 포함 확인</p>
                 </div>
-                
+
                 <div className="bg-white p-3 rounded border">
                   <p className="font-semibold text-red-700 mb-1">❌ "AV 또는 AI 컬럼을 찾을 수 없습니다"</p>
                   <p className="text-gray-700">→ Excel 첫 번째 행에 AV, AI (또는 Voltage, Current) 헤더 확인</p>
                 </div>
-                
+
                 <div className="bg-white p-3 rounded border">
                   <p className="font-semibold text-red-700 mb-1">❌ "분석 결과가 이상합니다"</p>
                   <p className="text-gray-700">→ 데이터 범위, 측정 조건, 노이즈 수준 점검. 디바이스 파라미터 재확인</p>
                 </div>
-                
+
                 <div className="bg-white p-3 rounded border">
                   <p className="font-semibold text-red-700 mb-1">❌ "파라미터가 N/A로 표시됩니다"</p>
                   <p className="text-gray-700">→ 해당 측정 타입의 파일이 누락되었거나 데이터 품질이 불충분함</p>
@@ -757,15 +758,324 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
         </motion.div>
       )}
 
+      {/* 저장/불러오기 섹션 */}
+      {activeSection === 'saveload' && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+          className="space-y-6"
+        >
+          <div className="bg-white p-6 rounded-xl border-2 border-indigo-200">
+            <h3 className="text-xl font-bold text-indigo-800 mb-6 flex items-center">
+              <RotateCcw className="w-6 h-6 mr-3" />
+              분석 데이터 저장 및 불러오기
+            </h3>
+            {/* 기능 개요 */}
+            <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 mb-6">
+              <h4 className="font-bold text-indigo-800 mb-3">🎯 핵심 기능</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-white p-3 rounded-lg border">
+                  <h5 className="font-semibold text-purple-700 mb-2 flex items-center">
+                    <FileDown className="w-4 h-4 mr-2" />
+                    전체 세션 내보내기
+                  </h5>
+                  <p className="text-sm text-gray-700">모든 분석 세션을 JSON 파일로 저장하여 백업이나 공유에 활용</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border">
+                  <h5 className="font-semibold text-blue-700 mb-2 flex items-center">
+                    <FileUp className="w-4 h-4 mr-2" />
+                    분석기록 불러오기
+                  </h5>
+                  <p className="text-sm text-gray-700">저장된 JSON 파일에서 분석 세션을 복원하여 이전 작업 이어가기</p>
+                </div>
+              </div>
+            </div>
+            {/* 전체 세션 내보내기 가이드 */}
+            <div className="space-y-6">
+              <div className="bg-purple-50 p-5 rounded-lg border-2 border-purple-200">
+                <h4 className="font-bold text-purple-800 mb-4 text-lg flex items-center">
+                  <FileDown className="w-6 h-6 mr-3" />
+                  전체 세션 내보내기 사용법
+                </h4>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-purple-700 mb-3">📍 내보내기 버튼 위치</h5>
+                    <div className="space-y-3">
+                      <div className="flex items-center p-3 bg-purple-100 rounded-lg">
+                        <span className="bg-purple-600 text-white px-3 py-1 rounded text-sm font-bold mr-3">위치</span>
+                        <span className="text-purple-800 font-medium">세션 관리 탭 하단</span>
+                      </div>
+                      <div className="bg-amber-50 p-3 rounded border border-amber-200">
+                        <p className="text-amber-700 text-sm">
+                          💡 <strong>팁:</strong> 보라색 "전체 세션 내보내기" 버튼을 찾아보세요. Download 아이콘이 표시됩니다.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-purple-700 mb-3">🔄 사용 단계</h5>
+                    <div className="space-y-3">
+                      {[
+                        { step: 1, action: "전체 세션 내보내기 버튼 클릭", desc: "보라색 버튼을 클릭하면 자동으로 파일 다운로드가 시작됩니다" },
+                        { step: 2, action: "파일 자동 다운로드", desc: "브라우저 다운로드 폴더에 JSON 파일이 저장됩니다" },
+                        { step: 3, action: "파일명 확인", desc: "TFT_Analysis_전체세션_X개_날짜.json 형식으로 저장됩니다" }
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-start space-x-3">
+                          <div className="w-6 h-6 bg-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                            {item.step}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-purple-800">{item.action}</p>
+                            <p className="text-sm text-gray-600">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-purple-700 mb-3">📁 저장되는 데이터</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">모든 분석 세션 정보</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">디바이스 파라미터 설정</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">분석 결과 (모든 파라미터)</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">업로드 파일 정보</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">세션 생성 날짜/시간</span>
+                        </div>
+                        <div className="flex items-center">
+                          <X className="w-4 h-4 text-red-500 mr-2" />
+                          <span className="text-sm text-gray-500">원본 Excel 데이터 (용량 절약)</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* 분석기록 불러오기 가이드 */}
+              <div className="bg-blue-50 p-5 rounded-lg border-2 border-blue-200">
+                <h4 className="font-bold text-blue-800 mb-4 text-lg flex items-center">
+                  <FileUp className="w-6 h-6 mr-3" />
+                  분석기록 불러오기 사용법
+                </h4>
+                <div className="space-y-4">
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-blue-700 mb-3">📍 불러오기 버튼 위치</h5>
+                    <div className="space-y-3">
+                      <div className="flex items-center p-3 bg-blue-100 rounded-lg">
+                        <span className="bg-blue-600 text-white px-3 py-1 rounded text-sm font-bold mr-3">홈 화면</span>
+                        <span className="text-blue-800 font-medium">"분석기록 불러오기" 카드 섹션</span>
+                      </div>
+                      <div className="bg-amber-50 p-3 rounded border border-amber-200">
+                        <p className="text-amber-700 text-sm">
+                          💡 <strong>참고:</strong> 홈 화면에서 "분석기록 불러오기" 제목 아래 보라색 "분석기록 파일 선택" 버튼을 찾으세요.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-blue-700 mb-3">🔄 사용 단계</h5>
+                    <div className="space-y-3">
+                      {[
+                        { step: 1, action: "분석기록 파일 선택 버튼 클릭", desc: "홈 화면의 보라색 버튼을 클릭합니다" },
+                        { step: 2, action: "JSON 파일 선택", desc: "이전에 내보낸 .json 파일을 컴퓨터에서 찾아 선택합니다" },
+                        { step: 3, action: "자동 불러오기", desc: "파일이 자동으로 분석되고 모든 세션이 복원됩니다" },
+                        { step: 4, action: "세션 확인", desc: "불러온 세션들이 기존 세션 목록에 추가됩니다" }
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-start space-x-3">
+                          <div className="w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0">
+                            {item.step}
+                          </div>
+                          <div className="flex-1">
+                            <p className="font-medium text-blue-800">{item.action}</p>
+                            <p className="text-sm text-gray-600">{item.desc}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h5 className="font-semibold text-blue-700 mb-3">✅ 복원되는 데이터</h5>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">전체 분석 결과</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">디바이스 설정값</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">파일 목록 정보</span>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">세션명 및 날짜</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
+                          <span className="text-sm">모든 TFT 파라미터</span>
+                        </div>
+                        <div className="flex items-center">
+                          <AlertTriangle className="w-4 h-4 text-orange-500 mr-2" />
+                          <span className="text-sm text-gray-500">원본 Excel 파일은 별도 업로드 필요</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* 활용 시나리오 */}
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-lg border-2 border-green-200">
+                <h4 className="font-bold text-green-800 mb-4 text-lg flex items-center">
+                  <TrendingUp className="w-6 h-6 mr-3" />
+                  실제 활용 시나리오
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-green-700 mb-2 flex items-center">
+                        <FileText className="w-4 h-4 mr-2" />
+                        연구 보고서 작성
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-3">논문이나 보고서 작성 시 이전 분석 결과를 참조해야 할 때</p>
+                      <div className="text-xs text-green-600 bg-green-100 p-2 rounded">
+                        💡 전체 세션 내보내기 → 보고서 작성 후 → 분석기록 불러오기로 재확인
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-green-700 mb-2 flex items-center">
+                        <RotateCcw className="w-4 h-4 mr-2" />
+                        장기 프로젝트 관리
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-3">몇 개월에 걸친 연구 프로젝트에서 데이터 누적 관리</p>
+                      <div className="text-xs text-green-600 bg-green-100 p-2 rounded">
+                        💡 주기적 백업 → 브라우저 초기화 후 → 전체 데이터 복원
+                      </div>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-green-700 mb-2 flex items-center">
+                        <Activity className="w-4 h-4 mr-2" />
+                        팀 협업
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-3">동료와 분석 결과를 공유하거나 인수인계할 때</p>
+                      <div className="text-xs text-green-600 bg-green-100 p-2 rounded">
+                        💡 A연구원 내보내기 → JSON 파일 전달 → B연구원 불러오기
+                      </div>
+                    </div>
+                    <div className="bg-white p-4 rounded-lg border">
+                      <h5 className="font-semibold text-green-700 mb-2 flex items-center">
+                        <Zap className="w-4 h-4 mr-2" />
+                        비교 분석
+                      </h5>
+                      <p className="text-sm text-gray-700 mb-3">이전 실험과 현재 실험 결과를 동시에 비교할 때</p>
+                      <div className="text-xs text-green-600 bg-green-100 p-2 rounded">
+                        💡 이전 데이터 불러오기 → 새 데이터 분석 → 통합 비교
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* 주의사항 및 팁 */}
+              <div className="bg-red-50 p-4 rounded-lg border border-red-200">
+                <h4 className="font-bold text-red-800 mb-3 flex items-center">
+                  <AlertTriangle className="w-5 h-5 mr-2" />
+                  주의사항 및 유용한 팁
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="font-semibold text-red-700 mb-2">⚠️ 주의사항</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start">
+                        <X className="w-4 h-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>원본 Excel 데이터는 저장되지 않음</span>
+                      </div>
+                      <div className="flex items-start">
+                        <X className="w-4 h-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>브라우저 로컬 스토리지는 자동 삭제될 수 있음</span>
+                      </div>
+                      <div className="flex items-start">
+                        <X className="w-4 h-4 text-red-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>다른 버전의 분석기에서는 호환 안 될 수 있음</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-green-700 mb-2">💡 유용한 팁</h5>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-start">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>중요한 분석은 즉시 백업 (정기적 내보내기)</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>파일명에 날짜가 포함되어 버전 관리 용이</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>클라우드 드라이브에 JSON 파일 백업 권장</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* 파일 형식 정보 */}
+              <div className="bg-gray-50 p-4 rounded-lg border">
+                <h4 className="font-bold text-gray-800 mb-3">📄 저장 파일 형식 정보</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">파일 이름 예시:</h5>
+                    <div className="bg-white p-3 rounded border font-mono text-sm">
+                      TFT_Analysis_전체세션_3개_2025-01-15.json
+                    </div>
+                  </div>
+                  <div>
+                    <h5 className="font-semibold text-gray-700 mb-2">파일 크기:</h5>
+                    <div className="text-sm text-gray-600">
+                      <p>• 세션당 평균 50-200KB</p>
+                      <p>• 10개 세션 ≈ 0.5-2MB</p>
+                      <p>• 원본 Excel 미포함으로 경량화</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
+
+
       {/* 하단 요약 정보 */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
         <div className="text-center">
           <h3 className="text-xl font-bold mb-4">🎉 분석 준비 완료!</h3>
           <p className="text-lg mb-4">
-            위의 가이드를 참고하여 Excel 파일을 준비하고 업로드하면 
+            위의 가이드를 참고하여 Excel 파일을 준비하고 업로드하면
             <br />자동으로 TFT 전기적 특성이 분석됩니다.
           </p>
-          
+
           <div className="flex flex-wrap justify-center gap-4 mt-6">
             <div className="bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
               <span className="font-bold">15+</span>
