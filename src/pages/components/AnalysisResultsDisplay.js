@@ -20,6 +20,8 @@ import {
 
 // 1. 상단 import 섹션에 추가
 import SampleDetailModal from './SampleDetailModal';
+// 📋 추가된 import문
+import { generateSampleName } from '../utils/fileUtils';
 
 // 사이드바의 축소된 너비와 확장된 너비 정의
 const COLLAPSED_WIDTH = 64; // px 단위로 변경
@@ -294,6 +296,7 @@ const AnalysisResultsDisplay = ({
     });
   };
 
+  // ✅ 수정된 handleSSUpdate 함수
   const handleSSUpdate = async (result) => {
     const { newSS } = result;
     const measurementType = ssEditorState.currentMeasurement;
@@ -302,12 +305,21 @@ const AnalysisResultsDisplay = ({
     const sampleIndex = updatedAnalysisResults[measurementType].findIndex(r => r.displayName === sampleName);
     if (sampleIndex !== -1) {
       updatedAnalysisResults[measurementType][sampleIndex].parameters.SS = `${newSS.toFixed(1)} mV/decade (범위 조정)`;
-      const newDit = calculateDit(newSS, currentSession.deviceParams);
+  
+      // 🔥 수정: 샘플별 개별 파라미터 사용
+      const sampleFile = currentSession.uploadedFiles?.find(f => {
+        const fileSampleName = f.alias || generateSampleName(f.name);
+        return fileSampleName === sampleName;
+      });
+      const paramsToUse = sampleFile?.individualParams || currentSession.deviceParams;
+      const newDit = calculateDit(newSS, paramsToUse);
+  
       if (newDit > 0) {
         updatedAnalysisResults[measurementType][sampleIndex].parameters.Dit = `${newDit.toExponential(2)} cm⁻²eV⁻¹ (SS 기반 재계산)`;
       } else {
         updatedAnalysisResults[measurementType][sampleIndex].parameters.Dit = 'N/A (계산 실패)';
       }
+  
       const updatedCompleteResults = performCompleteAnalysis(
         updatedAnalysisResults,
         currentSession.deviceParams,
@@ -702,12 +714,17 @@ const CompleteAnalysisSection = ({
   openSampleDetailModal
 }) => {
 
- // 샘플별 개별 파라미터 가져오는 함수
+ // ✅ 수정된 getSampleParams 함수
  const getSampleParams = (sampleName) => {
-   if (!uploadedFiles) return deviceParams;
-   const sampleFile = uploadedFiles.find(f => (f.alias || f.name) === sampleName);
-   return sampleFile?.individualParams || deviceParams;
- };
+  if (!uploadedFiles) return deviceParams;
+  // 🔥 수정: generateSampleName 사용으로 매칭 로직 통일
+  const sampleFile = uploadedFiles.find(f => {
+    const fileSampleName = f.alias || generateSampleName(f.name);
+    return fileSampleName === sampleName;
+  });
+  return sampleFile?.individualParams || deviceParams;
+};
+
 
  return (
    <div className="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl shadow-lg p-8 mb-8">
@@ -917,7 +934,7 @@ const IntegratedResultsTable = ({ completeAnalysisResults }) => (
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['gm_max (Linear 기준)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-bold text-blue-700">{result.parameters['μFE (통합 계산)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['μ0 (Y-function)']}</td>
-              <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['μeff (정확 계산)']}</td>
+              <td className="border border-ray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['μeff (정확 계산)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['θ (계산값)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['SS (Linear 기준)']}</td>
               <td className="border border-gray-300 px-2 py-2 text-center text-xs font-medium">{result.parameters['Dit (Linear 기준)']}</td>

@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Calculator, Upload, Database, Settings, FileText } from 'lucide-react';
+// 📋 추가된 import문
+import { generateSampleName } from '../utils/fileUtils';
 
 // Cox 자동 계산 (εr_SiO2 = 3.9, ε0 = 8.854e-12 F/m)
 const calculateCox = (tox) => {
@@ -30,7 +32,7 @@ const ParameterInputSection = ({
     },
     {
       id: 'individual',
-      title: '샘플별 파라미\n터 입력',
+      title: '샘플별 파라미터\n입력',
       icon: Upload,
       description: '같은 샘플명끼리 그룹화해서 샘플별로 설정',
       disabled: false
@@ -55,16 +57,17 @@ const ParameterInputSection = ({
     }
   };
 
-  // 샘플별 파라미터 업데이트 (같은 샘플명의 모든 파일에 적용)
+  // ✅ 수정된 updateSampleParameter 함수
   const updateSampleParameter = (sampleName, paramName, value) => {
     if (!setUploadedFiles || !uploadedFiles) return;
-    
+  
     const updatedFiles = uploadedFiles.map(file => {
-      const fileSampleName = file.alias || file.name;
-      
+      // 🔥 수정: generateSampleName 사용으로 매칭 로직 통일
+      const fileSampleName = file.alias || generateSampleName(file.name);
+  
       if (fileSampleName === sampleName) {
         const updatedParams = { ...(file.individualParams || deviceParams) };
-        
+  
         if (paramName === 'W') {
           updatedParams.W = parseFloat(value) * 1e-6;
         } else if (paramName === 'L') {
@@ -75,7 +78,7 @@ const ParameterInputSection = ({
           updatedParams.tox = newTox;
           updatedParams.Cox = newCox;
         }
-        
+  
         return {
           ...file,
           individualParams: updatedParams
@@ -83,9 +86,10 @@ const ParameterInputSection = ({
       }
       return file;
     });
-    
+  
     setUploadedFiles(updatedFiles);
   };
+
 
   // 파일 타입별 아이콘
   const getFileTypeIcon = (fileType) => {
@@ -109,12 +113,13 @@ const ParameterInputSection = ({
     }
   };
 
-  // 샘플별로 파일들을 그룹화하는 함수
+  // ✅ 수정된 createSampleGroups 함수
   const createSampleGroups = () => {
     if (!uploadedFiles || uploadedFiles.length === 0) return {};
-    
+  
     return uploadedFiles.reduce((groups, file) => {
-      const sampleName = file.alias || file.name;
+      // 🔥 수정: alias가 없거나 빈 문자열일 때 generateSampleName 사용
+      const sampleName = file.alias || generateSampleName(file.name);
       if (!groups[sampleName]) {
         groups[sampleName] = [];
       }

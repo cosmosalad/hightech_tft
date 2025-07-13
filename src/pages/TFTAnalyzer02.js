@@ -8,7 +8,8 @@ import HomePage from './components/HomePage';
 
 // 분석 로직 모듈들 import
 import { analyzeFiles, performCompleteAnalysis } from './analysis/analysisEngine';
-import { detectFileType } from './utils/fileUtils';
+// 📋 수정된 import문
+import { detectFileType, generateSampleName } from './utils/fileUtils';
 
 // 1. Import 수정 - 불필요한 함수 제거
 import {
@@ -76,6 +77,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     onNavigateHome();
   };
 
+  // ✅ 수정된 handleFileUpload 함수
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     const newFiles = files.map(file => ({
@@ -83,7 +85,8 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       name: file.name,
       type: detectFileType(file.name),
       id: Date.now() + Math.random(),
-      alias: ''
+      alias: generateSampleName(file.name), // ← 🔥 수정: 자동으로 샘플명 생성
+      source: 'local' // ← 🆕 추가: 파일 소스 구분
     }));
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
