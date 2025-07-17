@@ -104,7 +104,13 @@ export const RecipeConfiguration = ({ selectedEquipments, recipes, onRecipeChang
                 {parameters.map((param) => (
                   <div key={param.key} className="space-y-2">
                     <label className="block text-sm font-medium text-gray-700">{param.label}</label>
-                    {param.type === 'select' ? (<select value={currentRecipe[param.key] || param.default} onChange={(e) => handleParameterChange(index, param.key, e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{param.options.map((option) => (<option key={option} value={option}>{option}</option>))}</select>) : (<div className="relative"><input type="number" min={param.min} max={param.max} step={param.step || 1} value={currentRecipe[param.key] || param.default} onChange={(e) => handleParameterChange(index, param.key, Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12" /><span className="absolute right-3 top-2 text-sm text-gray-500">{param.unit}</span></div>)}
+                    {param.type === 'select' ? (<select value={currentRecipe[param.key] || param.default} onChange={(e) => handleParameterChange(index, param.key, e.target.value)} className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">{param.options.map((option) => (<option key={option} value={option}>{option}</option>))}</select>) : (<div className="relative"><input type="number" min={param.min} max={param.max} step={param.step || 1} value={currentRecipe[param.key] || param.default} 
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      const numValue = value === '' ? '' : Number(value);
+                      handleParameterChange(index, param.key, numValue);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-12" /><span className="absolute right-3 top-2 text-sm text-gray-500">{param.unit}</span></div>)}
                   </div>
                 ))}
               </div>
