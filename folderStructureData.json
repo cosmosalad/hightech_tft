@@ -1171,7 +1171,7 @@
       },
       "0829": {
         "type": "folder",
-        "description": "",
+        "description": "1차 power split",
         "children": {
           "000W": {
             "type": "folder",
