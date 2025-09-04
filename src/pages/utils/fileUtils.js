@@ -63,7 +63,7 @@ export const generateSampleName = (filename) => {
   let sampleName = nameWithoutExt
     .replace(/DKTFT/gi, '')
     .replace(/TFT/gi, '')
-    .replace(/IDVD|IDVG|Linear|Saturation|Hys|Hysteresis/gi, '')
+    .replace(/IDVD|IDVG|Lin|Linear|Sat|Saturation|Hys|Hysteresis/gi, '')
     .replace(/VD_Linear|VD_Sat/gi, '')
     .replace(/[_-]+/g, '_')
     .replace(/^_|_$/g, '');
