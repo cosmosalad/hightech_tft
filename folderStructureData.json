@@ -1171,7 +1171,7 @@
       },
       "0829": {
         "type": "folder",
-        "description": "1차 power split",
+        "description": "1차 split",
         "children": {
           "000W": {
             "type": "folder",
@@ -1237,7 +1237,7 @@
       },
       "0909": {
         "type": "folder",
-        "description": "",
+        "description": "2차 split",
         "children": {
           "000W": {
             "type": "folder",
