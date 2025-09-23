@@ -1368,6 +1368,102 @@
             ]
           }
         }
+      },
+      "0922": {
+        "type": "folder",
+        "description": "3차 split",
+        "children": {
+          "00W": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_00_3.xls",
+              "T4_IDVG_Hys_00_3.xls",
+              "T4_IDVG_Lin_00_3.xls",
+              "T4_IDVG_Lin_00_4.xls",
+              "T4_IDVG_Sat_00_3.xls"
+            ]
+          },
+          "00W_annealing_20m": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_00_3.xls",
+              "T4_IDVD_00_4.xls",
+              "T4_IDVD_00_a_3.xls",
+              "T4_IDVD_00_a_4.xls",
+              "T4_IDVG_Hys_00_3.xls",
+              "T4_IDVG_Hys_00_4.xls",
+              "T4_IDVG_Hys_00_a_3.xls",
+              "T4_IDVG_Hys_00_a_4.xls",
+              "T4_IDVG_Lin_00_3.xls",
+              "T4_IDVG_Lin_00_4.xls",
+              "T4_IDVG_Lin_00_a_3.xls",
+              "T4_IDVG_Lin_00_a_4.xls",
+              "T4_IDVG_Sat_00_3.xls",
+              "T4_IDVG_Sat_00_4.xls",
+              "T4_IDVG_Sat_00_a_3.xls",
+              "T4_IDVG_Sat_00_a_4.xls"
+            ]
+          },
+          "90W": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_90_3.xls",
+              "T4_IDVD_90_4.xls",
+              "T4_IDVG_Hys_90_3.xls",
+              "T4_IDVG_Hys_90_4.xls",
+              "T4_IDVG_Lin_90_3.xls",
+              "T4_IDVG_Lin_90_4.xls",
+              "T4_IDVG_Sat_90_3.xls",
+              "T4_IDVG_Sat_90_4.xls"
+            ]
+          },
+          "90W_annealing_05m": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_90_a05_3.xls",
+              "T4_IDVD_90_a05_4.xls",
+              "T4_IDVG_Hys_90_a05_3.xls",
+              "T4_IDVG_Hys_90_a05_4.xls",
+              "T4_IDVG_Lin_90_a05_3.xls",
+              "T4_IDVG_Lin_90_a05_4.xls",
+              "T4_IDVG_Sat_90_a05_3.xls",
+              "T4_IDVG_Sat_90_a05_4.xls"
+            ]
+          },
+          "90W_annealing_10m": {
+            "type": "folder",
+            "files": [
+              "T4_IDVG_Lin_90_a10_3.xls",
+              "T4_IDVG_Lin_90_a10_4.xls"
+            ]
+          },
+          "90W_annealing_15m": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_90_a15_3.xls",
+              "T4_IDVD_90_a15_4.xls",
+              "T4_IDVG_Hys_90_a15_3.xls",
+              "T4_IDVG_Hys_90_a15_4.xls",
+              "T4_IDVG_Lin_90_a15_3.xls",
+              "T4_IDVG_Lin_90_a15_4.xls",
+              "T4_IDVG_Sat_90_a15_3.xls",
+              "T4_IDVG_Sat_90_a15_4.xls"
+            ]
+          },
+          "90W_annealing_20m": {
+            "type": "folder",
+            "files": [
+              "T4_IDVD_90_a20_3.xls",
+              "T4_IDVD_90_a20_4.xls",
+              "T4_IDVG_Hys_90_a20_3.xls",
+              "T4_IDVG_Hys_90_a20_4.xls",
+              "T4_IDVG_Lin_90_a20_3.xls",
+              "T4_IDVG_Lin_90_a20_4.xls",
+              "T4_IDVG_Sat_90_a20_3.xls",
+              "T4_IDVG_Sat_90_a20_4.xls"
+            ]
+          }
+        }
       }
     }
   }
