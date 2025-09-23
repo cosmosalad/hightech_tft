@@ -248,33 +248,38 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
   };
 
   const calculateVthTangentInfo = (chartData, parameters) => {
-    if (!chartData || !parameters || type !== 'IDVG-Linear') return null;
-    const vthStr = parameters.Vth;
-    const gmMaxStr = parameters.gm_max;
-    if (!vthStr || !gmMaxStr) return null;
-    const vth = parseFloat(vthStr.split(' ')[0]);
-    const gmMax = parseFloat(gmMaxStr.split(' ')[0]);
-    if (isNaN(vth) || isNaN(gmMax)) return null;
+      if (!chartData || !parameters || type !== 'IDVG-Linear') return null;
+      const vthStr = parameters.Vth;
+      const gmMaxStr = parameters.gm_max;
+      if (!vthStr || !gmMaxStr) return null;
+      const vth = parseFloat(vthStr.split(' ')[0]);
+      const gmMax = parseFloat(gmMaxStr.split(' ')[0]);
+      if (isNaN(vth) || isNaN(gmMax)) return null;
 
-    let gmMaxVG = vth + 2;
-    const gmMaxPoint = chartData.find(d => Math.abs(d.VG - gmMaxVG) < 0.5);
-    if (gmMaxPoint) {
-      gmMaxVG = gmMaxPoint.VG;
-    } else {
-      const candidatePoints = chartData.filter(d => d.VG >= vth + 1 && d.VG <= vth + 3);
-      if (candidatePoints.length > 0) {
-        const selectedPoint = candidatePoints[Math.floor(candidatePoints.length / 2)];
-        gmMaxVG = selectedPoint.VG;
+      // 👇 여기 오프셋 값을 조절하여 접선 위치를 변경하세요.
+      // 숫자를 늘릴수록 접선이 더 아래로 내려갑니다. (예: 0.5, 1.0, 1.5)
+      const vth_offset = -0.1;
+
+      let gmMaxVG = vth + 2;
+      const gmMaxPoint = chartData.find(d => Math.abs(d.VG - gmMaxVG) < 0.5);
+      if (gmMaxPoint) {
+        gmMaxVG = gmMaxPoint.VG;
+      } else {
+        const candidatePoints = chartData.filter(d => d.VG >= vth + 1 && d.VG <= vth + 3);
+        if (candidatePoints.length > 0) {
+          const selectedPoint = candidatePoints[Math.floor(candidatePoints.length / 2)];
+          gmMaxVG = selectedPoint.VG;
+        }
       }
-    }
-    const vgMin = Math.min(...chartData.map(d => d.VG));
-    const vgMax = Math.max(...chartData.map(d => d.VG));
-    const tangentData = [];
-    for (let vg = vgMin; vg <= vgMax; vg += 0.1) {
-      const idTangent = gmMax * (vg - vth);
-      tangentData.push({ VG: parseFloat(vg.toFixed(1)), ID_tangent: idTangent > 0 ? idTangent : null });
-    }
-    return { vth, gmMax, gmMaxVG, tangentData };
+      const vgMin = Math.min(...chartData.map(d => d.VG));
+      const vgMax = Math.max(...chartData.map(d => d.VG));
+      const tangentData = [];
+      for (let vg = vgMin; vg <= vgMax; vg += 0.1) {
+        // 👇 vth에 오프셋을 더해서 접선을 오른쪽으로 이동시켜 아래로 내립니다.
+        const idTangent = gmMax * (vg - (vth + vth_offset));
+        tangentData.push({ VG: parseFloat(vg.toFixed(1)), ID_tangent: idTangent > 0 ? idTangent : null });
+      }
+      return { vth, gmMax, gmMaxVG, tangentData };
   };
 
   const allVGValues = [...new Set(resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : []))].sort((a, b) => a - b);
@@ -361,7 +366,7 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" content={renderCustomLegend} />
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={3} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
