@@ -36,10 +36,10 @@ export const calculateOnOffRatio = (chartData) => {
   // 따라서 전체 데이터에서 절대 최대값을 찾음
   const ion = Math.max(...sortedData.map(d => Math.abs(d.ID)));
   
-  // 🔒 Ioff: 가장 낮은 VG에서의 전류값 3개의 평균 (OFF 상태, 노이즈 고려함)
+  // 🔒 Ioff: 가장 낮은 VG에서의 전류값 3개의 평균 (OFF 상태, 노이즈 고려함) / 20개로 늘림
   // 일반적으로 VG가 가장 낮을 때가 OFF 상태
   const allCurrents = sortedData.map(d => Math.abs(d.ID)).sort((a, b) => a - b);
-  const smallestThree = allCurrents.slice(0, 3);
+  const smallestThree = allCurrents.slice(0, 20);
   const ioff = smallestThree.reduce((sum, current) => sum + current, 0) / smallestThree.length;
   
   // 📈 On/Off 비율 계산
