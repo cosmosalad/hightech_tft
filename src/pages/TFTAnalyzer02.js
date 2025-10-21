@@ -35,9 +35,9 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [deviceParams, setDeviceParams] = useState({
-    W: 100e-6,        // 채널 폭 (m)
-    L: 50e-6,         // 채널 길이 (m)  
-    tox: 20e-9,       // 산화막 두께 (m)
+    W: 1000e-6,        // 채널 폭 (m)
+    L: 1200e-6,         // 채널 길이 (m)  
+    tox: 100e-9,       // 산화막 두께 (m)
     Cox: 3.45e-7      // 산화막 정전용량 (F/cm²)
   });
   const [showParamInput, setShowParamInput] = useState(false);
