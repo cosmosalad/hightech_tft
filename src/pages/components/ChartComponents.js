@@ -285,6 +285,14 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
   const allVGValues = [...new Set(resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : []))].sort((a, b) => a - b);
   if (allVGValues.length === 0) return null;
 
+  //추가
+  const minVG = Math.floor(allVGValues[0]); // 데이터의 최소값을 내림
+  const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]); // 데이터의 최대값을 올림
+  const dynamicTicks = [];
+  for (let i = minVG; i <= maxVG; i += 3) {
+    dynamicTicks.push(i);
+  }
+
   const combinedData = allVGValues.map(vg => {
     const dataPoint = { VG: vg };
     resultArray.forEach((result, index) => {
@@ -360,13 +368,18 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={combinedData} margin={{ left: 18 }}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+            <XAxis 
+              dataKey="VG" 
+              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+              domain={[minVG, maxVG]}  // 👈 1. 동적 domain 설정
+              ticks={dynamicTicks}     // 👈 2. 동적으로 생성된 ticks 배열 설정 / 원본 <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+            />
             <YAxis scale={showLogScale ? "log" : "linear"} domain={showLogScale ? [1e-12, 1e-3] : ['auto', 'auto']} label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }} tickFormatter={(value) => showLogScale ? value.toExponential(0) : formatLinearCurrent(value)} />
             <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={showLogScale} formatLinearCurrent={formatLinearCurrent} />} />
             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" content={renderCustomLegend} />
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={3} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
@@ -429,6 +442,13 @@ export const GmCharts = ({ resultArray, sortByValue }) => {
  const allVGValues = [...new Set(resultArray.flatMap(result => result.gmData ? result.gmData.map(d => d.VG) : []))].sort((a, b) => a - b);
  if (allVGValues.length === 0) return null;
 
+  //추가
+  const minVG = Math.floor(allVGValues[0]);
+  const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]);
+  const dynamicTicks = [];
+  for (let i = minVG; i <= maxVG; i += 3) {
+    dynamicTicks.push(i);
+  }
  const combinedGmData = allVGValues.map(vg => {
    const dataPoint = { VG: vg };
    resultArray.forEach((result, index) => {
@@ -446,7 +466,12 @@ export const GmCharts = ({ resultArray, sortByValue }) => {
      <ResponsiveContainer width="100%" height="100%">
        <LineChart data={combinedGmData} margin={{ left: 18 }}>
          <CartesianGrid strokeDasharray="3 3" />
-         <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+          <XAxis 
+              dataKey="VG" 
+              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+              domain={[minVG, maxVG]}  // 👈 1. 동적 domain 설정
+              ticks={dynamicTicks}     // 👈 2. 동적으로 생성된 ticks 배열 설정 / 원본 <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+            />
          <YAxis scale="linear" domain={['auto', 'auto']} label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5, dx: -15 }} tickFormatter={(value) => value.toExponential(1)} />
          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} showLogScale={false} formatLinearCurrent={(value) => value.toExponential(2)} />} />
          <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
