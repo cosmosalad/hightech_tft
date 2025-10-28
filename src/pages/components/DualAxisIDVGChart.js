@@ -254,7 +254,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
               yAxisId="left"
               orientation="left"
               scale="log" 
-              domain={[1e-12, 1e-3]} 
+              domain={[1e-12, 1e-6]} // ⭐️ 최대값을 1e-6으로 조정
               label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }} 
               tickFormatter={(value) => value.toExponential(0)} 
             />
@@ -284,13 +284,15 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
             {/* ⭐️ 1. Log Scale 라인 (왼쪽 축) */}
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={`log-${index}`} yAxisId="left" type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
+              // ⭐️ [수정] dot={false} -> dot={{ r: 1 }}로 변경하여 작은 점 표시
+              return <Line key={`log-${index}`} yAxisId="left" type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={{ r: 2, fill: generateGoldenRatioColor(index) }} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
 
             {/* ⭐️ 2. Linear Scale 정규화 라인 (오른쪽 축) */}
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={`linear-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_norm`} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={`${key} (norm)`} connectNulls={false} hide={hiddenLines.has(`${key}_norm`)} legendType="none" />; 
+              // ⭐️ [수정] dot={false} -> dot={{ r: 2 }}로 변경
+              return <Line key={`linear-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_norm`} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={{ r: 2 }} name={`${key} (norm)`} connectNulls={false} hide={hiddenLines.has(`${key}_norm`)} legendType="none" />; 
             })}
 
             {/* ⭐️ 3. Vth Tangent 정규화 라인 (오른쪽 축) */}
@@ -328,7 +330,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
               <XAxis 
                   dataKey="VG" 
                   type="number" // ⭐️ 축 타입을 'number'로 강제 고정
-                  label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+                  label={{ value: 'VG-Vth (V)', position: 'insideBottom', offset: -10 }} 
                   domain={[minVG, maxVG]} // ⭐️ 고정된 minVG, maxVG 사용
                   ticks={dynamicTicks}    // ⭐️ 고정된 범위에 맞춘 틱 사용
                   allowDataOverflow={false} // ⭐️ 범위 밖 데이터 안그림
