@@ -79,7 +79,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
     });
   };
 
-  // Vth 접선 계산 (기존 로직 동일)
+  // ⭐️ [수정] Vth 접선 계산 (VG값을 숫자로 파싱)
   const calculateVthTangentInfo = (chartData, parameters) => {
       if (!chartData || !parameters || type !== 'IDVG-Linear') return null;
       const vthStr = parameters.Vth;
@@ -92,18 +92,19 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
       const vth_offset = -0.1;
 
       let gmMaxVG = vth + 2;
-      const gmMaxPoint = chartData.find(d => Math.abs(d.VG - gmMaxVG) < 0.5);
+      // ⭐️ [수정] d.VG를 parseFloat로 감싸 문자열도 숫자로 처리
+      const gmMaxPoint = chartData.find(d => Math.abs(parseFloat(d.VG) - gmMaxVG) < 0.5); 
       if (gmMaxPoint) {
-        gmMaxVG = gmMaxPoint.VG;
+        gmMaxVG = parseFloat(gmMaxPoint.VG); 
       } else {
-        const candidatePoints = chartData.filter(d => d.VG >= vth + 1 && d.VG <= vth + 3);
+        const candidatePoints = chartData.filter(d => parseFloat(d.VG) >= vth + 1 && parseFloat(d.VG) <= vth + 3); 
         if (candidatePoints.length > 0) {
           const selectedPoint = candidatePoints[Math.floor(candidatePoints.length / 2)];
-          gmMaxVG = selectedPoint.VG;
+          gmMaxVG = parseFloat(selectedPoint.VG); 
         }
       }
-      const vgMin = Math.min(...chartData.map(d => d.VG));
-      const vgMax = Math.max(...chartData.map(d => d.VG));
+      const vgMin = Math.min(...chartData.map(d => parseFloat(d.VG))); 
+      const vgMax = Math.max(...chartData.map(d => parseFloat(d.VG))); 
       const tangentData = [];
       for (let vg = vgMin; vg <= vgMax; vg += 0.1) {
         const idTangent = gmMax * (vg - (vth + vth_offset));
@@ -112,31 +113,35 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
       return { vth, gmMax, gmMaxVG, tangentData };
   };
 
-  // 데이터 구성 (기존 로직 동일)
-  const allVGValues = [...new Set(resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : []))].sort((a, b) => a - b);
+  // ⭐️ [수정] VG 값을 항상 숫자로 파싱 (parseFloat)
+  const allVGValues = [...new Set(resultArray.flatMap(result => 
+      result.chartData ? result.chartData.map(d => parseFloat(d.VG)) : []
+  ))].filter(v => !isNaN(v)).sort((a, b) => a - b);
+  
   if (allVGValues.length === 0) return null;
 
-  const minVG = Math.floor(allVGValues[0]);
-  const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]);
+  // ⭐️ [수정] X축 범위 -15V ~ 9V로 고정
+  const minVG = -15;
+  const maxVG = 9;
   const dynamicTicks = [];
-  for (let i = minVG; i <= maxVG; i += 3) {
+  for (let i = minVG; i <= maxVG; i += 3) { // -15, -12, ..., 9
     dynamicTicks.push(i);
   }
 
   // ⭐️ CombinedData 구성 (정규화 값 추가)
-  const combinedData = allVGValues.map(vg => {
-    const dataPoint = { VG: vg };
+  // ⭐️ [수정] 임시 변수명 사용 (필터링을 위해)
+  const combinedData_temp = allVGValues.map(vg => {
+    const dataPoint = { VG: vg }; // vg는 이제 항상 숫자
     resultArray.forEach((result, index) => {
       if (result.chartData) {
-        const point = result.chartData.find(d => Math.abs(d.VG - vg) < 0.01);
+        // ⭐️ [수정] 비교 시에도 parseFloat를 사용해 데이터 타입을 일치시킴
+        const point = result.chartData.find(d => Math.abs(parseFloat(d.VG) - vg) < 0.01);
         const key = result.displayName || `File${index + 1}`;
         
         // 1. [왼쪽축] Log Scale용 원본 ID (A)
         dataPoint[key] = point?.ID || null;
         
         // ⭐️ 2. [오른쪽축] Linear Scale용 정규화 ID (μA/mm)
-        // ⭐️ 'Width_um' (단위: micron) 값이 parameters에 있다고 가정합니다.
-        // ⭐️ 값이 없으면 100um (0.1mm)를 기본값으로 사용합니다.
         const width_um = result.parameters?.Width_um || 100;
         const width_mm = width_um / 1000.0;
         const normalized_id = (point?.ID * 1e6) / width_mm; // (A * 1e6 -> μA) / (mm)
@@ -159,6 +164,10 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
     });
     return dataPoint;
   });
+  
+  // ⭐️ [수정] -15V ~ 9V 범위의 데이터만 필터링하여 차트에 사용
+  const combinedData = combinedData_temp.filter(d => d.VG >= minVG && d.VG <= maxVG);
+
 
   // 커스텀 범례 (기존 로직 동일)
   const renderCustomLegend = ({ payload, onClick }) => (
@@ -179,7 +188,8 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
   );
 
   return (
-    <div>
+    // ⭐️ [수정] 컴포넌트의 최대 가로폭을 5xl (1024px)로 제한하고 중앙 정렬
+    <div className="max-w-5xl mx-auto">
       {/* --- 모달 상단 헤더 --- (변경 없음) */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold">ID-VG 병합 뷰 (Log/Linear)</h3>
@@ -225,15 +235,18 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
 
       {/* --- ⭐️ 1. Log/Linear 병합 차트 --- */}
       <h4 className="text-lg font-semibold mb-2 text-center">ID-VG (Log/Linear Combined)</h4>
-      <div className="h-96"> {/* 높이를 조금 늘림 */}
+      <div className="h-96"> 
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={combinedData} margin={{ left: 18, right: 18 }} syncId="dualChartSync"> {/* 오른쪽 마진 추가 */}
+          {/* ⭐️ [수정] data={combinedData} (이제 -15~9V로 필터링된 데이터임) */}
+          <LineChart data={combinedData} margin={{ left: 18, right: 18 }} syncId="dualChartSync"> 
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="VG" 
+              type="number" // ⭐️ 축 타입을 'number'로 강제 고정
               label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-              domain={[minVG, maxVG]}
-              ticks={dynamicTicks}
+              domain={[minVG, maxVG]} // ⭐️ 고정된 minVG, maxVG 사용
+              ticks={dynamicTicks}    // ⭐️ 고정된 범위에 맞춘 틱 사용
+              allowDataOverflow={false} // ⭐️ 범위 밖 데이터 안그림
             />
             
             {/* ⭐️ 왼쪽 Y축 (Log) */}
@@ -253,18 +266,16 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
               scale="linear" 
               domain={['auto', 'auto']} 
               label={{ value: 'ID (μA/mm)', angle: 90, position: 'insideRight', offset: 5 }} 
-              tickFormatter={(value) => value.toPrecision(3)} // μA/mm에 맞는 포맷터
+              tickFormatter={(value) => parseFloat(value.toPrecision(3))} // ⭐️ 0.800 -> 0.8
             />
 
-            {/* ⭐️ Tooltip: SampleNameTooltip이 이중 페이로드를 처리할 수 있는지 확실하지 않음. */}
-            {/* formatLinearCurrent가 A 기준이므로, 정규화된 값에는 맞지 않을 수 있음 */}
             <Tooltip content={
               <SampleNameTooltip 
                 xAxisLabel="VG" 
-                yAxisUnit="A or μA/mm" // 단위가 2개이므로 모호하게 표시
+                yAxisUnit="A or μA/mm" 
                 sortByValue={sortByValue} 
-                showLogScale={false} // Linear 기준으로 설정
-                formatLinearCurrent={formatLinearCurrent} // 이 함수가 정규화된 값(μA)을 올바르게 처리하지 못할 수 있음
+                showLogScale={false} 
+                formatLinearCurrent={formatLinearCurrent} 
               />} 
             />
             
@@ -279,7 +290,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
             {/* ⭐️ 2. Linear Scale 정규화 라인 (오른쪽 축) */}
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={`linear-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_norm`} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={`${key} (norm)`} connectNulls={false} hide={hiddenLines.has(`${key}_norm`)} legendType="none" />; // 범례에서 숨김
+              return <Line key={`linear-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_norm`} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={`${key} (norm)`} connectNulls={false} hide={hiddenLines.has(`${key}_norm`)} legendType="none" />; 
             })}
 
             {/* ⭐️ 3. Vth Tangent 정규화 라인 (오른쪽 축) */}
@@ -296,11 +307,8 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
                 if (!tangentInfo) return null;
                 return (
                   <React.Fragment key={`ref-${index}`}>
-                    {/* X축 기준 라인 (변경 없음) */}
                     <ReferenceLine x={tangentInfo.gmMaxVG} stroke={generateReferenceColor(index, 0)} strokeDasharray="4 4" strokeWidth={1} label={{ value: `gm_max VG`, position: "topLeft", style: { fontSize: '10px' } }} />
                     <ReferenceLine x={tangentInfo.vth} stroke={generateReferenceColor(index, 60)} strokeDasharray="4 4" strokeWidth={2} label={{ value: `Vth=${tangentInfo.vth.toFixed(2)}V`, position: "bottomRight", style: { fontSize: '11px', fontWeight: 'bold' } }} />
-                    
-                    {/* Y=0 기준점 (⭐️ yAxisId="right" 추가) */}
                     <ReferenceLine yAxisId="right" x={tangentInfo.vth} y={0} stroke="transparent" dot={{ fill: generateReferenceColor(index, 60), stroke: generateReferenceColor(index, 90), strokeWidth: 2, r: 6 }} />
                   </React.Fragment>
                 );
@@ -309,19 +317,21 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
         </ResponsiveContainer>
       </div>
 
-      {/* --- 2. IG 차트 (기존 로직 동일) --- */}
-      {/* (ID/IG 토글 기능은 유지) */}
+      {/* --- 2. IG 차트 --- */}
       <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
         <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
+            {/* ⭐️ [수정] data={combinedData} (이제 -15~9V로 필터링된 데이터임) */}
             <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
                   dataKey="VG" 
+                  type="number" // ⭐️ 축 타입을 'number'로 강제 고정
                   label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-                  domain={[minVG, maxVG]}
-                  ticks={dynamicTicks}
+                  domain={[minVG, maxVG]} // ⭐️ 고정된 minVG, maxVG 사용
+                  ticks={dynamicTicks}    // ⭐️ 고정된 범위에 맞춘 틱 사용
+                  allowDataOverflow={false} // ⭐️ 범위 밖 데이터 안그림
               />
               <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
               <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={true} />} />
