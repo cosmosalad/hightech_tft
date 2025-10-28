@@ -1,11 +1,11 @@
 // src/pages/components/DualAxisIDVGChart.js
 
 import React, { useState } from 'react';
-import { Eye, EyeOff, X } from 'lucide-react'; // ⭐️ X (닫기) 아이콘 추가
+import { Eye, EyeOff, X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { SampleNameTooltip } from './ChartComponents'; // ⭐️ 기존 Tooltip 컴포넌트 import
+import { SampleNameTooltip } from './ChartComponents';
 
-// 🌟 황금비 기반 색상 생성 함수들 (ChartComponents.js에서 복사)
+// 🌟 황금비 기반 색상 생성 함수들 (변경 없음)
 const generateGoldenRatioColor = (index) => {
   const goldenAngle = 137.508;
   const hue = (index * goldenAngle) % 360;
@@ -39,27 +39,41 @@ const generateReferenceColor = (index, offset = 0) => {
 };
 
 
-// ⭐️ Log/Linear 분리형 IDVG 차트 컴포넌트
+// ⭐️ Log/Linear 병합형 IDVG 차트 컴포넌트
 export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinearCurrent, onClose }) => {
   const [showIG, setShowIG] = useState(false);
   const [showVthTangent, setShowVthTangent] = useState(false);
   const [hiddenLines, setHiddenLines] = useState(new Set());
   
-  // 범례 클릭 핸들러
+  // ⭐️ 범례 클릭 핸들러 (병합 차트용으로 수정)
   const handleLegendClick = (data) => {
-    const { dataKey } = data;
+    const { dataKey } = data; // dataKey는 'File1'과 같은 기본 키
     setHiddenLines(prev => {
       const newSet = new Set(prev);
-      if (newSet.has(dataKey)) newSet.delete(dataKey);
-      else newSet.add(dataKey);
       
-      const baseKey = dataKey.replace('_IG', '').replace('_tangent', '');
+      // 기본 Log 라인 토글
       if (newSet.has(dataKey)) {
-        newSet.add(`${baseKey}_IG`);
-        newSet.add(`${baseKey}_tangent`);
+        newSet.delete(dataKey);
       } else {
-        newSet.delete(`${baseKey}_IG`);
-        newSet.delete(`${baseKey}_tangent`);
+        newSet.add(dataKey);
+      }
+
+      // 현재 상태 (숨김 여부)
+      const isNowHidden = newSet.has(dataKey);
+
+      // ⭐️ 관련된 모든 라인 (Linear, IG, Tangent)의 상태를 동기화
+      const relatedKeys = [
+        `${dataKey}_norm`, // Linear 정규화 라인
+        `${dataKey}_IG`, // IG 라인
+        `${dataKey}_tangent_norm` // Tangent 정규화 라인
+      ];
+      
+      if (isNowHidden) {
+        // 기본 라인이 숨겨졌으면 관련 라인도 모두 숨김
+        relatedKeys.forEach(k => newSet.add(k));
+      } else {
+        // 기본 라인이 표시되면 관련 라인도 모두 표시
+        relatedKeys.forEach(k => newSet.delete(k));
       }
       return newSet;
     });
@@ -109,19 +123,36 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
     dynamicTicks.push(i);
   }
 
+  // ⭐️ CombinedData 구성 (정규화 값 추가)
   const combinedData = allVGValues.map(vg => {
     const dataPoint = { VG: vg };
     resultArray.forEach((result, index) => {
       if (result.chartData) {
         const point = result.chartData.find(d => Math.abs(d.VG - vg) < 0.01);
         const key = result.displayName || `File${index + 1}`;
+        
+        // 1. [왼쪽축] Log Scale용 원본 ID (A)
         dataPoint[key] = point?.ID || null;
+        
+        // ⭐️ 2. [오른쪽축] Linear Scale용 정규화 ID (μA/mm)
+        // ⭐️ 'Width_um' (단위: micron) 값이 parameters에 있다고 가정합니다.
+        // ⭐️ 값이 없으면 100um (0.1mm)를 기본값으로 사용합니다.
+        const width_um = result.parameters?.Width_um || 100;
+        const width_mm = width_um / 1000.0;
+        const normalized_id = (point?.ID * 1e6) / width_mm; // (A * 1e6 -> μA) / (mm)
+        dataPoint[`${key}_norm`] = (point?.ID === null || point?.ID === undefined) ? null : normalized_id;
+
+        // 3. IG (A)
         dataPoint[`${key}_IG`] = point?.IG || null;
+
+        // ⭐️ 4. [오른쪽축] Vth Tangent (μA/mm)
         if (showVthTangent && type === 'IDVG-Linear') {
           const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
           if (tangentInfo) {
             const tangentPoint = tangentInfo.tangentData.find(d => Math.abs(d.VG - vg) < 0.05);
-            dataPoint[`${key}_tangent`] = tangentPoint?.ID_tangent || null;
+            // Tangent 값도 동일하게 정규화
+            const normalized_tangent = (tangentPoint?.ID_tangent * 1e6) / width_mm;
+            dataPoint[`${key}_tangent_norm`] = tangentPoint?.ID_tangent > 0 ? normalized_tangent : null;
           }
         }
       }
@@ -133,7 +164,8 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
   const renderCustomLegend = ({ payload, onClick }) => (
     <div style={{ textAlign: 'center', paddingTop: '10px' }}>
       {payload.map((entry, index) => {
-        if (entry.dataKey && (entry.dataKey.includes('_tangent') || entry.dataKey.includes('_IG'))) {
+        // ⭐️ _norm 키도 범례에서 숨김
+        if (entry.dataKey && (entry.dataKey.includes('_tangent') || entry.dataKey.includes('_IG') || entry.dataKey.includes('_norm') || entry.dataKey.includes('_tangent_norm'))) {
           return null;
         }
         return (
@@ -148,15 +180,15 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
 
   return (
     <div>
-      {/* --- 모달 상단 헤더 --- */}
+      {/* --- 모달 상단 헤더 --- (변경 없음) */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-bold">ID-VG 분리 뷰 (Log/Linear)</h3>
+        <h3 className="text-xl font-bold">ID-VG 병합 뷰 (Log/Linear)</h3>
         <button onClick={onClose} className="p-1 rounded-full text-gray-500 hover:bg-gray-200 hover:text-gray-800">
           <X size={24} />
         </button>
       </div>
 
-      {/* --- 토글 버튼들 --- */}
+      {/* --- 토글 버튼들 --- (변경 없음) */}
       <div className="flex items-center justify-end mb-4 flex-wrap gap-6">
         <div className="flex items-center space-x-3">
             <span className={`text-sm font-medium transition-colors duration-300 ${!showIG ? 'text-gray-900' : 'text-gray-400'}`}>ID만 표시</span>
@@ -180,7 +212,6 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
           </div>
         )}
         
-        {/* ⭐️ [추가] 기본 뷰 돌아가기 버튼 ⭐️ */}
         <div className="flex items-center">
           <button 
             onClick={onClose} 
@@ -192,11 +223,11 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
         </div>
       </div>
 
-      {/* --- 1. Log Scale 차트 --- */}
-      <h4 className="text-lg font-semibold mb-2 text-center">ID-VG (Log Scale)</h4>
-      <div className="h-80">
+      {/* --- ⭐️ 1. Log/Linear 병합 차트 --- */}
+      <h4 className="text-lg font-semibold mb-2 text-center">ID-VG (Log/Linear Combined)</h4>
+      <div className="h-96"> {/* 높이를 조금 늘림 */}
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
+          <LineChart data={combinedData} margin={{ left: 18, right: 18 }} syncId="dualChartSync"> {/* 오른쪽 마진 추가 */}
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
               dataKey="VG" 
@@ -204,61 +235,73 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
               domain={[minVG, maxVG]}
               ticks={dynamicTicks}
             />
+            
+            {/* ⭐️ 왼쪽 Y축 (Log) */}
             <YAxis 
+              yAxisId="left"
+              orientation="left"
               scale="log" 
               domain={[1e-12, 1e-3]} 
               label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }} 
               tickFormatter={(value) => value.toExponential(0)} 
             />
-            <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={true} formatLinearCurrent={formatLinearCurrent} />} />
-            {resultArray.map((result, index) => {
-              const key = result.displayName || `File${index + 1}`;
-              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
-            })}
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* --- 2. Linear Scale 차트 --- */}
-      <h4 className="text-lg font-semibold mt-8 mb-2 text-center">ID-VG (Linear Scale)</h4>
-      <div className="h-80">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="VG" 
-              label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-              domain={[minVG, maxVG]}
-              ticks={dynamicTicks}
-            />
+            
+            {/* ⭐️ 오른쪽 Y축 (Linear) */}
             <YAxis 
+              yAxisId="right"
+              orientation="right"
               scale="linear" 
               domain={['auto', 'auto']} 
-              label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }} 
-              tickFormatter={(value) => formatLinearCurrent(value)} 
+              label={{ value: 'ID (μA/mm)', angle: 90, position: 'insideRight', offset: 5 }} 
+              tickFormatter={(value) => value.toPrecision(3)} // μA/mm에 맞는 포맷터
             />
-            <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={false} formatLinearCurrent={formatLinearCurrent} />} />
+
+            {/* ⭐️ Tooltip: SampleNameTooltip이 이중 페이로드를 처리할 수 있는지 확실하지 않음. */}
+            {/* formatLinearCurrent가 A 기준이므로, 정규화된 값에는 맞지 않을 수 있음 */}
+            <Tooltip content={
+              <SampleNameTooltip 
+                xAxisLabel="VG" 
+                yAxisUnit="A or μA/mm" // 단위가 2개이므로 모호하게 표시
+                sortByValue={sortByValue} 
+                showLogScale={false} // Linear 기준으로 설정
+                formatLinearCurrent={formatLinearCurrent} // 이 함수가 정규화된 값(μA)을 올바르게 처리하지 못할 수 있음
+              />} 
+            />
             
             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" content={renderCustomLegend} />
             
+            {/* ⭐️ 1. Log Scale 라인 (왼쪽 축) */}
             {resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
-              return <Line key={index} type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={`log-${index}`} yAxisId="left" type="monotone" dataKey={key} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={key} connectNulls={false} hide={hiddenLines.has(key)} />;
             })}
+
+            {/* ⭐️ 2. Linear Scale 정규화 라인 (오른쪽 축) */}
+            {resultArray.map((result, index) => {
+              const key = result.displayName || `File${index + 1}`;
+              return <Line key={`linear-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_norm`} stroke={generateGoldenRatioColor(index)} strokeWidth={2} dot={false} name={`${key} (norm)`} connectNulls={false} hide={hiddenLines.has(`${key}_norm`)} legendType="none" />; // 범례에서 숨김
+            })}
+
+            {/* ⭐️ 3. Vth Tangent 정규화 라인 (오른쪽 축) */}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
               const key = result.displayName || `File${index + 1}`;
               const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
               if (!tangentInfo) return null;
-              return <Line key={`tangent-${index}`} type="monotone" dataKey={`${key}_tangent`} stroke={generateTangentColor(index)} strokeWidth={2} strokeDasharray="8 4" dot={false} legendType="none" connectNulls={false} hide={hiddenLines.has(key)} />;
+              return <Line key={`tangent-${index}`} yAxisId="right" type="monotone" dataKey={`${key}_tangent_norm`} stroke={generateTangentColor(index)} strokeWidth={2} strokeDasharray="8 4" dot={false} legendType="none" connectNulls={false} hide={hiddenLines.has(`${key}_tangent_norm`)} />;
             })}
+
+            {/* ⭐️ 4. Reference Lines (X축 및 오른쪽 Y축 기준) */}
             {showVthTangent && type === 'IDVG-Linear' && resultArray.map((result, index) => {
                 const tangentInfo = calculateVthTangentInfo(result.chartData, result.parameters);
                 if (!tangentInfo) return null;
                 return (
                   <React.Fragment key={`ref-${index}`}>
+                    {/* X축 기준 라인 (변경 없음) */}
                     <ReferenceLine x={tangentInfo.gmMaxVG} stroke={generateReferenceColor(index, 0)} strokeDasharray="4 4" strokeWidth={1} label={{ value: `gm_max VG`, position: "topLeft", style: { fontSize: '10px' } }} />
                     <ReferenceLine x={tangentInfo.vth} stroke={generateReferenceColor(index, 60)} strokeDasharray="4 4" strokeWidth={2} label={{ value: `Vth=${tangentInfo.vth.toFixed(2)}V`, position: "bottomRight", style: { fontSize: '11px', fontWeight: 'bold' } }} />
-                    <ReferenceLine x={tangentInfo.vth} y={0} stroke="transparent" dot={{ fill: generateReferenceColor(index, 60), stroke: generateReferenceColor(index, 90), strokeWidth: 2, r: 6 }} />
+                    
+                    {/* Y=0 기준점 (⭐️ yAxisId="right" 추가) */}
+                    <ReferenceLine yAxisId="right" x={tangentInfo.vth} y={0} stroke="transparent" dot={{ fill: generateReferenceColor(index, 60), stroke: generateReferenceColor(index, 90), strokeWidth: 2, r: 6 }} />
                   </React.Fragment>
                 );
             })}
@@ -266,32 +309,33 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
         </ResponsiveContainer>
       </div>
 
-     {/* --- 3. IG 차트 (기존 로직 동일) --- */}
-     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
-       <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
-       <div className="h-80">
-         <ResponsiveContainer width="100%" height="100%">
-           <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
-             <CartesianGrid strokeDasharray="3 3" />
-             <XAxis 
-                dataKey="VG" 
-                label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-                domain={[minVG, maxVG]}
-                ticks={dynamicTicks}
-             />
-             <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
-             <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={true} />} />
-             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
-             {resultArray.map((result, index) => {
-               const key = result.displayName || `File${index + 1}`;
-               return (
-                 <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={generateIGColor(index)} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} />
-               );
-             })}
-           </LineChart>
-         </ResponsiveContainer>
-       </div>
-     </div>
-   </div>
- );
+      {/* --- 2. IG 차트 (기존 로직 동일) --- */}
+      {/* (ID/IG 토글 기능은 유지) */}
+      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
+        <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis 
+                  dataKey="VG" 
+                  label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
+                  domain={[minVG, maxVG]}
+                  ticks={dynamicTicks}
+              />
+              <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
+              <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={true} />} />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" content={renderCustomLegend} />
+              {resultArray.map((result, index) => {
+                const key = result.displayName || `File${index + 1}`;
+                return (
+                  <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={generateIGColor(index)} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} legendType="none" />
+                );
+              })}
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    </div>
+  );
 };
