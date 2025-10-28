@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
+import { DualAxisIDVGChart } from './DualAxisIDVGChart'; // ⭐️ 1. 새 컴포넌트 import
 
 // 🌟 황금비 기반 색상 생성 함수들
 const generateGoldenRatioColor = (index) => {
@@ -227,6 +228,7 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
   const [showIG, setShowIG] = useState(false);
   const [showVthTangent, setShowVthTangent] = useState(false);
   const [hiddenLines, setHiddenLines] = useState(new Set());
+  const [showDualViewModal, setShowDualViewModal] = useState(false); // ⭐️ 2. 모달 상태 추가
   
   const handleLegendClick = (data) => {
     const { dataKey } = data;
@@ -363,6 +365,18 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             </button>
             <span className={`text-sm font-medium transition-colors duration-300 ${showLogScale ? 'text-gray-900' : 'text-gray-400'}`}>로그값</span>
         </div>
+        
+        {/* ⭐️ 3. [추가] 분리 뷰 토글 버튼 (ID만 표시 버튼 옆으로 이동) */}
+        <div className="flex items-center">
+          <button 
+            onClick={() => setShowDualViewModal(true)} // ⭐️ 모달 켜기
+            className="px-3 py-1 rounded text-sm transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-sm"
+            title="Log/Linear 분리 뷰 보기"
+          >
+            분리 뷰 보기
+          </button>
+        </div>
+
       </div>
       <div className="h-80">
         <ResponsiveContainer width="100%" height="100%">
@@ -371,8 +385,8 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             <XAxis 
               dataKey="VG" 
               label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-              domain={[minVG, maxVG]}  // 👈 1. 동적 domain 설정
-              ticks={dynamicTicks}     // 👈 2. 동적으로 생성된 ticks 배열 설정 / 원본 <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+              domain={[minVG, maxVG]}
+              ticks={dynamicTicks}
             />
             <YAxis scale={showLogScale ? "log" : "linear"} domain={showLogScale ? [1e-12, 1e-3] : ['auto', 'auto']} label={{ value: 'ID (A)', angle: -90, position: 'insideLeft', offset: 5 }} tickFormatter={(value) => showLogScale ? value.toExponential(0) : formatLinearCurrent(value)} />
             <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} showLogScale={showLogScale} formatLinearCurrent={formatLinearCurrent} />} />
@@ -422,6 +436,31 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
          </ResponsiveContainer>
        </div>
      </div>
+     
+     {/* ⭐️ 4. [추가] 모달 래퍼 ⭐️ */}
+     {showDualViewModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 z-40 flex justify-center items-center p-4">
+          {/* 모달 컨텐츠 (클릭 이벤트가 상위로 전파되는 것 방지) */}
+          <div 
+            className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-6xl h-[95vh] overflow-y-auto z-50"
+            onClick={(e) => e.stopPropagation()} 
+          >
+            <DualAxisIDVGChart
+              resultArray={resultArray}
+              type={type}
+              sortByValue={sortByValue}
+              formatLinearCurrent={formatLinearCurrent}
+              onClose={() => setShowDualViewModal(false)} // ⭐️ 모달 끄기
+            />
+          </div>
+          {/* 오버레이 배경 클릭 시 모달 닫기 (선택 사항) */}
+          <div 
+            className="absolute inset-0 z-40" 
+            onClick={() => setShowDualViewModal(false)}
+          ></div>
+        </div>
+     )}
+
    </div>
  );
 };
@@ -469,8 +508,8 @@ export const GmCharts = ({ resultArray, sortByValue }) => {
           <XAxis 
               dataKey="VG" 
               label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} 
-              domain={[minVG, maxVG]}  // 👈 1. 동적 domain 설정
-              ticks={dynamicTicks}     // 👈 2. 동적으로 생성된 ticks 배열 설정 / 원본 <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+              domain={[minVG, maxVG]}
+              ticks={dynamicTicks}
             />
          <YAxis scale="linear" domain={['auto', 'auto']} label={{ value: 'gm (S)', angle: -90, position: 'insideLeft', offset: 5, dx: -15 }} tickFormatter={(value) => value.toExponential(1)} />
          <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="S" sortByValue={sortByValue} showLogScale={false} formatLinearCurrent={(value) => value.toExponential(2)} />} />
