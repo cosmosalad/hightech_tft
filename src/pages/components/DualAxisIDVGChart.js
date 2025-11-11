@@ -120,11 +120,11 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
   
   if (allVGValues.length === 0) return null;
 
-  // ⭐️ [수정] X축 범위 -15V ~ 9V로 고정
-  const minVG = -15;
-  const maxVG = 9;
+  // ⭐️ [수정] X축 범위 -3V ~ 6V로 고정 (사용자 요청)
+  const minVG = -6; 
+  const maxVG = 9;  
   const dynamicTicks = [];
-  for (let i = minVG; i <= maxVG; i += 3) { // -15, -12, ..., 9
+  for (let i = minVG; i <= maxVG; i += 3) { // -3, 0, 3, 6
     dynamicTicks.push(i);
   }
 
@@ -142,7 +142,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
         dataPoint[key] = point?.ID || null;
         
         // ⭐️ 2. [오른쪽축] Linear Scale용 정규화 ID (μA/mm)
-        const width_um = result.parameters?.Width_um || 100;
+        const width_um = result.parameters?.Width_um || 1000;
         const width_mm = width_um / 1000.0;
         const normalized_id = (point?.ID * 1e6) / width_mm; // (A * 1e6 -> μA) / (mm)
         dataPoint[`${key}_norm`] = (point?.ID === null || point?.ID === undefined) ? null : normalized_id;
@@ -165,7 +165,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
     return dataPoint;
   });
   
-  // ⭐️ [수정] -15V ~ 9V 범위의 데이터만 필터링하여 차트에 사용
+  // ⭐️ [수정] -3V ~ 6V 범위의 데이터만 필터링하여 차트에 사용
   const combinedData = combinedData_temp.filter(d => d.VG >= minVG && d.VG <= maxVG);
 
 
@@ -188,8 +188,8 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
   );
 
   return (
-    // ⭐️ [수정] 컴포넌트의 최대 가로폭을 5xl (1024px)로 제한하고 중앙 정렬
-    <div className="max-w-5xl mx-auto">
+    // ⭐️ [수정됨] 컴포넌트의 최대 가로폭을 3xl (768px)로 "많이" 줄여 중앙 정렬
+    <div className="max-w-2xl mx-auto">
       {/* --- 모달 상단 헤더 --- (변경 없음) */}
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-xl font-bold">ID-VG 병합 뷰 (Log/Linear)</h3>
@@ -237,7 +237,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
       <h4 className="text-lg font-semibold mb-2 text-center">ID-VG (Log/Linear Combined)</h4>
       <div className="h-96"> 
         <ResponsiveContainer width="100%" height="100%">
-          {/* ⭐️ [수정] data={combinedData} (이제 -15~9V로 필터링된 데이터임) */}
+          {/* ⭐️ [수정] data={combinedData} (이제 -3~6V로 필터링된 데이터임) */}
           <LineChart data={combinedData} margin={{ left: 18, right: 18 }} syncId="dualChartSync"> 
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis 
@@ -324,7 +324,7 @@ export const DualAxisIDVGChart = ({ resultArray, type, sortByValue, formatLinear
         <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
         <div className="h-80">
           <ResponsiveContainer width="100%" height="100%">
-            {/* ⭐️ [수정] data={combinedData} (이제 -15~9V로 필터링된 데이터임) */}
+            {/* ⭐️ [수정] data={combinedData} (이제 -3~6V로 필터링된 데이터임) */}
             <LineChart data={combinedData} margin={{ left: 18 }} syncId="dualChartSync">
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis 
