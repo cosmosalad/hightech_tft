@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, Settings, Download, BarChart3, Zap, Thermometer, Gauge, X, ZoomIn } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Play, Pause, RotateCcw, Settings, Download, BarChart3, Zap, Thermometer, Gauge, X, ZoomIn, Activity } from 'lucide-react';
 
 const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, layerThickness }) => {
   const scale = 1.4;
@@ -18,10 +19,10 @@ const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, l
     background: `linear-gradient(to top, ${color} ${thickness}%, transparent ${thickness}%)`
   });
   
-  const containerBaseClasses = "bg-white/95 rounded-lg border-2 border-gray-300 shadow-lg transition-all";
+  const containerBaseClasses = "bg-slate-900 border border-slate-700 shadow-[0_0_30px_rgba(0,0,0,0.8)] transition-all overflow-hidden flex flex-col";
   const containerDynamicClasses = isExpanded
-    ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[1000px] h-[70vh] z-50 flex flex-col"
-    : `absolute bottom-4 right-4 w-52 h-40 z-20 cursor-pointer hover:shadow-xl hover:border-blue-400`;
+    ? "fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80vw] max-w-[1000px] h-[70vh] z-50 rounded-xl"
+    : `absolute bottom-6 right-6 w-64 h-48 z-20 rounded-lg cursor-pointer hover:shadow-[0_0_20px_rgba(6,182,212,0.5)] hover:border-cyan-500/50 backdrop-blur-md bg-slate-900/80`;
 
   const containerDynamicStyles = isExpanded 
     ? {} 
@@ -29,22 +30,25 @@ const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, l
 
   const renderDrawing = () => (
     <>
-      <div className={`${titleClass} font-bold text-center py-2 bg-gray-100 rounded-t-lg relative flex items-center justify-center`}>
-        {!isExpanded && <ZoomIn className="w-4 h-4 mr-2 text-gray-500" />}
-        실시간 단면도
+      <div className={`${titleClass} font-mono font-bold text-center py-2 bg-slate-800 text-cyan-400 border-b border-slate-700 relative flex items-center justify-center uppercase tracking-widest`}>
+        {!isExpanded && <ZoomIn className="w-4 h-4 mr-2 text-cyan-500 animate-pulse" />}
+        Cross-Section Analysis
         {isExpanded && (
           <button 
             onClick={(e) => { e.stopPropagation(); onToggle(); }}
-            className="absolute top-1/2 right-4 -translate-y-1/2 text-3xl font-light text-gray-500 hover:text-black"
+            className="absolute top-1/2 right-4 -translate-y-1/2 text-xl font-light text-slate-400 hover:text-white"
             aria-label="Close"
           >
-            &times;
+            <X className="w-5 h-5" />
           </button>
         )}
       </div>
-      <div className={`relative p-4 ${isExpanded ? 'flex-grow' : 'h-28'}`}>
-        <div className="absolute bottom-0 left-4 right-4 flex items-center justify-center bg-gray-600 rounded-b" style={{ height: `${substrateHeight}px` }}>
-          <span className={`${labelClass} text-white font-bold`}>Si 기판</span>
+      <div className={`relative p-4 ${isExpanded ? 'flex-grow' : 'h-28'} bg-[#0a0f18] overflow-hidden`}>
+        {/* 그리드 배경 */}
+        <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.1)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.1)_1px,transparent_1px)] bg-[size:20px_20px] pointer-events-none"></div>
+        
+        <div className="absolute bottom-0 left-4 right-4 flex items-center justify-center bg-slate-800 border-t-2 border-slate-600 rounded-b" style={{ height: `${substrateHeight}px`, boxShadow: '0 -4px 20px rgba(0,0,0,0.5)' }}>
+          <span className={`${labelClass} text-slate-400 font-bold font-mono tracking-wider`}>Si Substrate</span>
         </div>
         
         {selectedEquipments.map((equipment, index) => {
@@ -59,31 +63,33 @@ const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, l
           
           switch (equipment.id) {
             case 'oxidation':
-              layerColor = '#60a5fa'; layerName = 'SiO₂';
+              layerColor = 'rgba(56, 189, 248, 0.6)'; layerName = 'SiO₂';
+              if (thickness === 0) return null;
               return (
-                <div key={`layer-${index}`} className="absolute" style={{ left: '1rem', right: '1rem', bottom: `${bottomBase}px`, height: `${maxLayerHeight}px`, ...fillingStyle(layerColor, thickness) }}>
-                  <div className={`w-full h-full flex items-center justify-center ${labelClass} text-white font-bold`}>{thickness > 50 && layerName}</div>
+                <div key={`layer-${index}`} className="absolute border-t border-sky-400 shadow-[0_0_10px_rgba(56,189,248,0.5)]" style={{ left: '1rem', right: '1rem', bottom: `${bottomBase}px`, height: `${maxLayerHeight}px`, ...fillingStyle(layerColor, thickness), backdropFilter: 'blur(2px)' }}>
+                  <div className={`w-full h-full flex items-center justify-center ${labelClass} text-white font-mono font-bold text-shadow`}>{thickness > 50 && layerName}</div>
                 </div>
               );
             case 'sputtering':
-              layerColor = '#a855f7';
+              layerColor = 'rgba(168, 85, 247, 0.7)';
               layerName = recipe.material || 'IZO';
               return (
-                <div key={`layer-${index}`} className="absolute" style={{ 
+                <div key={`layer-${index}`} className={`absolute ${thickness > 0 ? 'border-x border-t border-purple-400' : ''} shadow-[0_0_15px_rgba(168,85,247,0.5)]`} style={{ 
                   left: '30%', 
                   width: '40%', 
                   bottom: `${bottomBase}px`, 
                   height: `${maxLayerHeight * thickness / 100}px`,
                   backgroundColor: layerColor,
-                  transition: 'height 0.3s ease-in-out'
+                  transition: 'height 0.3s ease-out',
+                  backdropFilter: 'blur(3px)'
                 }}>
-                  <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-white font-bold`}>
+                  <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-white font-mono font-bold text-shadow`}>
                     {thickness > 30 && layerName}
                   </div>
                 </div>
               );
             case 'evaporation':
-              layerColor = '#9ca3af';
+              layerColor = 'rgba(203, 213, 225, 0.9)';
               layerName = recipe.material || 'Al';
               const sputteringIndex = selectedEquipments.findIndex(eq => eq.id === 'sputtering');
               if (sputteringIndex === -1) return null;
@@ -92,27 +98,27 @@ const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, l
               const actualHeight = maxLayerHeight * thickness / 100;
               return (
                 <React.Fragment key={`layer-${index}`}>
-                  <div className="absolute" style={{ 
+                  <div className={`absolute ${thickness > 0 ? 'border border-slate-300' : ''} shadow-[0_0_10px_rgba(203,213,225,0.8)]`} style={{ 
                     left: '15%', width: '15%', bottom: `${sputteringBottomBase}px`, 
                     height: `${sputteringVisualHeight * (thickness * 1.2) / 100}px`,
-                    backgroundColor: layerColor, transition: 'height 0.3s ease-in-out'
+                    backgroundColor: layerColor, transition: 'height 0.3s ease-out'
                   }} />
-                  <div className="absolute" style={{ 
+                  <div className={`absolute ${thickness > 0 ? 'border border-slate-300' : ''} shadow-[0_0_10px_rgba(203,213,225,0.8)]`} style={{ 
                     right: '15%', width: '15%', bottom: `${sputteringBottomBase}px`, 
                     height: `${sputteringVisualHeight * (thickness * 1.2) / 100}px`,
-                    backgroundColor: layerColor, transition: 'height 0.3s ease-in-out'
+                    backgroundColor: layerColor, transition: 'height 0.3s ease-out'
                   }} />
-                  <div className="absolute" style={{ 
+                  <div className={`absolute ${thickness > 0 ? 'border-t border-x border-slate-300' : ''} shadow-[0_0_10px_rgba(203,213,225,0.8)]`} style={{ 
                     left: '30%', width: '15%', bottom: `${bottomBase}px`, height: `${actualHeight}px`,
-                    backgroundColor: layerColor, transition: 'height 0.3s ease-in-out'
+                    backgroundColor: layerColor, transition: 'height 0.3s ease-out'
                   }}>
-                    <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-white font-bold`}>{thickness > 30 && 'S'}</div>
+                    <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-slate-800 font-black font-mono`}>{thickness > 30 && layerName && 'S'}</div>
                   </div>
-                  <div className="absolute" style={{ 
+                  <div className={`absolute ${thickness > 0 ? 'border-t border-x border-slate-300' : ''} shadow-[0_0_10px_rgba(203,213,225,0.8)]`} style={{ 
                     left: '55%', width: '15%', bottom: `${bottomBase}px`, height: `${actualHeight}px`,
-                    backgroundColor: layerColor, transition: 'height 0.3s ease-in-out'
+                    backgroundColor: layerColor, transition: 'height 0.3s ease-out'
                   }}>
-                    <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-white font-bold`}>{thickness > 30 && 'D'}</div>
+                    <div className={`absolute inset-0 flex items-center justify-center ${labelClass} text-slate-800 font-black font-mono`}>{thickness > 30 && layerName && 'D'}</div>
                   </div>
                 </React.Fragment>
               );
@@ -153,47 +159,62 @@ const EnhancedEquipmentAnimation = ({ currentEquipment, layerThickness, currentS
     case 'oxidation':
       return (
         <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 rounded-t-[3rem] shadow-2xl overflow-hidden"
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 border-x border-t border-orange-500/30 rounded-t-[3rem] shadow-[0_0_40px_rgba(234,88,12,0.3)] overflow-hidden"
                style={{
-                 background: `linear-gradient(${animationPhase * 5}deg, #dc2626 0%, #ea580c 20%, #f59e0b 40%, #eab308 60%, #f59e0b 80%, #ea580c 100%)`,
+                 background: `linear-gradient(${animationPhase * 5}deg, rgba(15,23,42,0.9) 0%, rgba(30,10,10,0.8) 50%, rgba(15,23,42,0.9) 100%)`,
                  animation: `furnaceGlow ${2 / speed}s ease-in-out infinite`
                }}>
-            <div className="absolute inset-3 rounded-t-[2.5rem] opacity-90"
+            {/* 챔버 내부 발광 효과 */}
+            <div className="absolute inset-2 rounded-t-[2.5rem] opacity-80"
                  style={{
-                   background: `radial-gradient(circle at 50% 80%, #fbbf24 0%, #f59e0b 30%, #ea580c 60%, #dc2626 100%)`,
+                   background: `radial-gradient(ellipse at 50% 100%, rgba(249,115,22,0.4) 0%, rgba(239,68,68,0.2) 40%, transparent 80%)`,
                    transform: `scale(${0.95 + Math.sin(animationPhase * 0.4) * 0.1})`,
-                   filter: `brightness(${1.2 + Math.sin(animationPhase * 0.3) * 0.3})`
+                   filter: `blur(8px)`
                  }} />
+            
+            {/* 가열 코일 */}
+            {[...Array(5)].map((_, i) => (
+              <div key={`coil-${i}`} className="absolute w-64 h-2 left-1/2 -translate-x-1/2 rounded-full shadow-[0_0_15px_rgba(239,68,68,0.8)]"
+                   style={{ 
+                     top: `${20 + i * 15}%`, 
+                     background: `linear-gradient(90deg, #7f1d1d, #ef4444, #7f1d1d)`,
+                     opacity: 0.6 + Math.sin(animationPhase * 0.5 + i) * 0.4
+                   }} />
+            ))}
+
             {showEnergyWaves && [...Array(6)].map((_, i) => (
-              <div key={`heat-${i}`} className="absolute rounded-full border-2 border-orange-300" style={{
-                 left: '50%', top: '30%', width: `${40 + i * 20}px`, height: `${40 + i * 20}px`,
+              <div key={`heat-${i}`} className="absolute rounded-full border border-orange-400/50" style={{
+                 left: '50%', top: '60%', width: `${40 + i * 20}px`, height: `${40 + i * 20}px`,
                  transform: 'translate(-50%, -50%)',
-                 opacity: Math.max(0, 0.8 - i * 0.15 - (animationPhase % 8) * 0.1),
+                 opacity: Math.max(0, 0.6 - i * 0.1 - (animationPhase % 8) * 0.1),
                  animation: `heatWave ${3 + i * 0.5}s ease-out infinite`, animationDelay: `${i * 0.3}s`
                }} />
             ))}
-            {showParticles && [...Array(16)].map((_, i) => (
+
+            {showParticles && [...Array(24)].map((_, i) => (
               <div key={`o2-${i}`} className="absolute rounded-full" style={{
-                 width: `${2 + (i % 3)}px`, height: `${2 + (i % 3)}px`,
-                 background: `radial-gradient(circle, #60a5fa, #3b82f6)`,
-                 left: `${15 + (i % 6) * 12}%`, top: `${10 + (i % 4) * 15}%`,
-                 boxShadow: '0 0 8px rgba(96, 165, 250, 0.6)',
-                 animation: `oxygenFloat ${1.5 + (i % 4) * 0.5}s ease-in-out infinite`, animationDelay: `${i * 0.2}s`,
-                 transform: `scale(${0.8 + Math.sin((animationPhase + i) * 0.5) * 0.4}) rotate(${animationPhase * 10 + i * 30}deg)`
+                 width: `${1 + (i % 3)}px`, height: `${1 + (i % 3)}px`,
+                 background: `rgba(96,165,250,${0.6 + Math.random()*0.4})`,
+                 left: `${15 + (i % 8) * 10}%`, top: `${10 + (i % 6) * 10}%`,
+                 boxShadow: '0 0 10px rgba(96, 165, 250, 0.8)',
+                 animation: `oxygenFloat ${1.5 + (i % 4) * 0.5}s ease-in-out infinite`, animationDelay: `${i * 0.1}s`,
+                 transform: `scale(${0.8 + Math.sin((animationPhase + i) * 0.5) * 0.4})`
                }} />
             ))}
+            
+            {/* 기판 및 웨이퍼 컨테이너 */}
             <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-              <div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative overflow-hidden">
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg">
-                  <div className="absolute top-0 left-0 h-2 rounded-t-lg transition-all duration-1000" style={{ 
-                     width: `${thickness}%`, background: `linear-gradient(90deg, #3b82f6 0%, #1d4ed8 50%, #1e3a8a 100%)`,
-                     boxShadow: '0 0 10px rgba(59, 130, 246, 0.5)', filter: `brightness(${1 + thickness / 200})`
+              <div className="w-40 h-8 bg-slate-800 border-x border-t border-slate-600 rounded-t-xl shadow-[0_-5px_20px_rgba(0,0,0,0.8)] relative flex justify-center items-end pb-2">
+                <div className="w-32 h-2 bg-slate-700 rounded-sm relative">
+                  <motion.div className="absolute bottom-full left-0 w-full rounded-t-sm origin-bottom" 
+                    initial={{ height: 0 }}
+                    animate={{ height: thickness * 0.2 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    style={{ 
+                     background: `linear-gradient(90deg, rgba(6,182,212,0.8), rgba(56,189,248,0.9), rgba(6,182,212,0.8))`,
+                     boxShadow: '0 0 15px rgba(56, 189, 248, 0.6)', filter: `brightness(${1 + thickness / 200})`
                    }}/>
                 </div>
-                <div className="absolute inset-0 opacity-50" style={{
-                   background: `linear-gradient(90deg, transparent 0%, rgba(251, 191, 36, ${0.3 + Math.sin(animationPhase * 0.5) * 0.2}) 50%, transparent 100%)`,
-                   transform: `translateX(${animationPhase * 5}%)`
-                 }} />
               </div>
             </div>
           </div>
@@ -202,59 +223,64 @@ const EnhancedEquipmentAnimation = ({ currentEquipment, layerThickness, currentS
     case 'sputtering':
       return (
         <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 rounded-t-[3rem] shadow-2xl overflow-hidden" style={{
-            background: `linear-gradient(${animationPhase * 3}deg, #1f2937 0%, #374151 30%, #4b5563 50%, #374151 70%, #1f2937 100%)`
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 border-x border-t border-purple-500/30 rounded-t-[3rem] shadow-[0_0_40px_rgba(168,85,247,0.2)] overflow-hidden" style={{
+            background: `linear-gradient(180deg, rgba(15,23,42,0.95) 0%, rgba(30,10,40,0.85) 100%)`
           }}>
+            {/* 배경 플라즈마 글로우 */}
             <div className="absolute inset-3 rounded-t-[2.5rem]" style={{
-              background: `radial-gradient(ellipse at 50% 60%, rgba(147, 51, 234, ${0.8 + Math.sin(animationPhase * 0.6) * 0.2}) 0%, rgba(126, 34, 206, ${0.6 + Math.sin(animationPhase * 0.4) * 0.3}) 30%, rgba(88, 28, 135, 0.4) 60%, transparent 100%)`,
+              background: `radial-gradient(ellipse at 50% 40%, rgba(168, 85, 247, ${0.4 + Math.sin(animationPhase * 0.6) * 0.2}) 0%, rgba(147, 51, 234, ${0.2 + Math.sin(animationPhase * 0.4) * 0.1}) 40%, transparent 70%)`,
               animation: `plasmaFlicker ${1 / speed}s ease-in-out infinite`
             }} />
-            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-24 h-6 rounded-lg shadow-lg overflow-hidden" style={{
-              background: `linear-gradient(45deg, #10b981, #059669, #047857)`, boxShadow: '0 0 15px rgba(16, 185, 129, 0.5)'
-            }}>
-              <div className="text-xs text-center text-white font-bold py-1">{currentRecipe.material || 'IZO'} Target</div>
-              {showParticles && [...Array(8)].map((_, i) => (
-                <div key={`target-atom-${i}`} className="absolute w-1 h-1 rounded-full" style={{
-                  background: '#10b981', left: `${20 + (i % 4) * 15}%`, top: '100%', boxShadow: '0 0 4px #10b981',
-                  animation: `targetSputter ${0.8 + (i % 3) * 0.2}s ease-out infinite`, animationDelay: `${i * 0.1}s`
+            
+            {/* 상단 타겟 전극 */}
+            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-32 h-6 border border-purple-400 bg-slate-800 rounded shadow-[0_0_20px_rgba(168,85,247,0.5)] overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600/50 to-purple-400/50 opacity-50 animate-pulse"></div>
+              <div className="text-[10px] text-center text-purple-200 font-mono tracking-widest leading-6 uppercase">{currentRecipe.material || 'TARGET'} MATERIAL</div>
+              {showParticles && [...Array(10)].map((_, i) => (
+                <div key={`target-atom-${i}`} className="absolute w-1 h-3 rounded-full" style={{
+                  background: 'rgba(192,132,252,0.8)', left: `${10 + (i % 5) * 20}%`, top: '100%', boxShadow: '0 0 10px #c084fc',
+                  animation: `targetSputter ${0.5 + Math.random() * 0.5}s linear infinite`, animationDelay: `${Math.random() * 0.5}s`
                 }} />
               ))}
             </div>
+
             {showPlasmaEffects && (
-              <div className="absolute top-16 left-1/2 transform -translate-x-1/2 w-20 h-12 rounded-full opacity-60">
-                <div className="w-full h-full rounded-full relative" style={{
-                  background: `radial-gradient(circle, rgba(168, 85, 247, ${0.8 + Math.sin(animationPhase * 0.8) * 0.2}), rgba(147, 51, 234, 0.4), transparent)`,
-                  filter: `brightness(${1.5 + Math.sin(animationPhase * 0.7) * 0.5})`
+              <div className="absolute top-20 left-1/2 transform -translate-x-1/2 w-48 h-20 opacity-80 mix-blend-screen">
+                <div className="w-full h-full relative" style={{
+                  background: `radial-gradient(ellipse, rgba(168, 85, 247, ${0.6 + Math.sin(animationPhase * 0.8) * 0.2}), transparent 70%)`,
+                  filter: `blur(5px)`
                 }}>
-                  {[...Array(12)].map((_, i) => (
-                    <div key={`spark-${i}`} className="absolute w-0.5 h-0.5 bg-white rounded-full" style={{
-                      left: `${20 + (i % 6) * 10}%`, top: `${20 + (i % 4) * 15}%`, opacity: Math.random() > 0.5 ? 1 : 0,
-                      animation: `sparkle ${0.3 + Math.random() * 0.4}s ease-in-out infinite`, animationDelay: `${Math.random() * 0.5}s`
+                  {[...Array(20)].map((_, i) => (
+                    <div key={`spark-${i}`} className="absolute w-1 h-1 bg-white rounded-full" style={{
+                      left: `${10 + (i % 10) * 8}%`, top: `${10 + (i % 5) * 20}%`, 
+                      boxShadow: '0 0 5px #fff, 0 0 10px #c084fc',
+                      animation: `sparkle ${0.1 + Math.random() * 0.3}s ease-in-out infinite`, animationDelay: `${Math.random() * 0.2}s`
                     }} />
                   ))}
                 </div>
               </div>
             )}
-            {showParticles && [...Array(20)].map((_, i) => (
-              <div key={`sput-${i}`} className="absolute rounded-full" style={{
-                width: `${1 + (i % 2)}px`, height: `${1 + (i % 2)}px`, background: `radial-gradient(circle, #10b981, #059669)`,
-                left: `${35 + (i % 6) * 5}%`, top: `${20 + (i % 5) * 6}%`, boxShadow: '0 0 6px rgba(16, 185, 129, 0.6)',
-                animation: `superSputter ${1.2 + (i % 4) * 0.3}s ease-out infinite`, animationDelay: `${i * 0.1}s`,
-                transform: `scale(${0.5 + Math.sin((animationPhase + i) * 0.3) * 0.5})`
+
+            {showParticles && [...Array(30)].map((_, i) => (
+              <div key={`sput-${i}`} className="absolute w-1 h-1 rounded-full" style={{
+                background: `#e9d5ff`, left: `${20 + (i % 8) * 8}%`, top: `${20 + (i % 5) * 10}%`, 
+                boxShadow: '0 0 8px #d8b4fe',
+                animation: `superSputter ${0.8 + Math.random() * 0.5}s ease-in infinite`, animationDelay: `${Math.random() * 0.5}s`
               }} />
             ))}
+            
             <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-              <div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative overflow-hidden">
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg">
-                  <div className="absolute top-1 left-0 h-1 rounded transition-all duration-1000" style={{ 
-                    width: `${thickness}%`, background: `linear-gradient(90deg, #10b981, #059669, #047857)`,
-                    boxShadow: '0 0 8px rgba(16, 185, 129, 0.5)'
-                  }}/>
+              <div className="w-40 h-8 bg-slate-800 border border-slate-600 rounded-t-xl shadow-[0_0_20px_rgba(0,0,0,1)] relative flex justify-center items-end pb-2">
+                <div className="w-32 h-2 bg-slate-700 rounded-sm relative">
+                  <motion.div className="absolute bottom-full left-0 w-full rounded-t-sm origin-bottom" 
+                    initial={{ height: 0 }}
+                    animate={{ height: thickness * 0.2 }}
+                    transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                    style={{ 
+                     background: `linear-gradient(90deg, rgba(168,85,247,0.8), rgba(192,132,252,0.9), rgba(168,85,247,0.8))`,
+                     boxShadow: '0 0 15px rgba(192, 132, 252, 0.6)'
+                   }}/>
                 </div>
-                <div className="absolute inset-0 opacity-30" style={{
-                  background: `linear-gradient(90deg, transparent 0%, rgba(168, 85, 247, ${0.4 + Math.sin(animationPhase * 0.4) * 0.2}) 50%, transparent 100%)`,
-                  transform: `translateX(${(animationPhase * 3) % 100}%)`
-                }} />
               </div>
             </div>
           </div>
@@ -263,70 +289,57 @@ const EnhancedEquipmentAnimation = ({ currentEquipment, layerThickness, currentS
     case 'evaporation':
       return (
         <div className="absolute inset-0">
-          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 rounded-t-[3rem] shadow-2xl overflow-hidden" style={{
-            background: `linear-gradient(${animationPhase * 2}deg, #000000 0%, #1f2937 20%, #374151 40%, #1f2937 60%, #000000 100%)`
+          <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-80 h-64 border-x border-t border-slate-700 rounded-t-[3rem] shadow-[0_0_30px_rgba(255,255,255,0.05)] overflow-hidden" style={{
+            background: `linear-gradient(180deg, rgba(10,15,25,0.95) 0%, rgba(20,25,35,0.95) 100%)`
           }}>
-            <div className="absolute inset-3 rounded-t-[2.5rem]" style={{
-              background: `radial-gradient(ellipse at 50% 90%, rgba(17, 24, 39, 0.9) 0%, rgba(31, 41, 55, 0.7) 50%, rgba(55, 65, 81, 0.5) 100%)`
-            }} />
-            <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-8 h-16 rounded-b-lg shadow-lg" style={{
-              background: `linear-gradient(180deg, #6b7280, #4b5563, #374151)`, boxShadow: '0 0 20px rgba(59, 130, 246, 0.3)'
-            }}>
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-2 h-2 rounded-full" style={{
-                background: `radial-gradient(circle, #06b6d4, #0891b2)`,
-                boxShadow: `0 0 ${15 + Math.sin(animationPhase * 0.8) * 10}px #06b6d4`,
-                animation: `ebeamPulse ${0.5 / speed}s ease-in-out infinite`
-              }} />
-              <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-1 h-16" style={{
-                background: `linear-gradient(180deg, rgba(6, 182, 212, ${0.8 + Math.sin(animationPhase * 0.6) * 0.2}), rgba(8, 145, 178, 0.6), transparent)`,
-                boxShadow: '0 0 10px rgba(6, 182, 212, 0.5)', animation: `beamPath ${1 / speed}s linear infinite`
-              }} />
+            {/* E-beam 건 (하단) */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-24 h-10 border border-slate-600 bg-slate-800 rounded-lg shadow-[0_0_20px_rgba(0,0,0,0.8)] z-10 flex flex-col justify-end items-center pb-2">
+              <div className="text-[10px] text-slate-400 font-mono tracking-widest">{currentRecipe.material || 'Al'} SOURCE</div>
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,1)] animate-pulse"></div>
             </div>
-            <div className="absolute bottom-16 left-1/2 transform -translate-x-1/2 w-16 h-8 rounded-lg shadow-lg overflow-hidden" style={{
-              background: `linear-gradient(45deg, #d1d5db, #9ca3af, #6b7280)`, boxShadow: '0 0 15px rgba(156, 163, 175, 0.5)'
-            }}>
-              <div className="text-xs text-center text-gray-800 font-bold py-2">{currentRecipe.material || 'Al'} Source</div>
-              <div className="absolute inset-0 opacity-60" style={{
-                background: `radial-gradient(circle at 50% 80%, rgba(251, 191, 36, ${0.4 + Math.sin(animationPhase * 0.5) * 0.3}) 0%, rgba(245, 158, 11, 0.2) 50%, transparent 100%)`
-              }} />
-            </div>
-            {showParticles && [...Array(24)].map((_, i) => (
-              <div key={`evap-${i}`} className="absolute rounded-full" style={{
-                width: `${0.5 + (i % 3) * 0.5}px`, height: `${0.5 + (i % 3) * 0.5}px`, background: `radial-gradient(circle, #9ca3af, #6b7280)`,
-                left: `${38 + (i % 5) * 5}%`, top: `${25 + (i % 6) * 8}%`, boxShadow: '0 0 4px rgba(156, 163, 175, 0.6)',
-                animation: `superEvaporate ${1.8 + (i % 4) * 0.4}s ease-out infinite`, animationDelay: `${i * 0.08}s`,
-                opacity: 0.7 + Math.sin((animationPhase + i) * 0.4) * 0.3
+
+            {/* 레이저 빔 이펙트 */}
+            {showEnergyWaves && (
+              <div className="absolute bottom-14 left-1/2 transform -translate-x-1/2 w-1 h-[70%]" style={{
+                background: `linear-gradient(0deg, rgba(34,211,238,0.9) 0%, rgba(14,165,233,0.5) 40%, transparent 100%)`,
+                boxShadow: `0 0 ${15 + Math.sin(animationPhase)*10}px rgba(34,211,238,0.8)`,
+                animation: `beamFlicker ${0.1 / speed}s infinite`
+              }}></div>
+            )}
+
+            {/* 증발 파티클 */}
+            {showParticles && [...Array(40)].map((_, i) => (
+              <div key={`evap-${i}`} className="absolute w-[2px] h-[6px] rounded-full bg-slate-200" style={{
+                left: `${35 + Math.random() * 30}%`, 
+                bottom: '15%', 
+                boxShadow: '0 0 5px rgba(255,255,255,0.8)',
+                animation: `superEvaporate ${0.8 + Math.random()}s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite`, 
+                animationDelay: `${Math.random()}s`,
+                opacity: 0
               }} />
             ))}
-            {showEnergyWaves && [...Array(3)].map((_, i) => (
-              <div key={`beam-${i}`} className="absolute left-1/2 transform -translate-x-1/2" style={{
-                top: `${50 + i * 15}%`, width: `${10 + i * 5}px`, height: '2px',
-                background: `linear-gradient(90deg, transparent 0%, rgba(156, 163, 175, ${0.6 - i * 0.2}) 50%, transparent 100%)`,
-                animation: `molecularBeam ${2 + i * 0.3}s ease-in-out infinite`, animationDelay: `${i * 0.2}s`
-              }} />
-            ))}
-            <div className="absolute bottom-12 left-1/2 transform -translate-x-1/2">
-              <div className="w-32 h-6 bg-gradient-to-r from-gray-300 to-gray-500 rounded-lg shadow-2xl relative overflow-hidden">
-                <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 w-28 h-4 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg shadow-lg">
-                  {thickness > 0 && (
-                    <>
-                      <div className="absolute top-0.5 left-0 h-1 rounded transition-all duration-1000" style={{ 
-                        width: `${Math.min(35, thickness * 0.35)}%`, background: `linear-gradient(90deg, #9ca3af, #6b7280, #4b5563)`,
-                        boxShadow: '0 0 6px rgba(156, 163, 175, 0.5)'
-                      }}/>
-                      <div className="absolute top-0.5 right-0 h-1 rounded transition-all duration-1000" style={{ 
-                        width: `${Math.min(35, thickness * 0.35)}%`, background: `linear-gradient(270deg, #9ca3af, #6b7280, #4b5563)`,
-                        boxShadow: '0 0 6px rgba(156, 163, 175, 0.5)'
-                      }}/>
-                    </>
-                  )}
-                </div>
-                <div className="absolute inset-0 opacity-25" style={{
-                  background: `linear-gradient(90deg, transparent 0%, rgba(6, 182, 212, ${0.5 + Math.sin(animationPhase * 0.3) * 0.3}) 50%, transparent 100%)`,
-                  transform: `translateX(${(animationPhase * 2) % 100}%)`
-                }} />
+
+            <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-48 h-10 border border-slate-600 bg-slate-800 rounded-b-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] flex justify-center items-start pt-2">
+              <div className="w-40 h-2 bg-slate-700 rounded-full relative overflow-hidden">
+                <motion.div className="absolute left-1/4 w-1/4 bottom-0 bg-slate-300 origin-bottom" 
+                  initial={{ height: '20%' }}
+                  animate={{ height: `${Math.max(20, thickness)}%` }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                  style={{ 
+                  boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)'
+                }}/>
+                <motion.div className="absolute right-1/4 w-1/4 bottom-0 bg-slate-300 origin-bottom" 
+                  initial={{ height: '20%' }}
+                  animate={{ height: `${Math.max(20, thickness)}%` }}
+                  transition={{ type: "spring", stiffness: 100, damping: 20 }}
+                  style={{ 
+                  boxShadow: '0 0 10px rgba(255, 255, 255, 0.8)'
+                }}/>
               </div>
             </div>
+            
+            {/* 플라즈마 클라우드 느낌 */}
+            <div className="absolute top-[30%] left-1/2 -translate-x-1/2 w-40 h-20 bg-cyan-500/10 rounded-full mix-blend-screen filter blur-xl animate-pulse"></div>
           </div>
         </div>
       );
@@ -336,21 +349,30 @@ const EnhancedEquipmentAnimation = ({ currentEquipment, layerThickness, currentS
 };
 
 const ParameterMonitor = ({ currentRecipe, currentEquipment }) => (
-  <div className="absolute top-4 left-4 space-y-2 z-10">
-    <div className="flex items-center space-x-2 bg-black/80 text-white px-3 py-2 rounded-lg backdrop-blur">
-      <Thermometer className="w-4 h-4" />
-      <span className="text-sm font-mono">{currentRecipe.temperature || 25}°C</span>
-      <div className={`w-2 h-2 rounded-full ${(currentRecipe.temperature || 25) > 500 ? 'bg-red-500' : (currentRecipe.temperature || 25) > 100 ? 'bg-yellow-500' : 'bg-blue-500'} animate-pulse`}></div>
+  <div className="absolute top-4 left-4 space-y-3 z-10 font-mono">
+    <div className="flex items-center space-x-3 bg-slate-900/80 border border-slate-700 text-cyan-400 px-4 py-2.5 rounded-lg backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+      <Thermometer className="w-5 h-5 text-red-400" />
+      <div className="flex flex-col">
+        <span className="text-[10px] text-slate-500 uppercase tracking-widest leading-none mb-1">Temperature</span>
+        <span className="text-sm font-bold text-white">{currentRecipe.temperature || 25}°C</span>
+      </div>
+      <div className={`ml-auto w-2 h-2 rounded-full ${(currentRecipe.temperature || 25) > 500 ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : (currentRecipe.temperature || 25) > 100 ? 'bg-yellow-500 shadow-[0_0_8px_#eab308]' : 'bg-blue-500 shadow-[0_0_8px_#3b82f6]'} animate-pulse`}></div>
     </div>
-    <div className="flex items-center space-x-2 bg-black/80 text-white px-3 py-2 rounded-lg backdrop-blur">
-      <Gauge className="w-4 h-4" />
-      <span className="text-sm font-mono">{currentRecipe.pressure || 1} {currentEquipment?.id === 'sputtering' ? 'mTorr' : 'Torr'}</span>
+    <div className="flex items-center space-x-3 bg-slate-900/80 border border-slate-700 text-cyan-400 px-4 py-2.5 rounded-lg backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+      <Gauge className="w-5 h-5 text-purple-400" />
+      <div className="flex flex-col">
+        <span className="text-[10px] text-slate-500 uppercase tracking-widest leading-none mb-1">Chamber Pressure</span>
+        <span className="text-sm font-bold text-white">{currentRecipe.pressure || 1} {currentEquipment?.id === 'sputtering' ? 'mTorr' : 'Torr'}</span>
+      </div>
     </div>
     {currentRecipe.power && (
-      <div className="flex items-center space-x-2 bg-black/80 text-white px-3 py-2 rounded-lg backdrop-blur">
-        <Zap className="w-4 h-4" />
-        <span className="text-sm font-mono">{currentRecipe.power}{currentEquipment?.id === 'evaporation' ? 'kW' : 'W'}</span>
-        <div className="w-2 h-2 bg-yellow-500 rounded-full animate-ping"></div>
+      <div className="flex items-center space-x-3 bg-slate-900/80 border border-slate-700 text-cyan-400 px-4 py-2.5 rounded-lg backdrop-blur-md shadow-[0_0_15px_rgba(0,0,0,0.5)]">
+        <Zap className="w-5 h-5 text-yellow-400" />
+        <div className="flex flex-col">
+          <span className="text-[10px] text-slate-500 uppercase tracking-widest leading-none mb-1">RF/DC Power</span>
+          <span className="text-sm font-bold text-white">{currentRecipe.power}{currentEquipment?.id === 'evaporation' ? 'kW' : 'W'}</span>
+        </div>
+        <div className="ml-auto w-2 h-2 bg-yellow-400 shadow-[0_0_8px_#facc15] rounded-full animate-ping"></div>
       </div>
     )}
   </div>
@@ -435,114 +457,174 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
   const currentRecipe = recipes[currentStep] || {};
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50 rounded-t-xl">
-        <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent flex items-center">
-          <Play className="w-6 h-6 mr-2 text-green-500" />
-          공정 시뮬레이션
+    <div className="max-w-6xl mx-auto p-6 font-sans">
+      {/* 컨트롤 헤더 */}
+      <div className="flex flex-col md:flex-row items-center justify-between p-5 border-b border-cyan-900/50 bg-slate-800/80 backdrop-blur-md rounded-t-xl shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
+        <h2 className="text-2xl font-black text-white font-mono tracking-widest uppercase flex items-center mb-4 md:mb-0">
+          <Play className="w-6 h-6 mr-3 text-cyan-400 fill-current animate-pulse" />
+          SIMULATION <span className="text-cyan-500 ml-2">EXECUTION</span>
         </h2>
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 bg-white rounded-lg px-3 py-2 shadow">
-            <button onClick={togglePlay} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title={isPlaying ? "일시정지" : "재생"}>
-              {isPlaying ? <Pause className="w-5 h-5 text-red-500" /> : <Play className="w-5 h-5 text-green-500" />}
+        
+        <div className="flex flex-wrap justify-center items-center gap-3">
+          <div className="flex items-center space-x-1 bg-slate-900 border border-slate-700 rounded-lg p-1 shadow-inner">
+            <button onClick={togglePlay} className="p-2.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-md transition-colors" title={isPlaying ? "PAUSE" : "START"}>
+              {isPlaying ? <Pause className="w-5 h-5 text-red-500 fill-current" /> : <Play className="w-5 h-5 text-green-500 fill-current" />}
             </button>
-            <button onClick={resetAnimation} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="초기화">
-              <RotateCcw className="w-5 h-5 text-blue-500" />
+            <div className="w-px h-6 bg-slate-700"></div>
+            <button onClick={resetAnimation} className="p-2.5 hover:bg-slate-800 text-slate-300 hover:text-white rounded-md transition-colors" title="RESET">
+              <RotateCcw className="w-5 h-5 text-blue-400" />
             </button>
           </div>
           
-          <div className="flex items-center space-x-2 bg-white rounded-lg px-3 py-2 shadow">
-            <span className="text-sm font-medium">속도:</span>
-            <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="text-sm border rounded px-2 py-1 bg-white">
-              <option value={0.5}>0.5x</option><option value={1}>1x</option><option value={2}>2x</option><option value={4}>4x</option><option value={8}>8x</option>
+          <div className="flex items-center space-x-2 bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 shadow-inner font-mono">
+            <span className="text-xs text-cyan-600 uppercase tracking-widest">Rate:</span>
+            <select value={speed} onChange={(e) => setSpeed(Number(e.target.value))} className="text-sm font-bold bg-transparent text-white focus:outline-none cursor-pointer">
+              <option value={0.5} className="bg-slate-900">0.5x</option>
+              <option value={1} className="bg-slate-900">1.0x</option>
+              <option value={2} className="bg-slate-900">2.0x</option>
+              <option value={4} className="bg-slate-900">4.0x</option>
+              <option value={8} className="bg-slate-900">8.0x</option>
             </select>
           </div>
           
-          <button onClick={() => setShowSettings(!showSettings)} className="p-2 hover:bg-gray-100 rounded-full transition-colors" title="애니메이션 설정">
-            <Settings className="w-5 h-5 text-gray-600" />
+          <button onClick={() => setShowSettings(!showSettings)} className={`p-2.5 rounded-lg border transition-all ${showSettings ? 'bg-cyan-900/40 border-cyan-500 text-cyan-300 shadow-[0_0_10px_rgba(6,182,212,0.3)]' : 'bg-slate-900 border-slate-700 text-slate-400 hover:text-white hover:bg-slate-800'}`} title="SETTINGS">
+            <Settings className={`w-5 h-5 ${showSettings ? 'animate-[spin_4s_linear_infinite]' : ''}`} />
           </button>
         </div>
       </div>
       {showSettings && (
         <>
-          <div className="fixed inset-0 bg-black/30 z-20" onClick={() => setShowSettings(false)} />
-          <div className="absolute top-20 right-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-2xl border border-gray-200 p-4 w-72 z-30">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="font-bold text-lg text-gray-800">🎬 애니메이션 설정</h3>
-              <button onClick={() => setShowSettings(false)} className="text-gray-400 hover:text-gray-700">
+          <div className="fixed inset-0 bg-black/60 z-20 backdrop-blur-sm" onClick={() => setShowSettings(false)} />
+          <div className="absolute top-24 right-6 bg-slate-900/95 backdrop-blur-md rounded-xl shadow-[0_0_30px_rgba(0,0,0,0.8)] border border-cyan-900/80 p-5 w-80 z-30 font-mono">
+            <div className="flex justify-between items-center mb-6 border-b border-slate-700 pb-3">
+              <h3 className="font-bold text-sm tracking-widest text-cyan-400 uppercase flex items-center">
+                <Settings className="w-4 h-4 mr-2" /> OVERRIDE CONFIG
+              </h3>
+              <button onClick={() => setShowSettings(false)} className="text-slate-500 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <div className="space-y-4">
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" checked={showParticles} onChange={(e) => setShowParticles(e.target.checked)} className="rounded"/>
-                <span className="text-sm">🔸 파티클 효과</span>
+            <div className="space-y-5">
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${showParticles ? 'bg-cyan-600 border-cyan-400' : 'bg-slate-800 border-slate-600'}`}>
+                  {showParticles && <div className="w-2.5 h-2.5 bg-white rounded-sm"></div>}
+                </div>
+                <input type="checkbox" checked={showParticles} onChange={(e) => setShowParticles(e.target.checked)} className="hidden"/>
+                <span className={`text-sm tracking-widest uppercase transition-colors ${showParticles ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>PARTICLE SYS</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" checked={showEnergyWaves} onChange={(e) => setShowEnergyWaves(e.target.checked)} className="rounded"/>
-                <span className="text-sm">🌊 에너지 웨이브</span>
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${showEnergyWaves ? 'bg-cyan-600 border-cyan-400' : 'bg-slate-800 border-slate-600'}`}>
+                  {showEnergyWaves && <div className="w-2.5 h-2.5 bg-white rounded-sm"></div>}
+                </div>
+                <input type="checkbox" checked={showEnergyWaves} onChange={(e) => setShowEnergyWaves(e.target.checked)} className="hidden"/>
+                <span className={`text-sm tracking-widest uppercase transition-colors ${showEnergyWaves ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>WAVE EMITTER</span>
               </label>
-              <label className="flex items-center space-x-2 cursor-pointer">
-                <input type="checkbox" checked={showPlasmaEffects} onChange={(e) => setShowPlasmaEffects(e.target.checked)} className="rounded"/>
-                <span className="text-sm">⚡ 플라즈마 효과</span>
+              <label className="flex items-center space-x-3 cursor-pointer group">
+                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${showPlasmaEffects ? 'bg-cyan-600 border-cyan-400' : 'bg-slate-800 border-slate-600'}`}>
+                  {showPlasmaEffects && <div className="w-2.5 h-2.5 bg-white rounded-sm"></div>}
+                </div>
+                <input type="checkbox" checked={showPlasmaEffects} onChange={(e) => setShowPlasmaEffects(e.target.checked)} className="hidden"/>
+                <span className={`text-sm tracking-widest uppercase transition-colors ${showPlasmaEffects ? 'text-white' : 'text-slate-500 group-hover:text-slate-300'}`}>PLASMA FIELD</span>
               </label>
-              <div className="space-y-2">
-                <span className="text-sm font-medium">🔥 강도 레벨:</span>
-                <input type="range" min="0.5" max="2" step="0.1" value={intensityLevel} onChange={(e) => setIntensityLevel(Number(e.target.value))} className="w-full" />
-                <div className="text-xs text-gray-500 text-center">{intensityLevel}x</div>
+              <div className="space-y-3 pt-4 border-t border-slate-700">
+                <div className="flex justify-between items-center text-xs tracking-widest text-slate-400 uppercase">
+                  <span>OVERDRIVE INTENSITY</span>
+                  <span className="text-cyan-400 font-bold">{intensityLevel.toFixed(1)}x</span>
+                </div>
+                <input type="range" min="0.5" max="2" step="0.1" value={intensityLevel} onChange={(e) => setIntensityLevel(Number(e.target.value))} className="w-full accent-cyan-500 bg-slate-800 h-1.5 rounded-full appearance-none outline-none" />
               </div>
             </div>
           </div>
         </>
       )}
-      <div className="flex justify-center mb-6 space-x-3 bg-white p-4 rounded-lg shadow">
+      {/* 스텝 네비게이터 */}
+      <div className="flex justify-center mb-8 px-4 py-6 bg-slate-900 border-x border-b border-cyan-900/30 rounded-b-xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] flex-wrap gap-4 relative overflow-hidden">
+        {/* 장식용 스캔라인 */}
+        <div className="absolute inset-x-0 bottom-0 h-0.5 bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
+        
         {selectedEquipments.map((equipment, index) => (
-          <div key={index} className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-500 ${
+          <div key={index} className={`relative px-5 py-2.5 rounded border font-mono text-sm tracking-widest uppercase transition-all duration-500 flex items-center ${
             index === currentStep ? 
-              `${equipment.color === 'red' ? 'bg-gradient-to-r from-red-400 to-red-600' : equipment.color === 'purple' ? 'bg-gradient-to-r from-purple-400 to-purple-600' : 'bg-gradient-to-r from-blue-400 to-blue-600'} text-white shadow-xl scale-110` :
+              `${equipment.color === 'red' ? 'bg-red-900/30 border-red-500 text-white shadow-[0_0_15px_rgba(239,68,68,0.5)]' : equipment.color === 'purple' ? 'bg-purple-900/30 border-purple-500 text-white shadow-[0_0_15px_rgba(168,85,247,0.5)]' : 'bg-blue-900/30 border-blue-500 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]'} scale-105 z-10` :
             index < currentStep ? 
-              `${equipment.color === 'red' ? 'bg-gradient-to-r from-red-100 to-red-200 text-red-800' : equipment.color === 'purple' ? 'bg-gradient-to-r from-purple-100 to-purple-200 text-purple-800' : 'bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800'} shadow-md` :
-              'bg-gradient-to-r from-gray-100 to-gray-200 text-gray-500 shadow'
+              `${equipment.color === 'red' ? 'bg-red-900/10 border-red-900/50 text-red-500/70' : equipment.color === 'purple' ? 'bg-purple-900/10 border-purple-900/50 text-purple-500/70' : 'bg-blue-900/10 border-blue-900/50 text-blue-500/70'}` :
+              'bg-slate-800 border-slate-700 text-slate-500'
           }`}>
-            <div className="flex items-center space-x-2">
-              <span className="font-bold">{index + 1}.</span>
-              <span>{equipment.name}</span>
-            </div>
+            <span className={`mr-2 font-black ${index === currentStep ? 'opacity-100' : 'opacity-50'}`}>0{index + 1}</span>
+            <span className={index === currentStep ? 'font-bold' : ''}>{equipment.name}</span>
+            
             {index === currentStep && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-ping" />
+              <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-cyan-400 rounded-full animate-ping shadow-[0_0_10px_#22d3ee]" />
             )}
           </div>
         ))}
       </div>
-      <div className="relative mx-auto w-full h-[400px] bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
-        <div className="absolute inset-0 opacity-5">
+
+      {/* 메인 뷰포트 (애니메이션 컨테이너) */}
+      <motion.div 
+        animate={
+          isPlaying && currentEquipment?.id === 'sputtering' ? {
+            x: [0, -2, 2, -1, 1, 0] * intensityLevel,
+            y: [0, 1, -1, 2, -2, 0] * intensityLevel
+          } : isPlaying && currentEquipment?.id === 'evaporation' ? {
+            y: [0, -1, 1, 0] * intensityLevel
+          } : {}
+        }
+        transition={{
+          duration: 0.1 / speed,
+          repeat: Infinity,
+          repeatType: "mirror"
+        }}
+        className="relative mx-auto w-full h-[450px] bg-slate-900 rounded-2xl border border-cyan-900/50 overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.8)] mt-4"
+      >
+        <AnimatePresence>
+          <motion.div 
+            key={`flash-${currentStep}`}
+            initial={{ opacity: 1 }}
+            animate={{ opacity: 0 }}
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 bg-white z-[60] pointer-events-none mix-blend-overlay"
+          />
+        </AnimatePresence>
+        
+        {/* 글로벌 사이버 그리드 */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none z-0">
           <div className="w-full h-full" style={{
-            backgroundImage: 'linear-gradient(rgba(0,0,0,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.1) 1px, transparent 1px)', 
-            backgroundSize: '20px 20px'
+            backgroundImage: 'linear-gradient(rgba(6,182,212,0.2) 1px, transparent 1px), linear-gradient(90deg, rgba(6,182,212,0.2) 1px, transparent 1px)', 
+            backgroundSize: '40px 40px'
           }} />
         </div>
+        
+        {/* 상단 장식 바 */}
+        <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-cyan-900 via-cyan-500 to-cyan-900 opacity-50 z-10"></div>
 
         <ParameterMonitor currentRecipe={currentRecipe} currentEquipment={currentEquipment} />
         
         {currentEquipment && (
-          <div className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-xl px-4 py-3 shadow-xl border border-blue-200 max-w-xs z-10">
-            <div className={`text-lg font-bold mb-2 flex items-center ${
-              currentEquipment.color === 'red' ? 'text-red-600' : currentEquipment.color === 'purple' ? 'text-purple-600' : 'text-blue-600'
+          <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur-md rounded-lg px-4 py-3 shadow-[0_0_15px_rgba(0,0,0,0.5)] border border-slate-700 max-w-xs z-10 font-mono">
+            <div className={`text-sm tracking-widest uppercase font-bold mb-3 flex items-center justify-between ${
+              currentEquipment.color === 'red' ? 'text-red-400' : currentEquipment.color === 'purple' ? 'text-purple-400' : 'text-blue-400'
             }`}>
-              {currentEquipment.name}
-              <div className={`ml-2 w-2 h-2 rounded-full animate-pulse ${
-                currentEquipment.color === 'red' ? 'bg-red-500' : currentEquipment.color === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
+              <span>{currentEquipment.name}</span>
+              <div className={`ml-3 w-2 h-2 rounded-full animate-pulse ${
+                currentEquipment.color === 'red' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : currentEquipment.color === 'purple' ? 'bg-purple-500 shadow-[0_0_8px_#a855f7]' : 'bg-blue-500 shadow-[0_0_8px_#3b82f6]'
               }`} />
             </div>
-            <div className="text-center">
-              <div className="text-sm text-gray-500 bg-gray-100 rounded px-2 py-1">
-                진행률: {Math.round(layerThickness[currentStep] || 0)}%
+            <div className="text-center bg-slate-800 rounded p-2 border border-slate-700 relative overflow-hidden">
+              <motion.div 
+                className="absolute inset-y-0 left-0 bg-cyan-900/40" 
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.round(layerThickness[currentStep] || 0)}%` }}
+                transition={{ type: "spring", stiffness: 100, damping: 20 }}
+              />
+              <div className="relative z-10 text-xs text-slate-300 uppercase tracking-widest flex justify-between items-center">
+                <span>PROGRESS</span>
+                <span className="text-cyan-400 font-bold">{Math.round(layerThickness[currentStep] || 0)}%</span>
               </div>
             </div>
           </div>
         )}
         
-        {}
         <EnhancedEquipmentAnimation 
           currentEquipment={currentEquipment}
           layerThickness={layerThickness}
@@ -561,18 +643,22 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           selectedEquipments={selectedEquipments}
           layerThickness={layerThickness}
         />
-      </div>
-      <div className="mt-6 space-y-4">
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <span className="text-sm font-medium text-gray-700">전체 공정 진행률</span>
-            <span className="text-sm text-gray-500">
+      </motion.div>
+
+      {/* 종합 상태 대시보드 */}
+      <div className="mt-8 space-y-6 font-mono">
+        <div className="space-y-3">
+          <div className="flex justify-between items-center px-2">
+            <span className="text-xs font-bold text-cyan-500 uppercase tracking-widest flex items-center">
+              <Activity className="w-4 h-4 mr-2" /> TOTAL FABRICATION PROGRESS
+            </span>
+            <span className="text-sm font-black text-white">
               {Math.round((currentStep + (layerThickness[currentStep] || 0) / 100) / selectedEquipments.length * 100)}%
             </span>
           </div>
-          <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
+          <div className="w-full bg-slate-800 rounded-sm h-1.5 border border-slate-700 relative overflow-hidden">
             <div 
-              className="bg-gradient-to-r from-blue-500 via-purple-500 to-green-500 h-3 rounded-full transition-all duration-1000 shadow-lg" 
+              className="absolute left-0 top-0 bottom-0 bg-gradient-to-r from-cyan-600 via-blue-500 to-purple-500 transition-all duration-1000 shadow-[0_0_10px_rgba(6,182,212,0.8)]" 
               style={{ width: `${(currentStep + (layerThickness[currentStep] || 0) / 100) / selectedEquipments.length * 100}%` }}
             />
           </div>
@@ -580,56 +666,63 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {selectedEquipments.map((equipment, index) => (
-            <div key={index} className="bg-white rounded-lg p-4 shadow border">
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-medium ${
-                  equipment.color === 'red' ? 'text-red-600' : equipment.color === 'purple' ? 'text-purple-600' : 'text-blue-600'
-                }`}>{equipment.name.split(' ')[0]}</span>
-                <span className="text-xs text-gray-500">{Math.round(layerThickness[index] || 0)}%</span>
+            <div key={index} className="bg-slate-800/50 rounded-lg p-4 border border-slate-700 backdrop-blur-sm">
+              <div className="flex items-center justify-between mb-3 border-b border-slate-700 pb-2">
+                <span className={`text-xs uppercase tracking-widest font-bold ${
+                  equipment.color === 'red' ? 'text-red-400' : equipment.color === 'purple' ? 'text-purple-400' : 'text-cyan-400'
+                }`}>{equipment.name}</span>
+                <span className="text-xs text-white font-bold bg-slate-900 px-2 py-0.5 rounded border border-slate-700">{Math.round(layerThickness[index] || 0)}%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div className="w-full bg-slate-900 rounded-sm h-1">
                 <div className={`${
-                    equipment.color === 'red' ? 'bg-red-500' : equipment.color === 'purple' ? 'bg-purple-500' : 'bg-blue-500'
-                  } h-2 rounded-full transition-all duration-500`} 
+                    equipment.color === 'red' ? 'bg-red-500 shadow-[0_0_8px_#ef4444]' : equipment.color === 'purple' ? 'bg-purple-500 shadow-[0_0_8px_#a855f7]' : 'bg-cyan-500 shadow-[0_0_8px_#06b6d4]'
+                  } h-1 rounded-sm transition-all duration-500 relative`} 
                   style={{ width: `${layerThickness[index] || 0}%` }}
-                />
+                >
+                  {layerThickness[index] > 0 && layerThickness[index] < 100 && (
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full"></div>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
       </div>
-      <div className="flex justify-between items-center mt-8 p-4 bg-white rounded-xl shadow border">
-        <div className="flex items-center space-x-4">
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600">{currentStep + 1}</div>
-            <div className="text-sm text-gray-600">현재 단계</div>
+      {/* 하단 제어 패널 */}
+      <div className="flex flex-col md:flex-row justify-between items-center mt-12 p-6 bg-slate-900 border border-slate-700 rounded-xl shadow-[0_10px_30px_rgba(0,0,0,0.8)] font-mono gap-6">
+        <div className="flex items-center space-x-8 bg-slate-800 p-4 rounded-lg border border-slate-700">
+          <div className="text-center relative">
+            <div className="text-3xl font-black text-cyan-400 text-shadow-glow">{currentStep + 1}</div>
+            <div className="text-[10px] text-slate-500 tracking-widest uppercase mt-1">ACTIVE STAGE</div>
+            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-px h-8 bg-slate-700"></div>
+          </div>
+          <div className="text-center relative">
+            <div className="text-3xl font-black text-purple-400 text-shadow-glow">{completedCycles}</div>
+            <div className="text-[10px] text-slate-500 tracking-widest uppercase mt-1">COMPLETED CYCLES</div>
+            <div className="absolute -right-4 top-1/2 -translate-y-1/2 w-px h-8 bg-slate-700"></div>
           </div>
           <div className="text-center">
-            <div className="text-2xl font-bold text-purple-600">{completedCycles}</div>
-            <div className="text-sm text-gray-600">완료 사이클</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600">{selectedEquipments.length}</div>
-            <div className="text-sm text-gray-600">총 단계</div>
+            <div className="text-3xl font-black text-slate-300">{selectedEquipments.length}</div>
+            <div className="text-[10px] text-slate-500 tracking-widest uppercase mt-1">TOTAL STAGES</div>
           </div>
         </div>
         
-        <div className="flex space-x-3">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
           <button 
             onClick={onStartOver} 
-            className="px-6 py-3 bg-gray-300 text-gray-700 rounded-xl font-medium hover:bg-gray-400 transition-colors"
+            className="px-6 py-3 bg-slate-800 text-slate-300 border border-slate-600 hover:border-slate-400 hover:bg-slate-700 rounded-lg text-xs font-bold uppercase tracking-widest transition-all w-full sm:w-auto text-center"
           >
-            처음부터 다시 설정
+            ABORT & RECONFIGURE
           </button>
           <button 
             onClick={() => console.log('시뮬레이션 데이터:', {
               equipment: selectedEquipments, recipes: recipes, progress: layerThickness, cycles: completedCycles,
               animationSettings: { showParticles, showEnergyWaves, showPlasmaEffects, intensityLevel }
             })} 
-            className="px-6 py-3 bg-blue-500 text-white rounded-xl font-medium hover:bg-blue-600 transition-colors flex items-center"
+            className="px-6 py-3 bg-cyan-900/40 text-cyan-400 border border-cyan-500 hover:bg-cyan-500 hover:text-slate-900 shadow-[0_0_15px_rgba(6,182,212,0.3)] hover:shadow-[0_0_20px_rgba(6,182,212,0.6)] rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center w-full sm:w-auto"
           >
             <Download className="w-4 h-4 mr-2" />
-            데이터 내보내기
+            EXPORT DATA
           </button>
         </div>
       </div>
