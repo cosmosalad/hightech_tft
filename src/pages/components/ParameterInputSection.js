@@ -1,9 +1,7 @@
 import React from 'react';
 import { Calculator, Upload, Database, Settings, FileText } from 'lucide-react';
-// 📋 추가된 import문
 import { generateSampleName } from '../utils/fileUtils';
 
-// Cox 자동 계산 (εr_SiO2 = 3.9, ε0 = 8.854e-12 F/m)
 const calculateCox = (tox) => {
   const epsilon_r = 3.9;
   const epsilon_0 = 8.854e-12;
@@ -42,7 +40,6 @@ const ParameterInputSection = ({
   const handleMethodSelect = (methodId) => {
     setParameterMode(methodId);
     
-    // 샘플별 파라미터 방식으로 변경할 때, 기존 파일들에 기본 파라미터 설정
     if (methodId === 'individual' && uploadedFiles && setUploadedFiles) {
       const updatedFiles = uploadedFiles.map(file => ({
         ...file,
@@ -57,12 +54,10 @@ const ParameterInputSection = ({
     }
   };
 
-  // ✅ 수정된 updateSampleParameter 함수
   const updateSampleParameter = (sampleName, paramName, value) => {
     if (!setUploadedFiles || !uploadedFiles) return;
   
     const updatedFiles = uploadedFiles.map(file => {
-      // 🔥 수정: generateSampleName 사용으로 매칭 로직 통일
       const fileSampleName = file.alias || generateSampleName(file.name);
   
       if (fileSampleName === sampleName) {
@@ -91,7 +86,6 @@ const ParameterInputSection = ({
   };
 
 
-  // 파일 타입별 아이콘
   const getFileTypeIcon = (fileType) => {
     switch (fileType) {
       case 'IDVD': return '📊';
@@ -102,7 +96,6 @@ const ParameterInputSection = ({
     }
   };
 
-  // 파일 타입별 색상
   const getFileTypeColor = (fileType) => {
     switch (fileType) {
       case 'IDVD': return 'bg-purple-100 text-purple-800';
@@ -113,12 +106,10 @@ const ParameterInputSection = ({
     }
   };
 
-  // ✅ 수정된 createSampleGroups 함수
   const createSampleGroups = () => {
     if (!uploadedFiles || uploadedFiles.length === 0) return {};
   
     return uploadedFiles.reduce((groups, file) => {
-      // 🔥 수정: alias가 없거나 빈 문자열일 때 generateSampleName 사용
       const sampleName = file.alias || generateSampleName(file.name);
       if (!groups[sampleName]) {
         groups[sampleName] = [];
@@ -130,14 +121,13 @@ const ParameterInputSection = ({
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-lg mb-8">
-      {/* 제목 */}
+      {}
       <div className="text-center mb-6">
         <h3 className="text-xl font-bold text-gray-800">
           디바이스 파라미터 입력 방식:
         </h3>
       </div>
-
-      {/* 방식 선택 카드들 */}
+      {}
       <div className="grid md:grid-cols-2 gap-4 mb-6">
         {methods.map((method) => {
           const IconComponent = method.icon;
@@ -170,8 +160,7 @@ const ParameterInputSection = ({
           );
         })}
       </div>
-
-      {/* 단일 파라미터 입력 섹션 */}
+      {}
       {parameterMode === 'single' && (
         <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-6 rounded-xl text-white shadow-lg">
           <div className="flex items-center justify-center mb-4">
@@ -250,8 +239,7 @@ const ParameterInputSection = ({
           </div>
         </div>
       )}
-
-      {/* 샘플별 개별 파라미터 입력 섹션 */}
+      {}
       {parameterMode === 'individual' && (
         <div className="space-y-6">
           <div className="bg-gradient-to-r from-green-600 to-teal-600 p-4 rounded-xl text-white text-center">
@@ -276,7 +264,6 @@ const ParameterInputSection = ({
                     같은 샘플명의 파일들은 동일한 디바이스 파라미터를 공유합니다.
                   </p>
                 </div>
-
                 {sampleNames.map((sampleName, index) => {
                   const filesInGroup = sampleGroups[sampleName];
                   const representativeFile = filesInGroup[0];
@@ -284,7 +271,7 @@ const ParameterInputSection = ({
                   
                   return (
                     <div key={sampleName} className="border-2 border-gray-200 rounded-lg p-4 bg-white shadow-sm hover:shadow-md transition-shadow">
-                      {/* 샘플 정보 헤더 */}
+                      {}
                       <div className="flex items-center mb-4 pb-3 border-b-2 border-gray-100">
                         <div className="flex items-center bg-gradient-to-r from-blue-100 to-purple-100 rounded-full px-4 py-2 mr-4">
                           <span className="text-sm font-bold text-blue-800">샘플 #{index + 1}</span>
@@ -300,7 +287,7 @@ const ParameterInputSection = ({
                             </span>
                           </div>
                           
-                          {/* 그룹에 포함된 파일들 표시 */}
+                          {}
                           <div className="flex flex-wrap gap-2">
                             {filesInGroup.map((file) => (
                               <div key={file.id} className="flex items-center space-x-1 bg-gray-100 rounded-lg px-2 py-1">
@@ -316,8 +303,7 @@ const ParameterInputSection = ({
                           </div>
                         </div>
                       </div>
-
-                      {/* 샘플별 파라미터 입력 그리드 */}
+                      {}
                       <div className="grid md:grid-cols-3 gap-4">
                         <div className="bg-blue-50 p-3 rounded-lg border border-blue-200">
                           <label className="block text-sm font-bold text-blue-800 mb-2">
@@ -364,8 +350,7 @@ const ParameterInputSection = ({
                           />
                         </div>
                       </div>
-
-                      {/* Cox 계산 결과 */}
+                      {}
                       <div className="mt-3 p-3 bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg">
                         <p className="text-sm font-medium text-gray-800">
                           ⚡ <strong>자동 계산된 Cox:</strong> 
@@ -380,7 +365,6 @@ const ParameterInputSection = ({
                     </div>
                   );
                 })}
-
                 <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
                   <p className="text-sm text-green-800 font-medium">
                     ✅ <strong>설정 완료:</strong> {sampleNames.length}개 샘플 그룹의 개별 파라미터가 설정되었습니다. 

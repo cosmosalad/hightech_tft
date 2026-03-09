@@ -1,30 +1,27 @@
-// C:\Users\HYUN\hightech_tft\src\pages\components\ChartComponents.js
-
 import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { DualAxisIDVGChart } from './DualAxisIDVGChart'; // ⭐️ 1. 새 컴포넌트 import
+import { DualAxisIDVGChart } from './DualAxisIDVGChart';
 
-// 🌟 황금비 기반 색상 생성 함수들
 const generateGoldenRatioColor = (index) => {
-  const goldenAngle = 137.508; // 황금각
+  const goldenAngle = 137.508;
   const hue = (index * goldenAngle) % 360;
-  const saturation = 65 + (index % 4) * 5; // 65%, 70%, 75%, 80% 순환
-  const lightness = 45 + (index % 3) * 8;  // 45%, 53%, 61% 순환
+  const saturation = 65 + (index % 4) * 5;
+  const lightness = 45 + (index % 3) * 8;
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
 const generateIGColor = (index) => {
   const goldenAngle = 137.508;
   const hue = (index * goldenAngle) % 360;
-  const saturation = 70 + (index % 3) * 5; // 더 높은 채도
-  const lightness = 60 + (index % 2) * 10; // 더 밝게
+  const saturation = 70 + (index % 3) * 5;
+  const lightness = 60 + (index % 2) * 10;
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
 const generateTangentColor = (index) => {
   const goldenAngle = 137.508;
-  const hue = ((index * goldenAngle) + 20) % 360; // +20도 오프셋
+  const hue = ((index * goldenAngle) + 20) % 360;
   const saturation = 75 + (index % 3) * 5;
   const lightness = 40 + (index % 2) * 10;
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
@@ -42,7 +39,6 @@ const generateReferenceColor = (index, offset = 0) => {
   return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
 };
 
-// Tooltip 컴포넌트
 export const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUnit, sortByValue, showLogScale, formatLinearCurrent }) => {
   if (active && payload && payload.length) {
     return (
@@ -106,7 +102,6 @@ export const SampleNameTooltip = ({ active, payload, label, xAxisLabel, yAxisUni
   return null;
 };
 
-// IDVD 차트 컴포넌트
 export const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
   const [hiddenLines, setHiddenLines] = useState(new Set());
   const handleLegendClick = (data) => {
@@ -151,7 +146,6 @@ export const IDVDCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
   );
 };
 
-// Hysteresis 차트 컴포넌트 (범례 클릭 기능 제거됨)
 export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue }) => {
     const [showIG, setShowIG] = useState(false);
     
@@ -223,12 +217,11 @@ export const HysteresisCharts = ({ resultArray, hasMultipleFiles, sortByValue })
 };
 
 
-// IDVG 차트 컴포넌트
 export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent }) => {
   const [showIG, setShowIG] = useState(false);
   const [showVthTangent, setShowVthTangent] = useState(false);
   const [hiddenLines, setHiddenLines] = useState(new Set());
-  const [showDualViewModal, setShowDualViewModal] = useState(false); // ⭐️ 2. 모달 상태 추가
+  const [showDualViewModal, setShowDualViewModal] = useState(false);
   
   const handleLegendClick = (data) => {
     const { dataKey } = data;
@@ -258,8 +251,6 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
       const gmMax = parseFloat(gmMaxStr.split(' ')[0]);
       if (isNaN(vth) || isNaN(gmMax)) return null;
 
-      // 👇 여기 오프셋 값을 조절하여 접선 위치를 변경하세요.
-      // 숫자를 늘릴수록 접선이 더 아래로 내려갑니다. (예: 0.5, 1.0, 1.5)
       const vth_offset = -0.1;
 
       let gmMaxVG = vth + 2;
@@ -277,7 +268,6 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
       const vgMax = Math.max(...chartData.map(d => d.VG));
       const tangentData = [];
       for (let vg = vgMin; vg <= vgMax; vg += 0.1) {
-        // 👇 vth에 오프셋을 더해서 접선을 오른쪽으로 이동시켜 아래로 내립니다.
         const idTangent = gmMax * (vg - (vth + vth_offset));
         tangentData.push({ VG: parseFloat(vg.toFixed(1)), ID_tangent: idTangent > 0 ? idTangent : null });
       }
@@ -287,9 +277,8 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
   const allVGValues = [...new Set(resultArray.flatMap(result => result.chartData ? result.chartData.map(d => d.VG) : []))].sort((a, b) => a - b);
   if (allVGValues.length === 0) return null;
 
-  //추가
-  const minVG = Math.floor(allVGValues[0]); // 데이터의 최소값을 내림
-  const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]); // 데이터의 최대값을 올림
+  const minVG = Math.floor(allVGValues[0]);
+  const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]);
   const dynamicTicks = [];
   for (let i = minVG; i <= maxVG; i += 3) {
     dynamicTicks.push(i);
@@ -366,10 +355,10 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
             <span className={`text-sm font-medium transition-colors duration-300 ${showLogScale ? 'text-gray-900' : 'text-gray-400'}`}>로그값</span>
         </div>
         
-        {/* ⭐️ 3. [추가] 분리 뷰 토글 버튼 (ID만 표시 버튼 옆으로 이동) */}
+        {}
         <div className="flex items-center">
           <button 
-            onClick={() => setShowDualViewModal(true)} // ⭐️ 모달 켜기
+            onClick={() => setShowDualViewModal(true)}
             className="px-3 py-1 rounded text-sm transition-colors bg-gray-200 text-gray-700 hover:bg-gray-300 shadow-sm"
             title="Log/Linear 분리 뷰 보기"
           >
@@ -415,57 +404,53 @@ export const IDVGCharts = ({ resultArray, type, sortByValue, showLogScale, setSh
           </LineChart>
         </ResponsiveContainer>
       </div>
-
-     <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
-       <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
-       <div className="h-80">
-         <ResponsiveContainer width="100%" height="100%">
-           <LineChart data={combinedData} margin={{ left: 18 }}>
-             <CartesianGrid strokeDasharray="3 3" />
-             <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
-             <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
-             <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
-             <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
-             {resultArray.map((result, index) => {
-               const key = result.displayName || `File${index + 1}`;
-               return (
-                 <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={generateIGColor(index)} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} />
-               );
-             })}
-           </LineChart>
-         </ResponsiveContainer>
-       </div>
-     </div>
-     
-     {/* ⭐️ 4. [추가] 모달 래퍼 ⭐️ */}
-     {showDualViewModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 z-40 flex justify-center items-center p-4">
-          {/* 모달 컨텐츠 (클릭 이벤트가 상위로 전파되는 것 방지) */}
-          <div 
-            className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-6xl h-[95vh] overflow-y-auto z-50"
-            onClick={(e) => e.stopPropagation()} 
-          >
-            <DualAxisIDVGChart
-              resultArray={resultArray}
-              type={type}
-              sortByValue={sortByValue}
-              formatLinearCurrent={formatLinearCurrent}
-              onClose={() => setShowDualViewModal(false)} // ⭐️ 모달 끄기
-            />
-          </div>
-          {/* 오버레이 배경 클릭 시 모달 닫기 (선택 사항) */}
-          <div 
-            className="absolute inset-0 z-40" 
-            onClick={() => setShowDualViewModal(false)}
-          ></div>
+      <div className={`transition-all duration-500 ease-in-out overflow-hidden ${showIG ? 'max-h-[500px] opacity-100 mt-8' : 'max-h-0 opacity-0 mt-0'}`}>
+        <h4 className="text-lg font-semibold mb-4">IG-VG (Gate Current) 그래프</h4>
+        <div className="h-80">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={combinedData} margin={{ left: 18 }}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="VG" label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }} />
+              <YAxis scale="log" domain={[1e-12, 1e-6]} label={{ value: 'IG (A)', angle: -90, position: 'insideLeft', dx: -10 }} tickFormatter={(value) => value.toExponential(0)} />
+              <Tooltip content={<SampleNameTooltip xAxisLabel="VG" yAxisUnit="A" sortByValue={sortByValue} />} />
+              <Legend wrapperStyle={{ paddingTop: '10px' }} onClick={handleLegendClick} iconType="line" />
+              {resultArray.map((result, index) => {
+                const key = result.displayName || `File${index + 1}`;
+                return (
+                  <Line key={`ig-${index}`} type="monotone" dataKey={`${key}_IG`} stroke={generateIGColor(index)} strokeWidth={2} dot={false} name={`${key} - IG`} connectNulls={false} hide={hiddenLines.has(`${key}_IG`)} />
+                );
+              })}
+            </LineChart>
+          </ResponsiveContainer>
         </div>
-     )}
-
-   </div>
- );
+      </div>
+      {}
+      {showDualViewModal && (
+         <div className="fixed inset-0 bg-black bg-opacity-75 z-40 flex justify-center items-center p-4">
+           {}
+           <div 
+             className="bg-white p-4 sm:p-6 rounded-lg shadow-xl w-full max-w-6xl h-[95vh] overflow-y-auto z-50"
+             onClick={(e) => e.stopPropagation()} 
+           >
+             <DualAxisIDVGChart
+               resultArray={resultArray}
+               type={type}
+               sortByValue={sortByValue}
+               formatLinearCurrent={formatLinearCurrent}
+               onClose={() => setShowDualViewModal(false)}
+             />
+           </div>
+           {}
+           <div 
+             className="absolute inset-0 z-40" 
+             onClick={() => setShowDualViewModal(false)}
+           ></div>
+         </div>
+      )}
+    </div>
+  );
 };
 
-// Gm 차트 컴포넌트
 export const GmCharts = ({ resultArray, sortByValue }) => {
  const [hiddenLines, setHiddenLines] = useState(new Set());
  const handleLegendClick = (data) => {
@@ -481,7 +466,6 @@ export const GmCharts = ({ resultArray, sortByValue }) => {
  const allVGValues = [...new Set(resultArray.flatMap(result => result.gmData ? result.gmData.map(d => d.VG) : []))].sort((a, b) => a - b);
  if (allVGValues.length === 0) return null;
 
-  //추가
   const minVG = Math.floor(allVGValues[0]);
   const maxVG = Math.ceil(allVGValues[allVGValues.length - 1]);
   const dynamicTicks = [];

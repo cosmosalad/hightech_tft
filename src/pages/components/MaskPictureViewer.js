@@ -4,7 +4,6 @@ import {
   RotateCw, MousePointer, Trash2
 } from 'lucide-react';
 
-// 통합 이미지 뷰어 컴포넌트 (SVG + PNG/JPG 지원)
 const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
   const [zoom, setZoom] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -16,7 +15,6 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
   const svgRef = useRef(null);
   const containerRef = useRef(null);
 
-  // 파일 타입 확인
   const fileExtension = fileName.toLowerCase().split('.').pop();
   const isImageFile = ['png', 'jpg', 'jpeg'].includes(fileExtension);
 
@@ -92,7 +90,7 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/90 z-50 flex flex-col">
-      {/* 뷰어 헤더 */}
+      {}
       <div className="bg-gray-900 text-white p-4 flex items-center justify-between shadow-lg">
         <div className="flex items-center">
           <Image className="w-6 h-6 mr-3 text-blue-400" />
@@ -142,8 +140,7 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
           </button>
         </div>
       </div>
-
-      {/* 측정 모드 안내 */}
+      {}
       {measuring && (
         <div className="bg-blue-600 text-white p-3 text-center shadow-lg">
           <p className="text-sm flex items-center justify-center">
@@ -155,8 +152,7 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
           </p>
         </div>
       )}
-
-      {/* 이미지 뷰어 영역 */}
+      {}
       <div 
         ref={containerRef}
         className="flex-1 overflow-hidden relative bg-black"
@@ -222,8 +218,7 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
           </div>
         </div>
       </div>
-
-      {/* 화면 고정 측정 오버레이 */}
+      {}
       {measuring && (
         <div className="fixed inset-0 pointer-events-none z-10">
           {measurePoints.map((point, index) => (
@@ -288,8 +283,7 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
           ))}
         </div>
       )}
-
-      {/* 측정 결과 패널 */}
+      {}
       {measurements.length > 0 && (
         <div className="bg-gray-900 text-white p-4 border-t border-gray-700">
           <div className="flex items-center justify-between mb-3">
@@ -327,7 +321,6 @@ const ImageViewer = ({ svgContent, fileName, selectedFolder, onClose }) => {
   );
 };
 
-// 메인 마스크/픽처 뷰어 컴포넌트
 const MaskPictureViewer = ({ onClose }) => {
   const [isModalOpen, setIsModalOpen] = useState(true);
   const [selectedFolder, setSelectedFolder] = useState('mask');
@@ -352,7 +345,6 @@ const MaskPictureViewer = ({ onClose }) => {
       if (response.ok) {
         const fileList = await response.json();
         
-        // SVG, PNG, JPG, JPEG 파일을 모두 지원
         const imageFiles = fileList
           .filter(file => file.type === 'file' && 
             (file.name.endsWith('.svg') || 
@@ -378,7 +370,6 @@ const MaskPictureViewer = ({ onClose }) => {
       const fileExtension = fileName.toLowerCase().split('.').pop();
       
       if (fileExtension === 'svg') {
-        // SVG 파일은 텍스트로 로드
         const fileUrl = `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/${selectedFolder}/${fileName}`;
         const response = await fetch(fileUrl);
         
@@ -389,10 +380,8 @@ const MaskPictureViewer = ({ onClose }) => {
           createExampleSVG(fileName);
         }
       } else if (['png', 'jpg', 'jpeg'].includes(fileExtension)) {
-        // PNG/JPG 파일은 img 태그로 직접 표시
-        setSvgContent('image'); // 이미지 파일임을 표시하는 플래그
+        setSvgContent('image');
       } else {
-        // 지원하지 않는 파일 형식
         createExampleSVG(fileName);
       }
       

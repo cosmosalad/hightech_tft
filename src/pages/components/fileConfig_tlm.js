@@ -1,15 +1,11 @@
-// fileConfig_tlm.js - TLM 전용 파일 설정 및 GitHub 로드
-
 export const GITHUB_CONFIG = {
   username: 'cosmosalad',
   repo: 'hightech_tft',
   branch: 'main'
 };
 
-// TLM 전용 폴더 구조 데이터
 let TLM_FOLDER_STRUCTURE_DATA = null;
 
-// TLM 폴더 구조 로드 함수
 export const loadTLMFolderStructure = async () => {
   if (TLM_FOLDER_STRUCTURE_DATA) {
     console.log("TLM Folder structure already loaded. Returning cached data.");
@@ -35,7 +31,6 @@ export const loadTLMFolderStructure = async () => {
   }
 };
 
-// TLM 폴더에서 파일 목록 가져오기
 export const getTLMFilesFromPath = (folderPath) => {
   if (!TLM_FOLDER_STRUCTURE_DATA) {
     console.warn("TLM_FOLDER_STRUCTURE_DATA not loaded yet. Call loadTLMFolderStructure() first.");
@@ -46,15 +41,12 @@ export const getTLMFilesFromPath = (folderPath) => {
 
   for (const part of pathParts) {
     if (current && current[part]) {
-      // 'children'이 있는 경우 한 단계 더 들어갑니다.
       current = current[part].children ? current[part].children : current[part];
     } else if (current && current.children && current.children[part]) {
-       // 'children' 객체 내에서 직접 part를 찾습니다.
        current = current.children[part];
     }
     else {
-      // 경로의 중간에서 일치하는 폴더를 찾지 못한 경우
-       let pathNode = TLM_FOLDER_STRUCTURE_DATA;
+      let pathNode = TLM_FOLDER_STRUCTURE_DATA;
        for(const p of pathParts) {
          if(pathNode[p]) {
            pathNode = pathNode[p].children || pathNode[p];
@@ -67,10 +59,7 @@ export const getTLMFilesFromPath = (folderPath) => {
     }
   }
 
-  // 최종적으로 도달한 노드에서 'files' 속성을 찾습니다.
-  // 이 부분은 제공된 JSON 구조에 따라 조정이 필요할 수 있습니다.
-  // 최종 노드가 파일 목록을 직접 가지고 있지 않고, 한 단계 더 들어가야 할 수 있습니다.
-   let filesNode = TLM_FOLDER_STRUCTURE_DATA;
+  let filesNode = TLM_FOLDER_STRUCTURE_DATA;
    pathParts.forEach(part => {
        if (filesNode && filesNode[part]) {
            filesNode = filesNode[part];
@@ -84,23 +73,20 @@ export const getTLMFilesFromPath = (folderPath) => {
 };
 
 
-// ✅ [수정됨] TLM 폴더 트리 구조 생성 (계층 구조 유지)
 export const getTLMFolderTree = () => {
   if (!TLM_FOLDER_STRUCTURE_DATA) {
     console.warn("TLM_FOLDER_STRUCTURE_DATA not loaded yet.");
     return [];
   }
 
-  // 재귀적으로 폴더 구조를 탐색하여 트리 데이터 생성
   const buildTree = (data, currentPath = '') => {
     return Object.entries(data)
-      .filter(([key, value]) => value.type === 'folder') // 폴더 타입만 필터링
+      .filter(([key, value]) => value.type === 'folder')
       .map(([key, value]) => {
         const newPath = currentPath ? `${currentPath}/${key}` : key;
         const node = {
           name: key,
           path: newPath,
-          // 자식 폴더가 있으면 재귀적으로 탐색하여 children 배열 생성
           children: value.children ? buildTree(value.children, newPath) : []
         };
         return node;
@@ -111,7 +97,6 @@ export const getTLMFolderTree = () => {
 };
 
 
-// TLM 검색 기능
 export const searchTLMFiles = (searchTerm) => {
   if (!TLM_FOLDER_STRUCTURE_DATA) {
     console.warn("TLM_FOLDER_STRUCTURE_DATA not loaded yet.");
@@ -153,36 +138,26 @@ export const searchTLMFiles = (searchTerm) => {
   return results;
 };
 
-// TLM 파일명에서 샘플명 생성
 export const generateTLMSampleName = (filename) => {
-  // 파일 확장자 제거
   let sampleName = filename.replace(/\.[^/.]+$/, "");
-  
-  // TLM 파일의 경우 온도 조건 등을 기준으로 샘플명 생성
-  // 예: T1_Ti_Al_000.xls → T1_Ti_Al_000
-  // 더 복잡한 로직이 필요하면 여기서 처리
   
   return sampleName;
 };
 
-// TLM 파일 타입 아이콘
 export const getTLMFileTypeIcon = () => {
-  return '📊'; // TLM 파일은 모두 동일한 아이콘 사용
+  return '📊';
 };
 
-// TLM 파일 타입 색상
 export const getTLMFileTypeColor = () => {
   return 'bg-orange-100 text-orange-800';
 };
 
-// GitHub에서 TLM 파일 로드
 export const loadTLMFileFromGitHub = async (filename, folder) => {
-  // folder 경로에 /excel/TLM/ 접두사 추가
   const fullPath = `excel/TLM/${folder}`;
   const folderPath = fullPath.split('/').map(part => encodeURIComponent(part)).join('/');
   const rawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${folderPath}/${encodeURIComponent(filename)}`;
 
-  console.log('TLM 파일 다운로드 시도:', rawUrl); // 디버깅용 로그
+  console.log('TLM 파일 다운로드 시도:', rawUrl);
 
   const response = await fetch(rawUrl);
 
@@ -208,7 +183,6 @@ export const loadTLMFileFromGitHub = async (filename, folder) => {
   return fileInfo;
 };
 
-// TLM 폴더 통계
 export const getTLMFolderStats = () => {
   if (!TLM_FOLDER_STRUCTURE_DATA) {
     return {

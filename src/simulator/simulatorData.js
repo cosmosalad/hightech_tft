@@ -1,7 +1,6 @@
 import React from 'react';
 import { Flame, Target, Zap } from 'lucide-react';
 
-// 장비 종류 데이터
 export const equipmentTypes = [
   {
     id: 'oxidation',
@@ -32,7 +31,6 @@ export const equipmentTypes = [
   }
 ];
 
-// 장비별 레시피 파라미터 데이터
 export const getParameterFields = (equipment) => {
   switch (equipment.id) {
     case 'oxidation':
@@ -48,8 +46,14 @@ export const getParameterFields = (equipment) => {
         { key: 'pressure', label: '압력 (mTorr)', min: 1, max: 20, default: 5, unit: 'mTorr', step: 0.1 },
         { key: 'time', label: '시간 (분)', min: 5, max: 120, default: 30, unit: 'min' },
         { key: 'material', label: '타겟 재료', type: 'select', options: ['IZO', 'ITO', 'AZO'], default: 'IZO' },
-        // ### 마스크 선택 옵션 삭제 ###
-        { key: 'targetThickness', label: '목표 두께 (nm)', min: 10, max: 100, default: 30, unit: 'nm' }
+        {
+          key: 'targetThickness',
+          label: '목표 두께 (nm)',
+          min: 10,
+          max: 100,
+          default: 30,
+          unit: 'nm'
+        }
       ];
     case 'evaporation':
       return [
@@ -57,8 +61,14 @@ export const getParameterFields = (equipment) => {
         { key: 'pressure', label: '진공도 (Torr)', min: 1e-7, max: 1e-5, default: 1e-6, unit: 'Torr', step: 1e-7 },
         { key: 'time', label: '시간 (분)', min: 5, max: 60, default: 20, unit: 'min'},
         { key: 'material', label: '재료', type: 'select', options: ['Al', 'Au', 'Ti', 'Cr'], default: 'Al' },
-        // ### 마스크 선택 옵션 삭제 ###
-        { key: 'targetThickness', label: '목표 두께 (nm)', min: 50, max: 500, default: 100, unit: 'nm' }
+        {
+          key: 'targetThickness',
+          label: '목표 두께 (nm)',
+          min: 50,
+          max: 500,
+          default: 100,
+          unit: 'nm'
+        }
       ];
     default:
       return [];

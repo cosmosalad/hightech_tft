@@ -10,29 +10,27 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showDataTable, setShowDataTable] = useState(false);
   const [deviceParams, setDeviceParams] = useState({
-    W: 100e-6,        // 채널 폭 (m)
-    L: 50e-6,         // 채널 길이 (m)  
-    tox: 20e-9,       // 산화막 두께 (m)
-    Cox: 3.45e-7      // 산화막 정전용량 (F/cm²)
+    W: 100e-6,
+    L: 50e-6,
+    tox: 20e-9,
+    Cox: 3.45e-7
   });
   const [showParamInput, setShowParamInput] = useState(false);
   const [showFormulaInfo, setShowFormulaInfo] = useState('');
-  // ⭐ New state for discontinued message
   const [showDiscontinuedMessage, setShowDiscontinuedMessage] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [currentPage]);
 
-  // ⭐ New useEffect for the discontinued message timer
   useEffect(() => {
     if (currentPage === 'home') {
       const timer = setTimeout(() => {
         setShowDiscontinuedMessage(true);
-      }, 3000); // Show message after 3 seconds
-      return () => clearTimeout(timer); // Cleanup the timer
+      }, 3000);
+      return () => clearTimeout(timer);
     } else {
-      setShowDiscontinuedMessage(false); // Hide if not on home page
+      setShowDiscontinuedMessage(false);
     }
   }, [currentPage]);
 
@@ -49,14 +47,12 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     onNavigateHome();
   };
 
-  // Cox 자동 계산 (εr_SiO2 = 3.9, ε0 = 8.854e-12 F/m)
   const calculateCox = (tox) => {
     const epsilon_r = 3.9;
     const epsilon_0 = 8.854e-12;
     return (epsilon_r * epsilon_0) / tox;
   };
 
-  // 파일 업로드 핸들러
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     const newFiles = files.map(file => ({
@@ -64,12 +60,11 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       name: file.name,
       type: detectFileType(file.name),
       id: Date.now() + Math.random(),
-      alias: '' // 사용자 정의 샘플명
+      alias: ''
     }));
     setUploadedFiles(prev => [...prev, ...newFiles]);
   };
 
-  // 파일 타입 감지
   const detectFileType = (filename) => {
     const name = filename.toLowerCase();
     if (name.includes('idvd')) return 'IDVD';
@@ -79,12 +74,10 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     return 'Unknown';
   };
 
-  // 파일 제거
   const removeFile = (id) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== id));
   };
 
-  // 파일 샘플명 업데이트
   const updateFileAlias = (id, alias) => {
     setUploadedFiles(prev => 
       prev.map(file => 
@@ -93,7 +86,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     );
   };
 
-  // 분석 시작
   const startAnalysis = async () => {
     if (uploadedFiles.length === 0) {
       alert('먼저 엑셀 파일을 업로드해주세요.');
@@ -117,7 +109,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     }
   };
 
-  // 파일 분석 함수
   const analyzeFiles = async (files) => {
     const results = {};
     
@@ -137,8 +128,8 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
         results[fileInfo.type].push({
           ...analysisResult,
           filename: fileInfo.name,
-          alias: fileInfo.alias || fileInfo.name, // 샘플명이 있으면 샘플명, 없으면 파일명
-          displayName: fileInfo.alias || fileInfo.name.replace(/\.[^/.]+$/, ""), // 확장자 제거
+          alias: fileInfo.alias || fileInfo.name,
+          displayName: fileInfo.alias || fileInfo.name.replace(/\.[^/.]+$/, ""),
           rawData: jsonData
         });
       } catch (error) {
@@ -149,7 +140,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     return results;
   };
 
-  // 분석 수행
   const performAnalysis = (data, type, filename) => {
     const headers = data[0];
     const dataRows = data.slice(1).filter(row => row.some(cell => cell !== null && cell !== undefined && cell !== ''));
@@ -168,7 +158,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     }
   };
 
-  // 선형 회귀 계산
   const calculateLinearRegression = (x, y) => {
     const n = x.length;
     const sumX = x.reduce((a, b) => a + b, 0);
@@ -182,12 +171,10 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     return { slope, intercept };
   };
 
-  // IDVD 분석
   const analyzeIDVD = (headers, dataRows, filename) => {
     const chartData = [];
     const gateVoltages = [];
     
-    // 헤더에서 Gate Voltage 추출
     for (let i = 0; i < headers.length; i += 5) {
       if (headers[i] && headers[i].includes('DrainI')) {
         const gateVIndex = i + 3;
@@ -197,7 +184,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
 
-    // 차트 데이터 생성
     const uniqueVDPoints = new Map();
     
     for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
@@ -219,7 +205,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     
     const chartData_fixed = Array.from(uniqueVDPoints.values()).sort((a, b) => a.VD - b.VD);
 
-    // Ron 계산
     let ron = 0;
     if (chartData_fixed.length > 2) {
       const lowVDPoint = chartData_fixed[1];
@@ -239,7 +224,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     };
   };
 
-  // IDVG Linear 분석
   const analyzeIDVGLinear = (headers, dataRows, filename) => {
     let vgIndex = -1, idIndex = -1, vdIndex = -1;
 
@@ -283,7 +267,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     
     const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-    // gm 계산
     let gmData = [];
     let maxGm = 0;
     let maxGmIndex = 0;
@@ -345,7 +328,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     };
   };
 
-  // IDVG Saturation 분석
   const analyzeIDVGSaturation = (headers, dataRows, filename) => {
     let vgIndex = -1, idIndex = -1, vdIndex = -1;
     
@@ -390,7 +372,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     
     const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-    // gm 계산
     let gmData = [];
     let maxGm = 0;
     let maxGmIndex = 0;
@@ -410,7 +391,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
 
-    // Threshold voltage 계산
     let vth = 0;
     const gmMaxIndex = gmData.findIndex(d => d.gm === maxGm);
     if (gmMaxIndex > 5) {
@@ -424,7 +404,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
 
-    // Subthreshold Swing 계산
     const subthresholdData = chartData.filter(d => d.logID > -10 && d.logID < -6);
     let ss = 0;
     if (subthresholdData.length > 5) {
@@ -436,7 +415,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
 
-    // Interface trap density 계산
     const kT_q = 0.0259;
     const cox = calculateCox(deviceParams.tox) * 1e-4;
     const q = 1.602e-19;
@@ -462,7 +440,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     };
   };
 
-  // IDVG Hysteresis 분석
   const analyzeIDVGHysteresis = (headers, dataRows, filename) => {
     let vgIndex = -1, idIndex = -1;
     
@@ -492,7 +469,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
     
-    // Forward sweep
     const forwardVGMap = new Map();
     for (let i = 0; i <= maxVgIndex; i++) {
       const vg = dataRows[i][vgIndex] || 0;
@@ -507,7 +483,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     }
     forwardData = Array.from(forwardVGMap.values()).sort((a, b) => a.VG - b.VG);
     
-    // Backward sweep
     const backwardVGMap = new Map();
     for (let i = maxVgIndex; i < dataRows.length; i++) {
       const vg = dataRows[i][vgIndex] || 0;
@@ -522,7 +497,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     }
     backwardData = Array.from(backwardVGMap.values()).sort((a, b) => b.VG - a.VG);
 
-    // Forward Vth 계산
     let vthForward = 0;
     if (forwardData.length > 10) {
       const midStart = Math.floor(forwardData.length * 0.3);
@@ -535,7 +509,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
       }
     }
 
-    // Backward Vth 계산
     let vthBackward = 0;
     if (backwardData.length > 10) {
       const midStart = Math.floor(backwardData.length * 0.3);
@@ -575,7 +548,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     };
   };
 
-  // 파라미터 입력 섹션
   const renderParameterInput = () => (
     <div className={`bg-white p-6 rounded-xl shadow-lg mb-8 transition-all duration-300 ${showParamInput ? 'block' : 'hidden'}`}>
       <h3 className="text-xl font-bold text-gray-800 mb-4">디바이스 파라미터 입력</h3>
@@ -633,10 +605,9 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     </div>
   );
 
-  // 홈 페이지
   const renderHomePage = () => (
-  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8 relative"> {/* Added relative for message positioning */}
-    {/* ⭐ Discontinued Message Overlay */}
+  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8 relative"> {}
+    {}
     {showDiscontinuedMessage && (
       <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 animate-fadeIn">
         <div className="bg-gradient-to-br from-red-500 to-red-700 text-white p-8 rounded-2xl shadow-2xl text-center max-w-lg w-full transform scale-95 animate-popIn border-4 border-red-300">
@@ -649,7 +620,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
             새로운 '통합 분석 모드'를 이용해 주세요!
           </p>
           <button
-            onClick={handleGoToMainHome} // Assuming this button navigates to the main home where integrated mode exists
+            onClick={handleGoToMainHome}
             className="bg-white text-red-700 font-bold py-3 px-8 rounded-full text-lg shadow-lg hover:bg-gray-100 hover:scale-105 transition-all duration-300 flex items-center justify-center mx-auto"
           >
             <Play className="w-6 h-6 mr-3" />
@@ -904,7 +875,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
     </div>
   );
 
-  // 분석 페이지
   const renderAnalyzerPage = () => (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
@@ -940,12 +910,11 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
               <h2 className="text-2xl font-bold text-gray-800 mb-6">
                 {type} 분석 {hasMultipleFiles ? `(${resultArray.length}개 파일)` : ''}
               </h2>
-              
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-2">
                   <h3 className="text-lg font-semibold mb-4">측정 데이터 그래프</h3>
 
-                  {/* IDVD - 각 파일별로 별도 차트 */}
+                  {}
                   {type === 'IDVD' && (
                     <div className="space-y-8">
                       {resultArray.map((result, fileIndex) => {
@@ -995,7 +964,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                     </div>
                   )}
 
-                  {/* IDVG-Hysteresis - 각 파일별로 별도 차트 */}
+                  {}
                   {type === 'IDVG-Hysteresis' && (
                     <div className="space-y-8">
                       {resultArray.map((result, index) => {
@@ -1066,7 +1035,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                     </div>
                   )}
 
-                  {/* IDVG-Linear, IDVG-Saturation - 하나의 차트에 모든 파일 */}
+                  {}
                   {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && (
                     <div className="h-80">
                       <ResponsiveContainer width="100%" height="100%">
@@ -1126,7 +1095,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                     </div>
                   )}
 
-                  {/* gm 그래프 - Linear, Saturation 측정에서만 표시 */}
+                  {}
                   {(type === 'IDVG-Linear' || type === 'IDVG-Saturation') && 
                    resultArray.some(result => result.gmData) && (
                     <div className="mt-8">
@@ -1191,7 +1160,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                   )}
                 </div>
 
-                {/* 파라미터 표시 영역 */}
+                {}
                 <div>
                   <h3 className="text-lg font-semibold mb-4">계산된 파라미터</h3>
                   {resultArray.map((result, index) => (
@@ -1217,7 +1186,7 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
           );
         })}
 
-        {/* 데이터 표 버튼 */}
+        {}
         {analysisResults && Object.keys(analysisResults).length > 0 && (
           <div className="text-center mb-8">
             <button
@@ -1230,13 +1199,12 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
           </div>
         )}
 
-        {/* 데이터 표 */}
+        {}
         {showDataTable && analysisResults && (
           <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-6">분석 결과 요약표</h2>
             <div className="overflow-x-auto">
               {(() => {
-                // 샘플별로 데이터 그룹화
                 const sampleGroups = {};
                 
                 Object.entries(analysisResults).forEach(([type, resultArray]) => {
@@ -1270,7 +1238,6 @@ const TFTAnalyzer = ({ onNavigateHome, onNavigateBack }) => {
                     </thead>
                     <tbody>
                       {Object.entries(sampleGroups).map(([sampleName, sampleData]) => {
-                        // 각 샘플의 주요 파라미터 추출
                         const gmMax = sampleData['IDVG-Saturation']?.['gm_max'] || 
                                      sampleData['IDVG-Linear']?.['gm_max'] || 'N/A';
                         const vth = sampleData['IDVG-Saturation']?.['Vth'] || 'N/A';

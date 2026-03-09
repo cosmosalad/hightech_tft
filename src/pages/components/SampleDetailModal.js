@@ -1,10 +1,7 @@
-// C:\Users\HYUN\hightech_tft\src\pages\components\SampleDetailModal.js
-
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
-// 개별 샘플 상세 모달 컴포넌트
 const SampleDetailModal = ({
   isOpen,
   onClose,
@@ -15,7 +12,6 @@ const SampleDetailModal = ({
   const [showIG, setShowIG] = useState(true);
   const [showLogScale, setShowLogScale] = useState(true);
 
-  // ESC 키로 모달 닫기
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
@@ -32,12 +28,10 @@ const SampleDetailModal = ({
 
   if (!isOpen || !sampleName || !analysisResults) return null;
 
-  // measurementType에 따라 정확한 데이터 선택
   const primaryData = analysisResults[measurementType]?.find(r => r.displayName === sampleName);
 
   if (!primaryData) return null;
 
-  // 통합 차트 데이터 생성 (ID, gm, IG를 하나의 그래프에)
   const createCombinedData = () => {
     if (!primaryData.chartData) return [];
 
@@ -55,7 +49,6 @@ const SampleDetailModal = ({
 
   const combinedData = createCombinedData();
 
-  // 커스텀 Tooltip
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -114,7 +107,7 @@ const SampleDetailModal = ({
       }}
     >
       <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
-        {/* 모달 헤더 */}
+        {}
         <div className="flex items-center justify-between p-6 border-b bg-gradient-to-r from-blue-50 to-purple-50">
           <div>
             <h2 className="text-2xl font-bold text-gray-800">{sampleName} 그래프</h2>
@@ -129,11 +122,11 @@ const SampleDetailModal = ({
           </button>
         </div>
 
-        {/* 모달 내용 (스크롤 관련 클래스 제거) */}
+        {}
         <div className="p-6">
-          {/* 컨트롤 버튼들 */}
+          {}
           <div className="flex items-center justify-end mb-6 space-x-6">
-            {/* IG 표시 토글 */}
+            {}
             <div className="flex items-center space-x-3">
               <span className={`text-sm font-medium transition-colors duration-300 ${!showIG ? 'text-gray-900' : 'text-gray-400'}`}>
                 ID + gm만
@@ -158,7 +151,7 @@ const SampleDetailModal = ({
               </span>
             </div>
 
-            {/* 로그 스케일 토글 */}
+            {}
             <div className="flex items-center space-x-3">
               <span className={`text-sm font-medium transition-colors duration-300 ${!showLogScale ? 'text-gray-900' : 'text-gray-400'}`}>
                 실제값
@@ -183,7 +176,7 @@ const SampleDetailModal = ({
             </div>
           </div>
 
-          {/* 통합 그래프 */}
+          {}
           <div className="mb-6">
             <h3 className="text-lg font-semibold mb-4">통합 전기적 특성 그래프</h3>
             <div className="h-96">
@@ -194,7 +187,7 @@ const SampleDetailModal = ({
                     dataKey="VG"
                     label={{ value: 'VG (V)', position: 'insideBottom', offset: -10 }}
                   />
-                  {/* 왼쪽 Y축 - ID, IG용 */}
+                  {}
                   <YAxis
                     yAxisId="left"
                     scale={showLogScale ? "log" : "linear"}
@@ -202,7 +195,7 @@ const SampleDetailModal = ({
                     label={{ value: 'ID (A)', angle: -90, position: 'insideLeft' }}
                     tickFormatter={(value) => showLogScale ? value.toExponential(0) : value.toExponential(2)}
                   />
-                  {/* 오른쪽 Y축 - gm용 */}
+                  {}
                   <YAxis
                     yAxisId="right"
                     orientation="right"
@@ -220,7 +213,7 @@ const SampleDetailModal = ({
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ paddingTop: '15px' }} />
 
-                  {/* ID 라인 - 파랑색, 왼쪽 축 */}
+                  {}
                   <Line
                     type="monotone"
                     dataKey="ID"
@@ -232,7 +225,7 @@ const SampleDetailModal = ({
                     connectNulls={false}
                   />
 
-                  {/* gm 라인 - 빨간색, 오른쪽 축 */}
+                  {}
                   <Line
                     type="monotone"
                     dataKey="gm"
@@ -244,7 +237,7 @@ const SampleDetailModal = ({
                     connectNulls={false}
                   />
 
-                  {/* IG 라인 - 검정색, 왼쪽 축 (조건부 표시) */}
+                  {}
                   {showIG && (
                     <Line
                       type="monotone"

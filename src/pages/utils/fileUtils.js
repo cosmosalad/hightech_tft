@@ -1,13 +1,10 @@
-// 🔥 개선된 파일 타입 감지 - 실제 측정 파일명 패턴 반영
 export const detectFileType = (filename) => {
   const name = filename.toLowerCase();
   
-  // IDVD 패턴 감지
   if (name.includes('idvd')) {
     return 'IDVD';
   }
   
-  // Hysteresis 패턴 감지 (가장 구체적인 것부터)
   if (name.includes('idvg') && 
       (name.includes('linear') || name.includes('lin')) && 
       (name.includes('hys') || name.includes('hysteresis')) || 
@@ -15,19 +12,16 @@ export const detectFileType = (filename) => {
     return 'IDVG-Hysteresis';
   }
   
-  // Linear 패턴 감지
   if (name.includes('idvg') && 
       (name.includes('linear') || name.includes('lin'))) {
     return 'IDVG-Linear';
   }
   
-  // Saturation 패턴 감지
   if (name.includes('idvg') && 
       (name.includes('sat') || name.includes('saturation'))) {
     return 'IDVG-Saturation';
   }
   
-  // 추가 패턴들 (실제 측정에서 사용되는 패턴)
   if (name.includes('dk') && name.includes('tft')) {
     if (name.includes('idvd')) return 'IDVD';
     if (name.includes('idvg_vd_linear') && name.includes('hys')) return 'IDVG-Hysteresis';
@@ -38,7 +32,6 @@ export const detectFileType = (filename) => {
   return 'Unknown';
 };
 
-// 파일 크기 포맷팅
 export const formatFileSize = (bytes) => {
   if (bytes === 0) return '0 Bytes';
   const k = 1024;
@@ -47,19 +40,15 @@ export const formatFileSize = (bytes) => {
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 };
 
-// 파일 확장자 검증
 export const isValidExcelFile = (filename) => {
   const validExtensions = ['.xls', '.xlsx'];
   const extension = filename.toLowerCase().substring(filename.lastIndexOf('.'));
   return validExtensions.includes(extension);
 };
 
-// 🔥 개선된 샘플명 생성 - 더 지능적인 추출
 export const generateSampleName = (filename) => {
-  // 확장자 제거
   const nameWithoutExt = filename.replace(/\.[^/.]+$/, "");
   
-  // 일반적인 패턴들 제거
   let sampleName = nameWithoutExt
     .replace(/DKTFT/gi, '')
     .replace(/TFT/gi, '')
@@ -68,12 +57,10 @@ export const generateSampleName = (filename) => {
     .replace(/[_-]+/g, '_')
     .replace(/^_|_$/g, '');
   
-  // 숫자만 남은 경우 (예: 10711) - 날짜나 샘플 번호로 추정
   if (/^\d+$/.test(sampleName)) {
     return `Sample_${sampleName}`;
   }
   
-  // 빈 문자열인 경우 원본 파일명 사용
   if (!sampleName) {
     return nameWithoutExt;
   }
@@ -81,7 +68,6 @@ export const generateSampleName = (filename) => {
   return sampleName;
 };
 
-// 파일 타입별 아이콘 반환
 export const getFileTypeIcon = (fileType) => {
   switch (fileType) {
     case 'IDVD':
@@ -97,7 +83,6 @@ export const getFileTypeIcon = (fileType) => {
   }
 };
 
-// 파일 타입별 색상 반환
 export const getFileTypeColor = (fileType) => {
   switch (fileType) {
     case 'IDVD':
@@ -113,7 +98,6 @@ export const getFileTypeColor = (fileType) => {
   }
 };
 
-// 🔥 파일 타입별 설명 추가
 export const getFileTypeDescription = (fileType) => {
   switch (fileType) {
     case 'IDVD':
@@ -129,7 +113,6 @@ export const getFileTypeDescription = (fileType) => {
   }
 };
 
-// 🔥 파일명 검증 및 제안
 export const validateAndSuggestFilename = (filename) => {
   const detectedType = detectFileType(filename);
   const suggestions = [];
@@ -141,7 +124,6 @@ export const validateAndSuggestFilename = (filename) => {
   
   const name = filename.toLowerCase();
   
-  // 일반적인 명명 규칙 체크
   if (!name.includes('idvg') && !name.includes('idvd')) {
     suggestions.push('파일명에 IDVG 또는 IDVD를 포함해주세요.');
   }

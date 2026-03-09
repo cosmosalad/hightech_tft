@@ -1,4 +1,3 @@
-// TFTUtilities.js
 import React, { useState, useEffect } from 'react';
 import { X, HelpCircle, Wrench, FileSpreadsheet, Edit3 } from 'lucide-react';
 import ExcelWorksheetSplitterUI from './utils/ExcelWorksheetSplitterUI';
@@ -45,13 +44,12 @@ const TFTUtilities = ({ isOpen, onClose }) => {
       borderColor: 'border-blue-200',
       onClick: () => setShowFileRenamer(true)
     }
-    // 나중에 추가할 유틸리티들을 위한 공간
   ];
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* 헤더 */}
+        {}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -70,7 +68,7 @@ const TFTUtilities = ({ isOpen, onClose }) => {
           </div>
         </div>
         
-        {/* 유틸리티 그리드 */}
+        {}
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {utilities.map((utility) => (
@@ -81,41 +79,41 @@ const TFTUtilities = ({ isOpen, onClose }) => {
                 onMouseEnter={() => setHoveredUtility(utility.id)}
                 onMouseLeave={() => setHoveredUtility(null)}
               >
-                {/* 아이콘과 그라디언트 배경 */}
+                {}
                 <div className={`w-16 h-16 bg-gradient-to-br ${utility.color} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                   <div className="text-white">
                     {utility.icon}
                   </div>
                 </div>
                 
-                {/* 제목 */}
+                {}
                 <h3 className="text-lg font-bold text-gray-800 mb-1 group-hover:text-gray-900 transition-colors">
                   {utility.title}
                 </h3>
                 
-                {/* 부제목 */}
+                {}
                 <p className="text-sm font-medium text-gray-600 mb-3">
                   {utility.subtitle}
                 </p>
                 
-                {/* 설명 */}
+                {}
                 <p className="text-xs text-gray-500 leading-relaxed">
                   {utility.description}
                 </p>
                 
-                {/* 호버 효과 */}
+                {}
                 <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-gradient-to-br ${utility.color} rounded-xl pointer-events-none`}>
                   <div className="absolute inset-0 bg-white/90 rounded-xl"></div>
                 </div>
                 
-                {/* 활성화 인디케이터 */}
+                {}
                 {hoveredUtility === utility.id && (
                   <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full animate-pulse shadow-lg"></div>
                 )}
               </div>
             ))}
             
-            {/* 더 많은 도구 추가 예정 카드 */}
+            {}
             <div className="group relative border-2 border-dashed border-gray-300 rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition-colors">
               <div className="w-16 h-16 bg-gray-200 rounded-xl flex items-center justify-center mb-4 group-hover:bg-gray-300 transition-colors">
                 <div className="text-gray-400">
@@ -137,7 +135,7 @@ const TFTUtilities = ({ isOpen, onClose }) => {
             </div>
           </div>
           
-          {/* 하단 정보 */}
+          {}
           <div className="mt-8 p-6 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
             <div className="text-center">
               <h3 className="text-lg font-bold text-gray-800 mb-2 flex items-center justify-center">
@@ -161,16 +159,14 @@ const TFTUtilities = ({ isOpen, onClose }) => {
           </div>
         </div>
       </div>
-      
-      {/* 엑셀 워크시트 분할기 모달 */}
+      {}
       {showExcelSplitter && (
         <ExcelWorksheetSplitterUI
           isOpen={showExcelSplitter}
           onClose={() => setShowExcelSplitter(false)}
         />
       )}
-
-      {/* 파일명 일괄 변경 모달 */}
+      {}
       {showFileRenamer && (
         <FileRenamerUI
           isOpen={showFileRenamer}

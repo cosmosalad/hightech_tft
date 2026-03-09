@@ -1,19 +1,13 @@
-// 💡 FormulaCodeInspector.js - UI/UX 개선 버전 (framer-motion 적용)
-
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import {
   Code, Eye, ChevronRight, Calculator, Zap,
   AlertTriangle, Github, Activity, BarChart3, TrendingUp, Layers,
   FileText, Microscope, Loader2
 } from 'lucide-react';
-// ✨ 애니메이션을 위한 라이브러리 import
 import { motion, AnimatePresence } from 'framer-motion';
 
-// 🎯 실제 코드에서 파라미터 모듈들을 import
-// 이 경로는 실제 프로젝트 구조에 맞게 확인 및 수정이 필요할 수 있습니다.
 import * as TFTParams from '../parameters/index.js';
 
-// ✨ 부드러운 패널 전환을 위한 애니메이션 컴포넌트
 const AnimatedPanel = ({ children }) => (
   <motion.div
     initial={{ height: 0, opacity: 0 }}
@@ -50,7 +44,6 @@ const DynamicFormulaInspector = () => {
 
     setLoadingStates(prev => ({ ...prev, [fileName]: true }));
 
-    // 실제 GitHub 파일명 매핑 (기존 코드와 동일)
     const fileNameMapping = {
         'gm.js': 'gm.js', 'gm_max.js': 'gm_max.js', 'gm_sat.js': 'gm_sat.js',
         'field_effect_mobility.js': 'field_effect_mobility.js',
@@ -81,11 +74,9 @@ const DynamicFormulaInspector = () => {
     } catch (error) {
         console.error(`Failed to fetch ${fileName}:`, error);
         const errorMsg = `// ❌ GitHub에서 소스코드를 불러오는데 실패했습니다.\n// Error: ${error.message}`;
-        // 실패한 경우에도 캐시에 저장하여 반복 요청 방지
         setSourceCodeCache(prev => ({ ...prev, [fileName]: errorMsg }));
         return errorMsg;
     } finally {
-        // ✨ 실제 로딩이 끝난 후 약간의 딜레이를 주어 UI가 안정적으로 보이게 함
         setTimeout(() => setLoadingStates(prev => ({ ...prev, [fileName]: false })), 500);
     }
   }, [sourceCodeCache]);
@@ -94,7 +85,6 @@ const DynamicFormulaInspector = () => {
     try {
       return await fetchSourceCodeFromGitHub(fileName);
     } catch (error) {
-      // GitHub 접근 실패 시에도 로컬 함수 코드를 문자열로 반환
       return func.toString();
     }
   }, [fetchSourceCodeFromGitHub]);
@@ -115,7 +105,6 @@ const DynamicFormulaInspector = () => {
     });
   };
 
-  // 🔥 코드 표시 컴포넌트 - 로딩 및 표시 로직 개선
   const CodeDisplay = ({ param }) => {
     const [displayCode, setDisplayCode] = useState('');
     const isLoading = loadingStates[param.fileName];
@@ -151,7 +140,7 @@ const DynamicFormulaInspector = () => {
                  </a>
               </div>
 
-              {/* ✨ 로딩 중일 때는 스켈레톤 UI, 로딩 완료되면 코드 표시 */}
+              {}
               {isLoading || (!displayCode && isVisible) ? (
                 <CodeSkeleton />
               ) : (
@@ -254,7 +243,7 @@ const DynamicFormulaInspector = () => {
             formula: 'y = mx + b, R² = 1 - SSres/SStot', 
             unit: '기울기, 절편, R²', 
             description: '거리-저항 데이터의 선형 회귀 분석 및 R² 계산', 
-            actualFunction: TFTParams.linearRegression,  // 변경됨
+            actualFunction: TFTParams.linearRegression,
             codeLocation: 'src/pages/parameters/tlm.js' 
           },
           { 
@@ -264,7 +253,7 @@ const DynamicFormulaInspector = () => {
             formula: 'R = 1/slope = ΔV/ΔI', 
             unit: 'Ω', 
             description: '각 거리에서 I-V 곡선의 기울기로부터 저항값 계산', 
-            actualFunction: TFTParams.calculateResistanceFromIV,  // 변경됨
+            actualFunction: TFTParams.calculateResistanceFromIV,
             codeLocation: 'src/pages/parameters/tlm.js' 
           },
           { 
@@ -274,7 +263,7 @@ const DynamicFormulaInspector = () => {
             formula: 'RT = 2Rc + (Rsh/W)×d', 
             unit: 'Ω, Ω/sq, cm, Ω·cm²', 
             description: 'Rc(접촉저항), Rsh(면저항), LT(전달길이), ρc(접촉비저항) 계산', 
-            actualFunction: TFTParams.calculateTLMParameters,  // 변경됨
+            actualFunction: TFTParams.calculateTLMParameters,
             codeLocation: 'src/pages/parameters/tlm.js' 
           },
           { 
@@ -284,7 +273,7 @@ const DynamicFormulaInspector = () => {
             formula: 'distance = parseFloat(match)', 
             unit: 'mm', 
             description: '워크시트명에서 거리값 자동 추출 (동적 간격 지원)', 
-            actualFunction: TFTParams.parseDistanceFromSheetName,  // 변경됨
+            actualFunction: TFTParams.parseDistanceFromSheetName,
             codeLocation: 'src/pages/parameters/tlm.js' 
           },
           { 
@@ -294,7 +283,7 @@ const DynamicFormulaInspector = () => {
             formula: 'distances = [step, step×2, step×3, ...]', 
             unit: 'mm 배열', 
             description: '사용자 정의 거리 간격에 따른 잠재적 거리 배열 생성', 
-            actualFunction: TFTParams.generatePotentialDistances,  // 변경됨
+            actualFunction: TFTParams.generatePotentialDistances,
             codeLocation: 'src/pages/parameters/tlm.js' 
           },
           { 
@@ -304,7 +293,7 @@ const DynamicFormulaInspector = () => {
             formula: 'Excel → I-V → R(d) → TLM params', 
             unit: '종합 분석', 
             description: 'Excel 파일에서 완전한 TLM 분석까지 전체 워크플로우', 
-            actualFunction: TFTParams.performTLMAnalysis,  // 변경됨
+            actualFunction: TFTParams.performTLMAnalysis,
             codeLocation: 'src/pages/parameters/tlm.js' 
           }
         ]

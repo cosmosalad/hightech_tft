@@ -1,17 +1,11 @@
 import React from 'react';
 import { ArrowLeft, Home } from 'lucide-react';
-import TFTProcessSimulator from '../simulator/TFTProcessSimulator'; // 실제 시뮬레이터 로직을 담은 컴포넌트를 import합니다.
+import TFTProcessSimulator from '../simulator/TFTProcessSimulator';
 
-/**
- * ProcessSimulator 페이지 컴포넌트입니다.
- * 전체적인 페이지 레이아웃과 상단 네비게이션을 담당하며,
- * 실제 시뮬레이터 내용은 TFTProcessSimulator 컴포넌트를 렌더링하여 표시합니다.
- * @param {object} props - onNavigateHome, onNavigateBack 함수를 포함합니다.
- */
 const ProcessSimulator = ({ onNavigateHome, onNavigateBack }) => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* 네비게이션 헤더 */}
+      {}
       <div className="bg-white/90 backdrop-blur-sm shadow-sm border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-3">
           <div className="flex items-center justify-between">
@@ -39,8 +33,7 @@ const ProcessSimulator = ({ onNavigateHome, onNavigateBack }) => {
           </div>
         </div>
       </div>
-
-      {/* 메인 콘텐츠: 실제 시뮬레이터 컴포넌트를 렌더링합니다. */}
+      {}
       <div className="max-w-6xl mx-auto">
         <TFTProcessSimulator />
       </div>

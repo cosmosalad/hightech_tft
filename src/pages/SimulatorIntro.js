@@ -66,7 +66,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
-      {/* 헤더 */}
+      {}
       <div className="bg-white/80 backdrop-blur-sm shadow-lg border-b sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
@@ -96,11 +96,10 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           </div>
         </div>
       </div>
-
-      {/* 메인 콘텐츠 */}
+      {}
       <div className="max-w-7xl mx-auto px-6 py-12">
         
-        {/* 타이틀 섹션 */}
+        {}
         <div className="text-center mb-16">
           <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-6 shadow-xl">
             <Play className="w-10 h-10 text-white" />
@@ -114,7 +113,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           </p>
         </div>
 
-        {/* 공정 플로우 */}
+        {}
         <div className="mb-20">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
             🔬 TFT 제조 공정 플로우
@@ -136,7 +135,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
                   <p className="text-gray-600 text-sm leading-relaxed">{step.details}</p>
                 </div>
                 
-                {/* 화살표 */}
+                {}
                 {index < processSteps.length - 1 && (
                   <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 z-10">
                     <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
@@ -149,7 +148,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           </div>
         </div>
 
-        {/* 주요 기능 */}
+        {}
         <div className="mb-20">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
             ⚡ 주요 기능
@@ -189,7 +188,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           </div>
         </div>
 
-        {/* 사용법 안내 */}
+        {}
         <div className="mb-16">
           <h2 className="text-3xl font-bold text-center text-gray-800 mb-12">
             📋 사용법 안내
@@ -223,7 +222,7 @@ const SimulatorIntro = ({ onNavigateHome, onNavigateToSimulator }) => {
           </div>
         </div>
 
-        {/* CTA 섹션 */}
+        {}
         <div className="text-center bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-white shadow-2xl">
           <h2 className="text-4xl font-bold mb-4">지금 바로 시작해보세요!</h2>
           <p className="text-xl mb-8 opacity-90">

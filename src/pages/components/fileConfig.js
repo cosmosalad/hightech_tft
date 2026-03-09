@@ -4,41 +4,34 @@ export const GITHUB_CONFIG = {
   branch: 'main'
 };
 
-// FOLDER_STRUCTURE를 동적으로 불러오기 위한 변수 (초기에는 null)
 let FOLDER_STRUCTURE_DATA = null;
 
-// JSON 파일을 불러오는 비동기 함수
 export const loadFolderStructure = async () => {
   if (FOLDER_STRUCTURE_DATA) {
-    console.log("Folder structure already loaded. Returning cached data."); // 캐시된 데이터 반환 로그
-    return FOLDER_STRUCTURE_DATA; // 이미 로드되었다면 기존 데이터 반환
+    console.log("Folder structure already loaded. Returning cached data.");
+    return FOLDER_STRUCTURE_DATA;
   }
   try {
-    // GitHub Raw 콘텐츠 URL로 변경
     const githubRawUrl = `https://raw.githubusercontent.com/${GITHUB_CONFIG.username}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/public/folderStructureData.json`;
-    console.log(`Attempting to load folderStructureData.json from: ${githubRawUrl}`); // 로드 시도 로그
+    console.log(`Attempting to load folderStructureData.json from: ${githubRawUrl}`);
 
     const response = await fetch(githubRawUrl);
 
     if (!response.ok) {
-      const errorText = await response.text(); // 오류 응답 텍스트 읽기
+      const errorText = await response.text();
       console.error(`Failed to load folder structure: ${response.status} ${response.statusText}`, errorText);
       throw new Error(`Failed to load folder structure: ${response.status} ${response.statusText}`);
     }
 
     FOLDER_STRUCTURE_DATA = await response.json();
-    console.log("Folder structure loaded successfully:", FOLDER_STRUCTURE_DATA); // 성공 로그
+    console.log("Folder structure loaded successfully:", FOLDER_STRUCTURE_DATA);
     return FOLDER_STRUCTURE_DATA;
   } catch (error) {
-    console.error("Error loading folder structure:", error); // 에러 발생 시 로그
-    return null; // 에러 발생 시 null 반환
+    console.error("Error loading folder structure:", error);
+    return null;
   }
 };
 
-// --- 이하 함수들은 FOLDER_STRUCTURE_DATA가 로드되었다고 가정하고 동작 ---
-// 각 함수 내에서 FOLDER_STRUCTURE_DATA가 null일 경우 경고 메시지 출력은 유지
-
-// 📁 폴더 경로를 기반으로 파일 목록을 가져오는 함수
 export const getFilesFromPath = (folderPath) => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet. Call loadFolderStructure() first.");
@@ -48,8 +41,7 @@ export const getFilesFromPath = (folderPath) => {
   let current = FOLDER_STRUCTURE_DATA;
 
   for (const part of pathParts) {
-    if (current && current[part]) { // current가 유효한지 확인
-      current = current[part];
+    if (current && current[part]) { current = current[part];
       if (current.children) {
         current = current.children;
       }
@@ -58,10 +50,9 @@ export const getFilesFromPath = (folderPath) => {
     }
   }
 
-  return current && current.files || []; // current가 유효한지 확인
+  return current && current.files || [];
 };
 
-// 📁 모든 폴더 경로를 평면화해서 가져오는 함수 (모든 폴더 포함)
 export const getAllFolderPaths = () => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet. Call loadFolderStructure() first.");
@@ -70,13 +61,14 @@ export const getAllFolderPaths = () => {
   const paths = [];
 
   const traverse = (obj, currentPath = '') => {
-    if (!obj) return; // obj가 null/undefined일 경우 예외 처리
+    if (!obj)
+      return;
     Object.keys(obj).forEach(key => {
       const item = obj[key];
       const newPath = currentPath ? `${currentPath}/${key}` : key;
 
       if (item.type === 'folder') {
-        paths.push(newPath); // 파일 유무와 상관없이 모든 폴더 경로를 추가
+        paths.push(newPath);
 
         if (item.children) {
           traverse(item.children, newPath);
@@ -89,24 +81,24 @@ export const getAllFolderPaths = () => {
   return paths;
 };
 
-// 📁 폴더 트리 구조를 가져오는 함수 (FileTree 컴포넌트에서 사용)
 export const getFolderTree = () => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet. Call loadFolderStructure() first.");
     return [];
   }
   const buildTree = (obj, currentPath = '', level = 0) => {
-    if (!obj) return []; // obj가 null/undefined일 경우 예외 처리
+    if (!obj)
+      return [];
     return Object.keys(obj).map(key => {
       const item = obj[key];
       const newPath = currentPath ? `${currentPath}/${key}` : key;
 
       const node = {
         name: key,
-        path: newPath, // 전체 경로를 path로 저장
+        path: newPath,
         type: item.type,
-        level: level, // level 정보도 함께 저장
-        description: item.description || null // description 필드 추가
+        level: level,
+        description: item.description || null
       };
 
       if (item.type === 'folder') {
@@ -114,12 +106,11 @@ export const getFolderTree = () => {
           node.children = buildTree(item.children, newPath, level + 1);
         }
         if (item.files) {
-          // 폴더 안에 직접 파일이 있는 경우도 처리 (files가 배열인지 확인)
           node.children = [
             ...(node.children || []),
             ...(Array.isArray(item.files) ? item.files.map(filename => ({
               name: filename,
-              path: `${newPath}/${filename}`, // 파일의 전체 경로
+              path: `${newPath}/${filename}`,
               type: 'file'
             })) : [])
           ];
@@ -133,7 +124,6 @@ export const getFolderTree = () => {
 };
 
 
-// 📁 경로 표시를 위한 브레드크럼 생성
 export const generateBreadcrumb = (folderPath) => {
   if (!folderPath) return [];
 
@@ -151,7 +141,6 @@ export const generateBreadcrumb = (folderPath) => {
   return breadcrumb;
 };
 
-// 🔍 검색 기능 - 모든 폴더에서 파일 검색
 export const searchFiles = (searchTerm) => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet. Call loadFolderStructure() first.");
@@ -161,14 +150,14 @@ export const searchFiles = (searchTerm) => {
   const searchLower = searchTerm.toLowerCase();
 
   const searchInFolder = (obj, currentPath = '') => {
-    if (!obj) return; // obj가 null/undefined일 경우 예외 처리
+    if (!obj)
+      return;
     Object.keys(obj).forEach(key => {
       const item = obj[key];
       const newPath = currentPath ? `${currentPath}/${key}` : key;
 
       if (item.type === 'folder') {
-        if (item.files && Array.isArray(item.files)) { // files가 배열인지 확인
-          item.files.forEach(filename => {
+        if (item.files && Array.isArray(item.files)) { item.files.forEach(filename => {
             const filenameLower = filename.toLowerCase();
             const sampleName = generateSampleName(filename).toLowerCase();
             const fileType = detectFileType(filename).toLowerCase();
@@ -178,7 +167,7 @@ export const searchFiles = (searchTerm) => {
               fileType.includes(searchLower)) {
               results.push({
                 filename,
-                folderPath: newPath, // 파일이 속한 폴더의 전체 경로
+                folderPath: newPath,
                 sampleName: generateSampleName(filename),
                 fileType: detectFileType(filename)
               });
@@ -197,7 +186,6 @@ export const searchFiles = (searchTerm) => {
   return results;
 };
 
-// 📁 폴더에 새 파일 추가 (개발용)
 export const addFileToPath = (folderPath, filename) => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet.");
@@ -206,10 +194,8 @@ export const addFileToPath = (folderPath, filename) => {
   const pathParts = folderPath.split('/').filter(part => part !== '');
   let current = FOLDER_STRUCTURE_DATA;
 
-  // 경로를 따라가며 폴더 찾기
   for (const part of pathParts) {
-    if (current && current[part]) { // current가 유효한지 확인
-      current = current[part];
+    if (current && current[part]) { current = current[part];
       if (current.children) {
         current = current.children;
       }
@@ -219,7 +205,6 @@ export const addFileToPath = (folderPath, filename) => {
     }
   }
 
-  // 파일 추가
   if (!current.files) {
     current.files = [];
   }
@@ -234,7 +219,6 @@ export const addFileToPath = (folderPath, filename) => {
   }
 };
 
-// 📁 새 폴더 생성 (개발용)
 export const createFolder = (parentPath, folderName) => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet.");
@@ -243,10 +227,8 @@ export const createFolder = (parentPath, folderName) => {
   const pathParts = parentPath ? parentPath.split('/').filter(part => part !== '') : [];
   let current = FOLDER_STRUCTURE_DATA;
 
-  // 부모 폴더 찾기
   for (const part of pathParts) {
-    if (current && current[part]) { // current가 유효한지 확인
-      current = current[part];
+    if (current && current[part]) { current = current[part];
       if (current.children) {
         current = current.children;
       }
@@ -256,9 +238,7 @@ export const createFolder = (parentPath, folderName) => {
     }
   }
 
-  // 새 폴더 생성
-  if (current && !current[folderName]) { // current가 유효한지 확인
-    current[folderName] = {
+  if (current && !current[folderName]) { current[folderName] = {
       type: 'folder',
       files: []
     };
@@ -270,7 +250,6 @@ export const createFolder = (parentPath, folderName) => {
   }
 };
 
-// 기존 함수들 유지
 export const detectFileType = (filename) => {
   const name = filename.toLowerCase();
 
@@ -355,7 +334,6 @@ export const getFileTypeColor = (fileType) => {
   }
 };
 
-// 📊 폴더별 통계 정보
 export const getFolderStats = () => {
   if (!FOLDER_STRUCTURE_DATA) {
     console.warn("FOLDER_STRUCTURE_DATA not loaded yet.");
@@ -374,7 +352,8 @@ export const getFolderStats = () => {
   };
 
   const countInFolder = (obj, currentPath = '') => {
-    if (!obj) return; // obj가 null/undefined일 경우 예외 처리
+    if (!obj)
+      return;
     Object.keys(obj).forEach(key => {
       const item = obj[key];
       const newPath = currentPath ? `${currentPath}/${key}` : key;
@@ -382,12 +361,10 @@ export const getFolderStats = () => {
       if (item.type === 'folder') {
         stats.totalFolders++;
 
-        if (item.files && Array.isArray(item.files)) { // files가 배열인지 확인
-          const fileCount = item.files.length;
+        if (item.files && Array.isArray(item.files)) { const fileCount = item.files.length;
           stats.totalFiles += fileCount;
           stats.folderFileCount[newPath] = fileCount;
 
-          // 파일 타입별 분포 계산
           item.files.forEach(filename => {
             const fileType = detectFileType(filename);
             stats.fileTypeDistribution[fileType] =

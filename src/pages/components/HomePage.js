@@ -1,5 +1,3 @@
-// C:\Users\HYUN\hightech_tft\src\pages\components\HomePage.js
-
 import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import {
   ArrowRight, Star, Calculator, Play, Home, Upload, Github, X, Download,
@@ -9,12 +7,8 @@ import {
 import ParameterInputSection from './ParameterInputSection';
 import FormulaCodeInspector from './FormulaCodeInspector';
 
-// 1. Import 수정 (템플릿 관련 제거)
-import {
-  importAnalysisSession
-} from '../utils/analysisExportImport';
+import { importAnalysisSession } from '../utils/analysisExportImport';
 
-// 설정 파일에서 import
 import {
   GITHUB_CONFIG,
   getFilesFromPath,
@@ -24,10 +18,9 @@ import {
   getFileTypeIcon,
   getFileTypeColor,
   getFolderTree,
-  loadFolderStructure
+  loadFolderStructure,
 } from './fileConfig';
 
-// Analytics import 추가
 import {
   trackPageView,
   trackFileUpload,
@@ -36,13 +29,12 @@ import {
   trackError,
   trackPerformance,
   initializeSession,
-  trackFeatureUsage
+  trackFeatureUsage,
 } from '../utils/analytics';
 import TFTUsageGuide from './TFTUsageGuide';
 import { motion } from 'framer-motion';
 
 
-// --- FileTreeItem Component ---
 const FileTreeItem = ({ item, level = 0, onSelectFolder, selectedFolder }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
@@ -100,7 +92,6 @@ const FileTreeItem = ({ item, level = 0, onSelectFolder, selectedFolder }) => {
 };
 
 
-// --- FileTree Component ---
 const FileTree = ({ folderStructure, onSelectFolder, selectedFolder, isFolderStructureLoading, hasLoadError }) => {
   if (isFolderStructureLoading) {
     return (
@@ -144,7 +135,6 @@ const FileTree = ({ folderStructure, onSelectFolder, selectedFolder, isFolderStr
 };
 
 
-// 2. EnhancedFileUploadSection Props 제거 (템플릿 관련)
 const EnhancedFileUploadSection = ({
   uploadedFiles,
   handleFileUpload,
@@ -155,22 +145,20 @@ const EnhancedFileUploadSection = ({
   onImportAnalysisSession
 }) => {
   const [activeTab, setActiveTab] = useState('local');
-  const [selectedFolder, setSelectedFolder] = useState('공통'); // 초기 폴더 설정
-  const [isLoadingFiles, setIsLoadingFiles] = useState(false); // GitHub 파일 로딩 중 상태
+  const [selectedFolder, setSelectedFolder] = useState('공통');
+  const [isLoadingFiles, setIsLoadingFiles] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [showGlobalResults, setShowGlobalResults] = useState(false);
-  const [isFolderStructureLoading, setIsFolderStructureLoading] = useState(true); // 폴더 구조 자체 로딩 상태
-  const [hasFolderLoadError, setHasFolderLoadError] = useState(false); // 폴더 구조 로딩 오류 상태
-  const [folderTreeData, setFolderTreeData] = useState([]); // 폴더 트리 데이터 상태
+  const [isFolderStructureLoading, setIsFolderStructureLoading] = useState(true);
+  const [hasFolderLoadError, setHasFolderLoadError] = useState(false);
+  const [folderTreeData, setFolderTreeData] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 3. 상태 변수 제거 (템플릿 관련)
   const [isImportingSession, setIsImportingSession] = useState(false);
   const [notification, setNotification] = useState(null);
   const analysisFileInputRef = useRef(null);
 
-  // 🆕 알림 표시 함수
   const showNotification = (message, type = 'success') => {
     setNotification({ message, type });
     setTimeout(() => setNotification(null), 5000);
@@ -208,7 +196,6 @@ const EnhancedFileUploadSection = ({
     }
   };
 
-  // 🆕 분석기록 불러오기 함수
   const handleImportAnalysisFile = async (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -227,34 +214,30 @@ const EnhancedFileUploadSection = ({
       showNotification('파일 불러오기 중 오류가 발생했습니다.', 'error');
     } finally {
       setIsImportingSession(false);
-      event.target.value = ''; // 파일 입력 초기화
+      event.target.value = '';
     }
   };
   
-  // 4. 불필요한 함수들 제거 (handleImportTemplateFile, handleExportTemplate)
-
-  // 컴포넌트 마운트 시 폴더 구조를 비동기적으로 불러옴
   useEffect(() => {
     const fetchFolderStructure = async () => {
       setIsFolderStructureLoading(true);
-      setHasFolderLoadError(false); // 새로운 로딩 시작 시 에러 상태 초기화
+      setHasFolderLoadError(false);
       try {
         const data = await loadFolderStructure();
         if (data) {
-          setFolderTreeData(getFolderTree()); // 로드된 데이터로 트리 생성
-          // 초기 selectedFolder가 유효한지 확인하고, 유효하지 않다면 첫 번째 루트 폴더로 설정
-          const allFolderPaths = getFolderTree().map(item => item.path); // 루트 폴더 경로만 가져옴
+          setFolderTreeData(getFolderTree());
+          const allFolderPaths = getFolderTree().map(item => item.path);
           if (!allFolderPaths.includes(selectedFolder)) {
             if (allFolderPaths.length > 0) {
-              setSelectedFolder(allFolderPaths[0]); // 첫 번째 루트 폴더로 설정
+              setSelectedFolder(allFolderPaths[0]);
             } else {
-              setSelectedFolder(''); // 폴더가 없을 경우 빈 문자열로 설정
+              setSelectedFolder('');
             }
           }
         } else {
-          setHasFolderLoadError(true); // 데이터 로드 실패 시 에러 상태 설정
-          setFolderTreeData([]); // 데이터가 없으므로 빈 배열로 설정
-          setSelectedFolder(''); // 폴더 선택도 초기화
+          setHasFolderLoadError(true);
+          setFolderTreeData([]);
+          setSelectedFolder('');
         }
       } catch (error) {
         console.error("Error in fetching and setting folder structure:", error);
@@ -266,7 +249,7 @@ const EnhancedFileUploadSection = ({
       }
     };
     fetchFolderStructure();
-  }, []); // 의존성 배열 비워 초기 1회만 실행
+  }, []);
 
   const currentFolderFiles = useMemo(() => {
     if (isFolderStructureLoading || hasFolderLoadError) return [];
@@ -292,7 +275,6 @@ const EnhancedFileUploadSection = ({
     });
   }, [currentFolderFiles, searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
-  // 샘플명 기준으로 파일을 그룹화하는 로직
   const groupedFilesBySampleName = useMemo(() => {
     if (isFolderStructureLoading || hasFolderLoadError) return new Map();
     const grouped = new Map();
@@ -312,7 +294,6 @@ const EnhancedFileUploadSection = ({
     return searchFiles(searchTerm);
   }, [searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
-  // 검색어 변경 시 Analytics 추적
   const handleSearchChange = useCallback((value) => {
     setSearchTerm(value);
     if (value.trim()) {
@@ -350,7 +331,6 @@ const EnhancedFileUploadSection = ({
     return fileInfo;
   }, [GITHUB_CONFIG.username, GITHUB_CONFIG.repo, GITHUB_CONFIG.branch]);
 
-  // 향상된 GitHub 파일 로드 함수
   const loadSelectedFiles = async () => {
     if (selectedFiles.size === 0) {
       alert('불러올 파일을 선택해주세요.');
@@ -384,7 +364,7 @@ const EnhancedFileUploadSection = ({
         });
         
         alert(`${loadedFiles.length}개 파일을 성공적으로 불러왔습니다!`);
-        setSelectedFiles(new Set()); // 성공적으로 불러왔으면 선택 상태 초기화
+        setSelectedFiles(new Set());
       } else {
         trackError('github_load', 'All files failed to load', selectedFolder);
         alert('선택한 파일 중 로드에 성공한 파일이 없습니다.');
@@ -439,11 +419,10 @@ const EnhancedFileUploadSection = ({
     setShowGlobalResults(false);
   };
 
-  // 모든 불러온 파일 삭제 핸들러
   const handleClearAllFiles = () => {
     if (window.confirm('현재 불러온 모든 파일(' + uploadedFiles.length + '개)을 목록에서 삭제하시겠습니까?')) {
-      setUploadedFiles([]); // 상위 컴포넌트의 상태 업데이트 함수 호출
-      trackFeatureUsage('clear_all_uploaded_files', uploadedFiles.length); // Analytics 추적
+      setUploadedFiles([]);
+      trackFeatureUsage('clear_all_uploaded_files', uploadedFiles.length);
     }
   };
 
@@ -462,8 +441,7 @@ const EnhancedFileUploadSection = ({
         <Upload className="w-8 h-8 text-blue-600 mr-3" />
         <h2 className="text-2xl font-bold text-gray-800">파일 불러오기</h2>
       </div>
-
-      {/* 🆕 알림 메시지 */}
+      {}
       {notification && (
         <div className={`mb-4 p-4 rounded-lg border ${
           notification.type === 'success' 
@@ -479,8 +457,7 @@ const EnhancedFileUploadSection = ({
           </div>
         </div>
       )}
-
-      {/* 탭 메뉴 확장 */}
+      {}
       <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
         <button
           onClick={() => setActiveTab('local')}
@@ -516,7 +493,6 @@ const EnhancedFileUploadSection = ({
           분석기록
         </button>
       </div>
-
       {activeTab === 'local' && (
         <div>
           <p className="text-gray-600 mb-6">
@@ -567,7 +543,6 @@ const EnhancedFileUploadSection = ({
           </div>
         </div>
       )}
-
       {activeTab === 'github' && (
         <div>
           <p className="text-gray-600 mb-6">
@@ -744,124 +719,121 @@ const EnhancedFileUploadSection = ({
               </button>
             </div>
           )}
-
-          {/* 5. 분석기록 탭 간소화 */}
-          {activeTab === 'analysis' && (
-            <div className="space-y-6">
-              <p className="text-gray-600 mb-6">
-                이전에 저장한 분석기록을 불러오세요
-              </p>
-              {/* 분석기록 불러오기만 */}
-              <div className="border border-purple-200 rounded-lg p-6 bg-purple-50">
-                <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+      {}
+      {activeTab === 'analysis' && (
+        <div className="space-y-6">
+          <p className="text-gray-600 mb-6">
+            이전에 저장한 분석기록을 불러오세요
+          </p>
+          {}
+          <div className="border border-purple-200 rounded-lg p-6 bg-purple-50">
+            <h3 className="text-lg font-semibold text-purple-800 mb-4 flex items-center">
+              <FileUp className="w-5 h-5 mr-2" />
+              분석기록 불러오기
+            </h3>
+            <p className="text-purple-700 mb-4 text-sm">
+              이전에 내보낸 분석기록 파일(.json)을 불러와서 세션을 복원합니다.
+            </p>
+            
+            <input
+              ref={analysisFileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImportAnalysisFile}
+              className="hidden"
+            />
+            
+            <button
+              onClick={() => analysisFileInputRef.current?.click()}
+              disabled={isImportingSession}
+              className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
+            >
+              {isImportingSession ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  불러오는 중...
+                </>
+              ) : (
+                <>
                   <FileUp className="w-5 h-5 mr-2" />
-                  분석기록 불러오기
-                </h3>
-                <p className="text-purple-700 mb-4 text-sm">
-                  이전에 내보낸 분석기록 파일(.json)을 불러와서 세션을 복원합니다.
-                </p>
-                
-                <input
-                  ref={analysisFileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportAnalysisFile}
-                  className="hidden"
-                />
-                
-                <button
-                  onClick={() => analysisFileInputRef.current?.click()}
-                  disabled={isImportingSession}
-                  className="w-full bg-purple-600 text-white py-3 px-6 rounded-lg font-semibold hover:bg-purple-700 disabled:bg-gray-400 transition-colors flex items-center justify-center"
-                >
-                  {isImportingSession ? (
-                    <>
-                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                      불러오는 중...
-                    </>
-                  ) : (
-                    <>
-                      <FileUp className="w-5 h-5 mr-2" />
-                      분석기록 파일 선택
-                    </>
-                  )}
-                </button>
-              </div>
-              {/* 간단한 사용 가이드 */}
-              <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">📖 사용법</h3>
-                <p className="text-sm text-gray-600">
-                  이전에 "전체 세션 내보내기"로 저장한 JSON 파일을 선택하면 모든 분석 세션이 복원됩니다.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {uploadedFiles.length > 0 && (
-            <div className="mt-6">
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="font-semibold text-gray-800">불러온 파일들: ({uploadedFiles.length}개)</h3>
-                <button
-                  onClick={handleClearAllFiles}
-                  className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center group"
-                  title="모든 파일 목록에서 삭제"
-                >
-                  <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
-                  <span className="sr-only">모든 파일 삭제</span>
-                </button>
-              </div>
-              <div className="space-y-3">
-                {uploadedFiles.map((file) => (
-                  <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
-                    <div className="flex items-start justify-between mb-2 gap-3">
-                      <div className="flex items-start flex-1 min-w-0">
-                        <span className="text-lg mr-2 flex-shrink-0">{getFileTypeIcon(file.type)}</span>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <span className="font-medium text-sm truncate max-w-full" title={file.name}>
-                              {file.name}
-                           </span>
-                         </div>
-                         <div className="flex items-center space-x-2">
-                           <span className={`inline-block px-2 py-1 text-xs rounded ${getFileTypeColor(file.type)}`}>
-                             {file.type}
-                           </span>
-                           {file.source === 'github' && (
-                             <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
-                               <Github className="w-3 h-3 inline mr-1" />
-                               {file.folder}
-                             </span>
-                           )}
-                         </div>
-                       </div>
-                     </div>
-                     <button
-                       onClick={() => removeFile(file.id)}
-                       className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors flex-shrink-0"
-                     >
-                       <X className="w-4 h-4" />
-                     </button>
-                   </div>
-                    <div className="flex items-center space-x-2">
-                      <label className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">샘플명:</label>
-                      <input
-                        type="text"
-                        value={file.alias}
-                        onChange={(e) => updateFileAlias(file.id, e.target.value)}
-                        placeholder="샘플명 (예: IZO25nm, condition_A)"
-                        className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent min-w-0"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+                  분석기록 파일 선택
+                </>
+              )}
+            </button>
+          </div>
+          {}
+          <div className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <h3 className="text-lg font-semibold text-gray-800 mb-2">📖 사용법</h3>
+            <p className="text-sm text-gray-600">
+              이전에 "전체 세션 내보내기"로 저장한 JSON 파일을 선택하면 모든 분석 세션이 복원됩니다.
+            </p>
+          </div>
         </div>
-      );
+      )}
+      {uploadedFiles.length > 0 && (
+        <div className="mt-6">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="font-semibold text-gray-800">불러온 파일들: ({uploadedFiles.length}개)</h3>
+            <button
+              onClick={handleClearAllFiles}
+              className="p-2 rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors flex items-center justify-center group"
+              title="모든 파일 목록에서 삭제"
+            >
+              <Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+              <span className="sr-only">모든 파일 삭제</span>
+            </button>
+          </div>
+          <div className="space-y-3">
+            {uploadedFiles.map((file) => (
+              <div key={file.id} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+                <div className="flex items-start justify-between mb-2 gap-3">
+                  <div className="flex items-start flex-1 min-w-0">
+                    <span className="text-lg mr-2 flex-shrink-0">{getFileTypeIcon(file.type)}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="font-medium text-sm truncate max-w-full" title={file.name}>
+                          {file.name}
+                       </span>
+                     </div>
+                     <div className="flex items-center space-x-2">
+                       <span className={`inline-block px-2 py-1 text-xs rounded ${getFileTypeColor(file.type)}`}>
+                         {file.type}
+                       </span>
+                       {file.source === 'github' && (
+                         <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded">
+                           <Github className="w-3 h-3 inline mr-1" />
+                           {file.folder}
+                         </span>
+                       )}
+                     </div>
+                   </div>
+                 </div>
+                 <button
+                   onClick={() => removeFile(file.id)}
+                   className="text-red-600 hover:text-red-800 p-1 rounded hover:bg-red-50 transition-colors flex-shrink-0"
+                 >
+                   <X className="w-4 h-4" />
+                 </button>
+               </div>
+                <div className="flex items-center space-x-2">
+                  <label className="text-sm text-gray-600 whitespace-nowrap flex-shrink-0">샘플명:</label>
+                  <input
+                    type="text"
+                    value={file.alias}
+                    onChange={(e) => updateFileAlias(file.id, e.target.value)}
+                    placeholder="샘플명 (예: IZO25nm, condition_A)"
+                    className="flex-1 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent min-w-0"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
     };
 
-    // 6. HomePage 컴포넌트 Props 제거 (템플릿 관련)
     const HomePage = ({
       uploadedFiles,
       deviceParams,
@@ -872,7 +844,7 @@ const EnhancedFileUploadSection = ({
       updateFileAlias,
       setShowParamInput,
       setDeviceParams,
-      setUploadedFiles, // Added for clearing all files
+      setUploadedFiles,
       startAnalysis,
       handleGoToMainHome,
       handleGitHubFilesLoaded,
@@ -885,7 +857,6 @@ const EnhancedFileUploadSection = ({
     }) => {
       const [showFormulaInspector, setShowFormulaInspector] = useState(false);
       const [showAnalysisOptionsModal, setShowAnalysisOptionsModal] = useState(false);
-      // TFTUsageGuide 모달 상태 추가 (기존 showUsageGuide와 별도로 관리)
       const [showUsageGuideModal, setShowUsageGuideModal] = useState(false);
 
       useEffect(() => {
@@ -893,7 +864,6 @@ const EnhancedFileUploadSection = ({
         initializeSession();
       }, []);
 
-      // 모달 열릴 때 body 스크롤 방지
       useEffect(() => {
         if (showUsageGuideModal) {
           const originalOverflow = document.body.style.overflow;
@@ -905,7 +875,6 @@ const EnhancedFileUploadSection = ({
         }
       }, [showUsageGuideModal]);
 
-      // ESC 키로 모달 닫기
       useEffect(() => {
         const handleEscape = (event) => {
           if (event.key === 'Escape' && showUsageGuideModal) {
@@ -942,14 +911,10 @@ const EnhancedFileUploadSection = ({
         }
       }, [originalHandleFileUpload]);
 
-      // 🆕 분석기록 불러오기 핸들러
       const handleImportAnalysisSession = (sessions) => {
         onImportAnalysisSession(sessions);
-        // 불러온 후 바로 분석 결과 페이지로 이동
         setCurrentPage('analyzer');
       };
-
-      // 7. 불필요한 핸들러 함수 제거 (handleImportTemplate)
 
       const handleStartAnalysisClick = () => {
         if (uploadedFiles.length === 0) {
@@ -997,7 +962,7 @@ const EnhancedFileUploadSection = ({
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mb-12">
-              {/* 8. EnhancedFileUploadSection 호출부 수정 */}
+              {}
               <EnhancedFileUploadSection
                 uploadedFiles={uploadedFiles}
                 handleFileUpload={handleFileUpload}
@@ -1113,8 +1078,7 @@ const EnhancedFileUploadSection = ({
               </div>
             )}
           </div>
-
-          {/* 분석 옵션 선택 모달 */}
+          {}
           {showAnalysisOptionsModal && (
             <div className="fixed inset-0 bg-gray-600 bg-opacity-75 flex items-center justify-center z-50 p-4">
               <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full text-center transform transition-all duration-300 scale-100 opacity-100">
@@ -1158,8 +1122,7 @@ const EnhancedFileUploadSection = ({
               </div>
             </div>
           )}
-
-          {/* TFT 사용법 모달 */}
+          {}
           {showUsageGuideModal && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4"
                   style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(4px)' }}
@@ -1176,7 +1139,7 @@ const EnhancedFileUploadSection = ({
                 className="bg-white rounded-2xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
-                {/* 모달 헤더 */}
+                {}
                 <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -1192,11 +1155,11 @@ const EnhancedFileUploadSection = ({
                   </div>
                 </div>
                       
-                {/* 스크롤 가능한 컨텐츠 영역 */}
+                {}
                 <div className="overflow-y-auto p-6">
                   <TFTUsageGuide
                      showUsageGuide={true}
-                     setShowUsageGuide={() => {}} // 모달에서는 사용하지 않음
+                     setShowUsageGuide={() => {}}
                   />
                 </div>
               </motion.div>

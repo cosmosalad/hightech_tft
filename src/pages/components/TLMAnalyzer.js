@@ -118,7 +118,6 @@ const TLMAnalyzer = ({ onClose }) => {
   const [errorMessage, setErrorMessage] = useState('');
   const [dragOver, setDragOver] = useState(false);
 
-  // GitHub 관련 상태
   const [activeTab, setActiveTab] = useState('local');
   const [selectedFolder, setSelectedFolder] = useState('');
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
@@ -131,26 +130,21 @@ const TLMAnalyzer = ({ onClose }) => {
 
   const fileInputRef = useRef(null);
 
-  // 🔥 모달창 스크롤 문제 해결: 컴포넌트 마운트 시 body 스크롤 방지
   useEffect(() => {
-    // 모달이 열릴 때 body 스크롤 방지
     const originalOverflow = document.body.style.overflow;
     const originalPaddingRight = document.body.style.paddingRight;
 
-    // 스크롤바 너비 계산하여 레이아웃 시프트 방지
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
 
     document.body.style.overflow = 'hidden';
     document.body.style.paddingRight = `${scrollbarWidth}px`;
 
-    // 컴포넌트 언마운트 시 원복
     return () => {
       document.body.style.overflow = originalOverflow;
       document.body.style.paddingRight = originalPaddingRight;
     };
   }, []);
 
-  // 🔥 ESC 키로 모달 닫기
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === 'Escape') {
@@ -192,13 +186,11 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   }, [activeTab]);
 
-  // 현재 폴더의 파일 목록
   const currentFolderFiles = useMemo(() => {
     if (isFolderStructureLoading || hasFolderLoadError || !selectedFolder) return [];
     return getTLMFilesFromPath(selectedFolder) || [];
   }, [selectedFolder, isFolderStructureLoading, hasFolderLoadError, folderTreeData]);
 
-  // 필터링된 파일 목록
   const filteredFiles = useMemo(() => {
     if (isFolderStructureLoading || hasFolderLoadError) return [];
     if (!searchTerm.trim()) {
@@ -213,20 +205,17 @@ const TLMAnalyzer = ({ onClose }) => {
     });
   }, [currentFolderFiles, searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
-  // 전역 검색 결과
   const globalSearchResults = useMemo(() => {
     if (isFolderStructureLoading || hasFolderLoadError) return [];
     if (!searchTerm.trim()) return [];
     return searchTLMFiles(searchTerm);
   }, [searchTerm, isFolderStructureLoading, hasFolderLoadError]);
 
-  // 파일 검증
   const validateFile = (file) => {
     const validExtensions = ['.xls', '.xlsx'];
     return validExtensions.some(ext => file.name.toLowerCase().endsWith(ext));
   };
 
-  // 파일 업로드 처리
   const handleFileUpload = useCallback((files) => {
     const validFiles = Array.from(files).filter(validateFile);
 
@@ -257,7 +246,6 @@ const TLMAnalyzer = ({ onClose }) => {
     setErrorMessage('');
   }, [uploadedFiles]);
 
-  // 드래그 앤 드롭 이벤트
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
     setDragOver(true);
@@ -280,7 +268,6 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   }, [handleFileUpload]);
 
-  // 파일 제거
   const removeFile = (fileId) => {
     setUploadedFiles(prev => prev.filter(f => f.id !== fileId));
   };
@@ -292,7 +279,6 @@ const TLMAnalyzer = ({ onClose }) => {
     setErrorMessage('');
   };
 
-  // 파일 별칭 업데이트
   const updateFileAlias = (fileId, newAlias) => {
     setUploadedFiles(prev =>
       prev.map(file =>
@@ -301,7 +287,6 @@ const TLMAnalyzer = ({ onClose }) => {
     );
   };
 
-  // 파일 선택 토글
   const toggleFileSelection = (filename) => {
     setSelectedFiles(prev => {
       const newSet = new Set(prev);
@@ -314,7 +299,6 @@ const TLMAnalyzer = ({ onClose }) => {
     });
   };
 
-  // 전체 선택 토글
   const toggleSelectAll = useCallback(() => {
     if (filteredFiles.length === 0) return;
     if (selectedFiles.size === filteredFiles.length) {
@@ -324,7 +308,6 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   }, [selectedFiles.size, filteredFiles]);
 
-  // 폴더 변경 처리
   const handleFolderChange = (folder) => {
     setSelectedFolder(folder);
     setSelectedFiles(new Set());
@@ -332,12 +315,10 @@ const TLMAnalyzer = ({ onClose }) => {
     setShowGlobalResults(false);
   };
 
-  // 검색어 변경 처리
   const handleSearchChange = useCallback((value) => {
     setSearchTerm(value);
   }, []);
 
-  // GitHub 파일 로드
   const loadSelectedFiles = async () => {
     if (selectedFiles.size === 0) {
       setErrorMessage('불러올 파일을 선택해주세요.');
@@ -371,7 +352,6 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   };
 
-  // TLM 분석 실행
   const executeAnalysis = async () => {
     if (uploadedFiles.length === 0) {
       setErrorMessage('분석할 파일을 업로드해주세요.');
@@ -401,7 +381,6 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   };
 
-  // 파일 상태 아이콘
   const getStatusIcon = (status) => {
     switch (status) {
       case 'ready': return <FileSpreadsheet className="w-4 h-4 text-blue-500" />;
@@ -412,7 +391,6 @@ const TLMAnalyzer = ({ onClose }) => {
     }
   };
 
-  // 결과 표시 중일 때
   if (showResults && analysisResults) {
     return (
       <TLMChartDisplay
@@ -431,7 +409,6 @@ const TLMAnalyzer = ({ onClose }) => {
         backdropFilter: 'blur(4px)'
       }}
       onClick={(e) => {
-        // 🔥 백드롭 클릭 시 모달 닫기 (모달 내부 클릭은 제외)
         if (e.target === e.currentTarget) {
           onClose();
         }
@@ -445,12 +422,11 @@ const TLMAnalyzer = ({ onClose }) => {
         className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full mx-4"
         style={{
           maxHeight: '90vh',
-          // 🔥 모달 자체의 스크롤 방지, 내부 컨텐츠만 스크롤
           overflow: 'hidden'
         }}
-        onClick={(e) => e.stopPropagation()} // 🔥 이벤트 버블링 방지
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* 헤더 */}
+        {}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -469,18 +445,17 @@ const TLMAnalyzer = ({ onClose }) => {
           </div>
         </div>
 
-        {/* 스크롤 가능한 컨텐츠 영역 */}
+        {}
         <div
           className="overflow-y-auto"
           style={{
-            maxHeight: 'calc(90vh - 120px)', // 헤더와 푸터(버튼) 높이 제외
-            // 🔥 커스텀 스크롤바 스타일링
+            maxHeight: 'calc(90vh - 120px)',
             scrollbarWidth: 'thin',
             scrollbarColor: '#fb923c #f3f4f6'
           }}
         >
           <div className="p-6">
-            {/* 분석 파라미터 설정 */}
+            {}
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
                 <Settings className="w-5 h-5 mr-2" />
@@ -541,7 +516,7 @@ const TLMAnalyzer = ({ onClose }) => {
               </div>
             </div>
 
-            {/* 탭 메뉴 */}
+            {}
             <div className="mb-6">
               <h3 className="text-lg font-semibold text-gray-800 mb-3 flex items-center">
                 <Upload className="w-5 h-5 mr-2" />
@@ -572,7 +547,7 @@ const TLMAnalyzer = ({ onClose }) => {
                 </button>
               </div>
 
-              {/* 로컬 파일 탭 */}
+              {}
               {activeTab === 'local' && (
                 <div>
                   <p className="text-gray-600 mb-6">
@@ -624,7 +599,7 @@ const TLMAnalyzer = ({ onClose }) => {
                 </div>
               )}
 
-              {/* GitHub 파일 탭 */}
+              {}
               {activeTab === 'github' && (
                 <div>
                   <p className="text-gray-600 mb-6">
@@ -688,7 +663,7 @@ const TLMAnalyzer = ({ onClose }) => {
                     </div>
                   )}
 
-                  {/* 전체 검색 결과 */}
+                  {}
                   <div className={`transition-all duration-500 ease-in-out overflow-hidden ${
                     searchTerm && showGlobalResults && !hasFolderLoadError
                       ? 'max-h-96 opacity-100 mb-4'
@@ -731,7 +706,7 @@ const TLMAnalyzer = ({ onClose }) => {
                     )}
                   </div>
 
-                  {/* 파일 목록 */}
+                  {}
                   {!hasFolderLoadError && selectedFolder ? (
                     filteredFiles.length > 0 ? (
                       <div className="mb-4">
@@ -801,7 +776,7 @@ const TLMAnalyzer = ({ onClose }) => {
               )}
             </div>
 
-            {/* 업로드된 파일 목록 */}
+            {}
             {uploadedFiles.length > 0 && (
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-3">
@@ -860,7 +835,7 @@ const TLMAnalyzer = ({ onClose }) => {
               </div>
             )}
 
-            {/* 사용법 안내 */}
+            {}
             <div className="mb-6">
               <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
                 <div className="flex items-center justify-between mb-3">
@@ -898,7 +873,7 @@ const TLMAnalyzer = ({ onClose }) => {
                     transition={{ duration: 0.3 }}
                     className="mt-4 space-y-4"
                   >
-                    {/* 파일명 예시 */}
+                    {}
                     <div>
                       <h5 className="font-medium text-blue-700 mb-2">✅ 1. Excel 파일명은 자유롭게 설정 가능</h5>
                       <div className="bg-white p-3 rounded-lg border border-blue-200">
@@ -917,7 +892,7 @@ const TLMAnalyzer = ({ onClose }) => {
                       </div>
                     </div>
 
-                    {/* 워크시트 구조 예시 */}
+                    {}
                     <div>
                       <h5 className="font-medium text-blue-700 mb-2">⚠️ 2. 워크시트명은 반드시 거리값으로 설정</h5>
                       <div className="bg-white p-3 rounded-lg border border-blue-200 mb-3">
@@ -967,7 +942,7 @@ const TLMAnalyzer = ({ onClose }) => {
                       </div>
                     </div>
 
-                    {/* 추가 요구사항 */}
+                    {}
                     <div>
                       <h5 className="font-medium text-blue-700 mb-2">📋 3. 데이터 형식 요구사항</h5>
                       <ul className="text-sm text-blue-700 space-y-1">
@@ -982,7 +957,7 @@ const TLMAnalyzer = ({ onClose }) => {
               </div>
             </div>
 
-            {/* 에러 메시지 */}
+            {}
             {errorMessage && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
                 <div className="flex items-center">
@@ -992,7 +967,7 @@ const TLMAnalyzer = ({ onClose }) => {
               </div>
             )}
 
-            {/* 분석 실행 버튼 */}
+            {}
             <div className="flex gap-4">
               <button
                 onClick={executeAnalysis}

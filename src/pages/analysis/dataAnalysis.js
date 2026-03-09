@@ -1,11 +1,9 @@
 import * as TFTParams from '../parameters/index.js';
 
-// IDVD 분석
 export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
   const chartData = [];
   const gateVoltages = [];
   
-  // 게이트 전압 추출
   for (let i = 0; i < headers.length; i += 5) {
     if (headers[i] && headers[i].includes('DrainI')) {
       const gateVIndex = i + 3;
@@ -15,7 +13,6 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
     }
   }
 
-  // 차트 데이터 생성
   const uniqueVDPoints = new Map();
   
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
@@ -37,7 +34,6 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
   
   const chartData_fixed = Array.from(uniqueVDPoints.values()).sort((a, b) => a.VD - b.VD);
 
-  // Ron 계산 (새 모듈 사용)
   const ron = TFTParams.calculateRon(chartData_fixed, gateVoltages);
 
   return {
@@ -49,11 +45,9 @@ export const analyzeIDVD = (headers, dataRows, filename, deviceParams) => {
   };
 };
 
-// IDVG Linear 분석
 export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1, igIndex = -1;
 
-  // 헤더 분석
   headers.forEach((header, idx) => {
     if (header && typeof header === 'string') {
       const headerLower = header.toLowerCase();
@@ -75,28 +69,27 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
     }
   });
 
-  // 기본값 설정
-  if (vgIndex === -1) vgIndex = 3;
+  if (vgIndex === -1)
+    vgIndex = 3;
   if (idIndex === -1) idIndex = 0;
   if (vdIndex === -1) vdIndex = 1;
 
   const vdsLinear = dataRows.length > 0 ? Math.abs(dataRows[0][vdIndex] || 0.1) : 0.1;
 
-  // 차트 데이터 생성
   const uniqueVGPoints = new Map();
 
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
     const row = dataRows[rowIdx];
     const vg = row[vgIndex] || 0;
     const id = Math.abs(row[idIndex]) || 1e-12;
-    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12; // 🆕 IG 데이터 추가
+    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12;
     const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
     
     if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
       uniqueVGPoints.set(vg, {
         VG: vg,
         ID: id,
-        IG: ig, // IG 데이터 포함
+        IG: ig,
         VD: Math.abs(row[vdIndex]) || 0,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id),
@@ -107,11 +100,9 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
   
   const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-  // 새 모듈들 사용해서 계산
   let gmData = [];
   let useExcelGm = false;
 
-  // Excel에 gm 데이터가 있는지 확인
   if (gmIndex !== -1 && chartData.some(d => d.gm_measured && d.gm_measured > 0)) {
     useExcelGm = true;
     chartData.forEach((point, i) => {
@@ -120,11 +111,9 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
       }
     });
   } else {
-    // 수치 계산으로 gm 구하기
     gmData = TFTParams.calculateGm(chartData);
   }
 
-  // 각 파라미터 계산
   const gmMax = TFTParams.calculateGmMax(gmData);
   const vth = TFTParams.calculateVth(chartData, gmData);
   const ss = TFTParams.calculateSS(chartData);
@@ -150,11 +139,9 @@ export const analyzeIDVGLinear = (headers, dataRows, filename, deviceParams) => 
   };
 };
 
-// IDVG Saturation 분석
 export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1, vdIndex = -1, gmIndex = -1, igIndex = -1;
   
-  // 헤더 분석 (Linear와 동일)
   headers.forEach((header, idx) => {
     if (header && typeof header === 'string') {
       const headerLower = header.toLowerCase();
@@ -179,21 +166,20 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
 
   const vdsSat = dataRows.length > 0 ? Math.abs(dataRows[0][vdIndex] || 20) : 20;
 
-  // 차트 데이터 생성
   const uniqueVGPoints = new Map();
 
   for (let rowIdx = 0; rowIdx < dataRows.length; rowIdx++) {
     const row = dataRows[rowIdx];
     const vg = row[vgIndex] || 0;
     const id = Math.abs(row[idIndex]) || 1e-12;
-    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12; // 🆕 IG 데이터 추가
+    const ig = igIndex !== -1 ? Math.abs(row[igIndex]) || 1e-12 : 1e-12;
     const gm_measured = gmIndex !== -1 ? Math.abs(row[gmIndex]) || 0 : null;
     
     if (!isNaN(vg) && !isNaN(id) && !uniqueVGPoints.has(vg)) {
       uniqueVGPoints.set(vg, {
         VG: vg,
         ID: id,
-        IG: ig, // IG 데이터 포함
+        IG: ig,
         VD: Math.abs(row[vdIndex]) || 0,
         sqrtID: Math.sqrt(id),
         logID: Math.log10(id),
@@ -204,7 +190,6 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
   
   const chartData = Array.from(uniqueVGPoints.values()).sort((a, b) => a.VG - b.VG);
 
-  // gm 데이터 처리
   let gmData = [];
   let useExcelGm = false;
 
@@ -219,7 +204,6 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
     gmData = TFTParams.calculateGmSat(chartData);
   }
 
-  // 파라미터 계산
   const gmMax = TFTParams.calculateGmMax(gmData);
   const idSat = TFTParams.calculateIDSat(chartData, deviceParams);
 
@@ -235,7 +219,6 @@ export const analyzeIDVGSaturation = (headers, dataRows, filename, deviceParams)
   };
 };
 
-// IDVG Hysteresis 분석
 export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams) => {
   let vgIndex = -1, idIndex = -1, igIndex = -1;
   
@@ -257,7 +240,6 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
   if (vgIndex === -1) vgIndex = 3;
   if (idIndex === -1) idIndex = 0;
 
-  // Forward/Backward 데이터 분리
   const vgValues = dataRows.map(row => row[vgIndex] || 0);
   let maxVgIndex = 0;
   for (let i = 1; i < vgValues.length; i++) {
@@ -266,12 +248,11 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
     }
   }
   
-  // Forward 데이터
   const forwardVGMap = new Map();
   for (let i = 0; i <= maxVgIndex; i++) {
     const vg = dataRows[i][vgIndex] || 0;
     const id = Math.abs(dataRows[i][idIndex]) || 1e-12;
-    const ig = igIndex !== -1 ? Math.abs(dataRows[i][igIndex]) || 1e-12 : 1e-12; // 🆕
+    const ig = igIndex !== -1 ? Math.abs(dataRows[i][igIndex]) || 1e-12 : 1e-12;
     if (!forwardVGMap.has(vg)) {
       forwardVGMap.set(vg, {
         VG: vg,
@@ -284,7 +265,6 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
   }
   const forwardData = Array.from(forwardVGMap.values()).sort((a, b) => a.VG - b.VG);
   
-  // Backward 데이터
   const backwardVGMap = new Map();
   for (let i = maxVgIndex; i < dataRows.length; i++) {
     const vg = dataRows[i][vgIndex] || 0;
@@ -302,10 +282,8 @@ export const analyzeIDVGHysteresis = (headers, dataRows, filename, deviceParams)
   }
   const backwardData = Array.from(backwardVGMap.values()).sort((a, b) => b.VG - a.VG);
 
-  // Hysteresis 계산 (새 모듈 사용)
   const { deltaVth, vthForward, vthBackward } = TFTParams.calculateDeltaVth(forwardData, backwardData);
 
-  // 안정성 평가
   let stability = 'Excellent';
   if (deltaVth < 0.5) {
     stability = 'Excellent';

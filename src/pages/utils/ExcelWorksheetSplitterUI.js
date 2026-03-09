@@ -1,4 +1,3 @@
-// ExcelWorksheetSplitterUI.js
 import React, { useState, useCallback } from 'react';
 import { 
   Upload, 
@@ -29,14 +28,12 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
   const [downloadProgress, setDownloadProgress] = useState(null);
   const [previewSheet, setPreviewSheet] = useState(null);
   const [error, setError] = useState(null);
-  const [includeOriginalName, setIncludeOriginalName] = useState(true); // 새로 추가
+  const [includeOriginalName, setIncludeOriginalName] = useState(true);
 
-  // 파일 업로드 처리
   const handleFileUpload = useCallback(async (uploadedFile) => {
     setError(null);
     setWorkbookData(null);
     
-    // 파일 유효성 검사
     const validation = validateExcelFile(uploadedFile);
     if (!validation.isValid) {
       setError(validation.errors.join(' '));
@@ -61,7 +58,6 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
     }
   }, []);
 
-  // 드래그 앤 드롭 처리
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     const droppedFile = e.dataTransfer.files[0];
@@ -74,7 +70,6 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
     e.preventDefault();
   }, []);
 
-  // 개별 워크시트 다운로드
   const handleSingleDownload = (sheetName) => {
     try {
       const result = downloadSingleWorksheet(workbookData.workbook, sheetName, workbookData.fileName, includeOriginalName);
@@ -86,7 +81,6 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 전체 워크시트 일괄 다운로드
   const handleBulkDownload = async () => {
     setDownloadProgress({ current: 0, total: workbookData.worksheetInfo.length, progress: 0 });
     
@@ -109,21 +103,19 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 워크시트 미리보기
   const showPreview = (sheetName) => {
     const worksheet = workbookData.workbook.Sheets[sheetName];
     const previewData = generateWorksheetPreview(worksheet);
     setPreviewSheet({ name: sheetName, data: previewData });
   };
 
-  // 초기화
   const handleReset = () => {
     setFile(null);
     setWorkbookData(null);
     setPreviewSheet(null);
     setError(null);
     setDownloadProgress(null);
-    setIncludeOriginalName(true); // 토글도 초기화
+    setIncludeOriginalName(true);
   };
 
   if (!isOpen) return null;
@@ -131,7 +123,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
-        {/* 헤더 */}
+        {}
         <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -151,7 +143,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* 파일 업로드 영역 */}
+          {}
           {!workbookData && (
             <div className="mb-8">
               <div
@@ -188,7 +180,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 로딩 상태 */}
+          {}
           {isProcessing && (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-green-500 mr-3" />
@@ -196,7 +188,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 오류 메시지 */}
+          {}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
               <div className="flex items-center">
@@ -206,10 +198,10 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 워크북 정보 및 워크시트 목록 */}
+          {}
           {workbookData && (
             <div className="space-y-6">
-              {/* 파일 정보 */}
+              {}
               <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-bold text-green-800">파일 정보</h3>
@@ -245,7 +237,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* 파일명 옵션 토글 */}
+              {}
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h3 className="text-sm font-bold text-blue-800 mb-3">📝 파일명 설정</h3>
                 <div className="flex items-center justify-between">
@@ -278,7 +270,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
                 </p>
               </div>
 
-              {/* 일괄 다운로드 버튼 */}
+              {}
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-bold text-gray-800">워크시트 목록</h3>
                 <button
@@ -291,7 +283,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
                 </button>
               </div>
 
-              {/* 다운로드 진행률 */}
+              {}
               {downloadProgress && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
@@ -310,7 +302,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
                 </div>
               )}
 
-              {/* 워크시트 목록 */}
+              {}
               <div className="grid gap-4">
                 {workbookData.worksheetInfo.map((sheet, index) => (
                   <div
@@ -352,7 +344,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 미리보기 모달 */}
+          {}
           {previewSheet && (
             <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-60 flex items-center justify-center p-4">
               <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
@@ -397,7 +389,7 @@ const ExcelWorksheetSplitterUI = ({ isOpen, onClose }) => {
             </div>
           )}
 
-          {/* 사용 안내 */}
+          {}
           <div className="mt-8 p-6 bg-gray-50 rounded-xl">
             <h3 className="text-lg font-bold text-gray-800 mb-4">사용 안내</h3>
             <div className="grid md:grid-cols-2 gap-4 text-sm text-gray-600">

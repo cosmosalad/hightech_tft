@@ -1,8 +1,6 @@
-// components/FileUploadSection.js
 import React from 'react';
 import { Upload, X } from 'lucide-react';
 
-// 파일 타입별 아이콘 반환
 const getFileTypeIcon = (fileType) => {
   switch (fileType) {
     case 'IDVD':
@@ -18,7 +16,6 @@ const getFileTypeIcon = (fileType) => {
   }
 };
 
-// 파일 타입별 색상 반환
 const getFileTypeColor = (fileType) => {
   switch (fileType) {
     case 'IDVD':

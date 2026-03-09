@@ -6,7 +6,7 @@ import MaskPictureViewer from './components/MaskPictureViewer';
 import TLMAnalyzer from './components/TLMAnalyzer';
 import TFTEducationPodcast from './components/TFTEducationPodcast';
 import TFTUtilities from './TFTUtilities'; 
-import YouTubePlayerModal from './YouTubePlayerModal'; // YouTube 모달 임포트
+import YouTubePlayerModal from './YouTubePlayerModal';
 
 const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showFormulaInspector, setShowFormulaInspector] = useState(false);
@@ -17,7 +17,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
   const [showUtilities, setShowUtilities] = useState(false); 
   const [showYouTubeModal, setShowYouTubeModal] = useState(false);
 
-  // --- ⬇️ 세션당 1회 자동 팝업 로직 (기존과 동일) ⬇️ ---
   useEffect(() => {
     const hasSeenIntroVideo = sessionStorage.getItem('hasSeenIntroVideo');
     if (!hasSeenIntroVideo) {
@@ -28,8 +27,6 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
       return () => clearTimeout(timer);
     }
   }, []); 
-  // --- ⬆️ 여기까지 자동 팝업 로직 ⬆️ ---
-
   const navigateToAnalyzer = (version) => {
     if (version === 'basic') {
       onNavigate('basic');
@@ -67,7 +64,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-blue-50 to-purple-50 relative overflow-hidden">
-      {/* (배경 장식... 기존과 동일) */}
+      {}
       <div className="absolute inset-0 overflow-hidden">
         <div
           className="absolute -top-40 -right-40 w-80 h-80 bg-purple-300 rounded-full mix-blend-multiply filter blur-xl opacity-30"
@@ -78,9 +75,8 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           style={{ transform: 'translate3d(0,0,0)' }}
         ></div>
       </div>
-
       <div className="relative z-10 max-w-6xl mx-auto p-8">
-        {/* ( ... 헤더 및 나머지 페이지 컨텐츠 ... 기존과 동일 ... ) */}
+        {}
         <header className="text-center mb-16">
           <div className="mb-8">
             <h1 className="title-font text-6xl md:text-7xl font-bold bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 bg-clip-text text-transparent leading-tight mb-4 py-1">
@@ -96,7 +92,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </p>
 
           <div className="flex flex-wrap justify-center items-center gap-2 mb-8">
-           {/* 🔧 유틸리티 종합 버튼 */}
+           {}
             <button  
               onClick={() => setShowUtilities(true)}  
               className="group relative overflow-hidden bg-gradient-to-br from-slate-500 to-gray-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -113,7 +109,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
                     <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
                 </div>
             </button>
-           {/* 🎧 TFT 팟캐스트 버튼 */}
+           {}
            <button
              onClick={() => setShowTFTPodcast(true)}
              className="group relative overflow-hidden bg-gradient-to-br from-emerald-500 to-green-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -165,7 +161,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
              </div>
            </button>
 
-           {/* 🚀 TLM 분석 버튼 */}
+           {}
            <button
              onClick={() => setShowTLMAnalyzer(true)}
              className="group relative overflow-hidden bg-gradient-to-br from-orange-500 to-red-600 text-white px-4 py-3 rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
@@ -190,10 +186,10 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </header>
 
-        {/* ( ... 버전 선택, 비교표, 사용 가이드, 수식 점검, 검색창, 푸터 ... ) */}
-        {/* ( ... 이 부분은 기존 코드와 동일합니다 ... ) */}
+        {}
+        {}
         <section className="grid md:grid-cols-2 gap-8 mb-12">
-          {/* 기본 분석 버전 */}
+          {}
           <article className="group relative transform hover:scale-105 transition-transform duration-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-gray-100 hover:border-blue-200 hover:shadow-2xl relative overflow-hidden transition-all duration-300">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-indigo-100/50 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
@@ -239,7 +235,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </div>
           </article>
 
-          {/* 통합 분석 버전 */}
+          {}
           <article className="group relative transform hover:scale-105 transition-transform duration-300">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-purple-200 hover:border-purple-300 relative overflow-hidden transition-all duration-300">
               <div className="absolute top-4 right-4 z-20">
@@ -294,7 +290,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </article>
         </section>
 
-        {/* 비교 표 */}
+        {}
         <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 mb-12 border border-white/20">
           <h2 className="text-3xl font-bold text-gray-800 mb-6 text-center bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
             버전별 기능 비교
@@ -321,7 +317,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* 사용 가이드 */}
+        {}
         <section className="grid md:grid-cols-2 gap-8 mb-12">
           <div className="bg-blue-50/80 backdrop-blur-sm rounded-xl p-6 border border-blue-100/50">
             <h3 className="text-lg font-bold text-blue-800 mb-4 flex items-center"><Users className="w-5 h-5 mr-2" />기본 분석 모드 추천 대상</h3>
@@ -354,7 +350,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* ✨ 수식 및 코드 점검 컴포넌트 */}
+        {}
         <AnimatePresence>
           {showFormulaInspector && (
             <motion.div
@@ -369,7 +365,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           )}
         </AnimatePresence>       
 
-        {/* 검색창 섹션 */}
+        {}
         <section className="mb-8">
           <div className="max-w-2xl mx-auto">
             <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-white/20">
@@ -390,33 +386,28 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </section>
 
-        {/* 푸터 */}
+        {}
         <footer className="text-center pt-8 border-t border-gray-200/50">
           <p className="text-gray-500 text-sm">
             © 2025 <a href="https://www.kopo.ac.kr/seongnam/content.do?menu=11163" className="text-blue-600 hover:underline transition-colors">폴리텍 성남캠퍼스 하이테크 반도체공정 </a>. All rights reserved.
           </p>
         </footer>
       </div>
-      
-      {/* ⬇️ === 여기부터 모달 및 플로팅 버튼 === ⬇️ */}
-
-      {/* 🎥 === 새로 추가된 플로팅 버튼 === 🎥 */}
+      {}
+      {}
       <motion.button
         onClick={() => setShowYouTubeModal(true)}
         className="fixed bottom-8 right-8 z-40 bg-gradient-to-r from-red-500 to-red-700 text-white p-4 rounded-full shadow-xl hover:shadow-2xl hover:scale-110 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-all duration-300"
         aria-label="소개 영상 다시보기"
         title="소개 영상 다시보기"
-        initial={{ scale: 0, opacity: 0 }} // 처음엔 안보임
-        animate={{ scale: 1, opacity: 1 }} // 1초 뒤에 나타남
-        transition={{ delay: 1.0, type: 'spring', stiffness: 300, damping: 20 }} // 스프링 애니메이션
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.0, type: 'spring', stiffness: 300, damping: 20 }}
       >
         <PlayCircle className="w-8 h-8" />
       </motion.button>
-
-
-      {/* ( ... 기존 모달들 ... ) */}
-      
-      {/* 검색 모달 */}
+      {}
+      {}
       {isSearchModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[85vh] overflow-hidden">
@@ -436,7 +427,7 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
             </div>
             
             <div className="p-6 overflow-y-auto max-h-[calc(85vh-120px)]">
-              {/* ( ... 검색 모달 컨텐츠 ... ) */}
+              {}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-800 mb-3">📚 TFT 전기적 특성 분석 완벽 가이드</h3>
                 <p className="text-gray-600 text-sm mb-4">
@@ -560,30 +551,25 @@ const TFTAnalyzerHome = ({ onNavigate }) => {
           </div>
         </div>
       )}
-      
       {showMaskViewer && (
         <MaskPictureViewer onClose={() => setShowMaskViewer(false)} />
       )}
-
-      {/* 🚀 TLM 분석 모달 렌더링 추가 */}
+      {}
       {showTLMAnalyzer && (
         <TLMAnalyzer onClose={() => setShowTLMAnalyzer(false)} />
       )}
-
-      {/* TFT 팟캐스트 모달 */}
+      {}
       {showTFTPodcast && (
         <TFTEducationPodcast onClose={() => setShowTFTPodcast(false)} />
       )}
-
-      {/* 유틸리티 모달 */}
+      {}
       {showUtilities && (
         <TFTUtilities
           isOpen={showUtilities}
           onClose={() => setShowUtilities(false)}
         />
       )}
-
-      {/* 🎥 YouTube 모달 렌더링 (자동 또는 클릭으로 뜸) */}
+      {}
       <YouTubePlayerModal
         isOpen={showYouTubeModal}
         onClose={() => setShowYouTubeModal(false)}

@@ -1,24 +1,5 @@
-// src/pages/utils/analysisExportImport.js
-
-/**
- * 🎯 TFT Analyzer 분석기록 내보내기/불러오기 유틸리티 (간소화 버전)
- * 
- * 기능:
- * - 전체 세션 내보내기
- * - 분석기록 불러오기
- * - Analytics 추적
- */
-
 import { trackFeatureUsage, trackError } from './analytics';
 
-// ===== 내보내기 함수 =====
-
-/**
- * 여러 세션 일괄 내보내기 (전체 세션 내보내기)
- * @param {Array} sessions - 내보낼 세션들
- * @param {boolean} includeRawData - 원본 데이터 포함 여부
- * @returns {Object} 성공/실패 결과
- */
 export const exportMultipleSessions = (sessions, includeRawData = false) => {
   try {
     if (!sessions || sessions.length === 0) {
@@ -85,13 +66,6 @@ export const exportMultipleSessions = (sessions, includeRawData = false) => {
   }
 };
 
-// ===== 불러오기 함수 =====
-
-/**
- * 분석 세션 불러오기
- * @param {File} file - 불러올 JSON 파일
- * @returns {Object} 성공/실패 결과와 세션 데이터
- */
 export const importAnalysisSession = async (file) => {
   try {
     if (!file || file.type !== 'application/json') {
@@ -101,14 +75,12 @@ export const importAnalysisSession = async (file) => {
     const text = await file.text();
     const importData = JSON.parse(text);
 
-    // 버전 호환성 검사
     if (!importData.version) {
       return { success: false, message: '지원하지 않는 파일 형식입니다.' };
     }
 
     let sessions = [];
 
-    // 단일 세션 불러오기
     if (importData.type === "single_session" && importData.sessionData) {
       const session = {
         ...importData.sessionData,
@@ -119,9 +91,7 @@ export const importAnalysisSession = async (file) => {
         originalExportDate: importData.exportDate
       };
       sessions = [session];
-    }
-    // 다중 세션 불러오기 (전체 세션)
-    else if (importData.type === "multiple_sessions" && importData.sessions) {
+    } else if (importData.type === "multiple_sessions" && importData.sessions) {
       sessions = importData.sessions.map((sessionData, index) => ({
         ...sessionData,
         id: `imported_${Date.now()}_${index}_${Math.random().toString(36).substr(2, 9)}`,
@@ -135,7 +105,6 @@ export const importAnalysisSession = async (file) => {
       return { success: false, message: '올바르지 않은 파일 구조입니다.' };
     }
 
-    // Analytics 추적
     trackFeatureUsage('import_analysis_sessions', {
       session_count: sessions.length,
       original_export_date: importData.exportDate,

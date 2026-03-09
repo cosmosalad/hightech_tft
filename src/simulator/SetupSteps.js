@@ -1,8 +1,7 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { equipmentTypes, getParameterFields } from './simulatorData'; // 데이터 import
+import { equipmentTypes, getParameterFields } from './simulatorData';
 
-// 1. 장비 선택 컴포넌트
 export const EquipmentSelector = ({ selectedEquipments, onEquipmentChange, onNext, selectionError, isSelectionComplete }) => {
   const getColorClasses = (color, selected) => {
     const baseClasses = selected ? 'ring-4 scale-105' : 'hover:scale-102';
@@ -23,15 +22,13 @@ export const EquipmentSelector = ({ selectedEquipments, onEquipmentChange, onNex
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold text-gray-800 mb-2">TFT 공정 장비 선택</h2>
         <p className="text-gray-600">시뮬레이션할 장비들을 순서에 맞게 선택하세요</p>
-        {/* ### 아래 안내 문구를 삭제했습니다 ### */}
+        {}
       </div>
-
       {selectionError && (
         <div className="text-center mb-6 bg-red-100 border-2 border-red-300 text-red-700 font-bold p-4 rounded-xl shadow-md">
           {selectionError}
         </div>
       )}
-
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         {equipmentTypes.map((equipment) => {
           const isSelected = selectedEquipments.some(eq => eq.id === equipment.id);
@@ -73,7 +70,6 @@ export const EquipmentSelector = ({ selectedEquipments, onEquipmentChange, onNex
   );
 };
 
-// ... RecipeConfiguration 컴포넌트는 그대로 ...
 export const RecipeConfiguration = ({ selectedEquipments, recipes, onRecipeChange, onNext, onBack }) => {
   const handleParameterChange = (equipmentIndex, parameter, value) => {
     const newRecipes = [...recipes];

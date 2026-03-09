@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { Play, Settings, Gauge, ChevronRight } from 'lucide-react';
 import { EquipmentSelector, RecipeConfiguration } from './SetupSteps';
 import ProcessAnimation from './ProcessAnimation';
-import { equipmentTypes } from './simulatorData'; // 장비 데이터 import
+import { equipmentTypes } from './simulatorData';
 
 const CORRECT_ORDER = ['oxidation', 'sputtering', 'evaporation'];
 
-// 메인 시뮬레이터 컴포넌트: 전체 상태와 흐름을 제어합니다.
 const TFTProcessSimulator = () => {
     const [currentStep, setCurrentStep] = useState('equipment'); 
     const [selectedEquipments, setSelectedEquipments] = useState([]);
@@ -34,7 +33,6 @@ const TFTProcessSimulator = () => {
         if (id === expectedId) {
             setSelectedEquipments(prev => [...prev, equipment]);
         } else {
-            // ### 오류 메시지를 일반적인 내용으로 변경 ###
             if (expectedId) {
                 setSelectionError('공정 순서가 올바르지 않습니다. 다시 선택해주세요.');
             } else {

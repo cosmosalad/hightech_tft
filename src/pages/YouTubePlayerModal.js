@@ -1,8 +1,7 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion'; // framer-motion 임포트
+import { motion, AnimatePresence } from 'framer-motion';
 
-// YouTube URL에서 Embed URL을 추출하는 헬퍼 함수 (이전과 동일)
 const getEmbedUrl = (url) => {
   let videoId = '';
   try {
@@ -29,10 +28,9 @@ const getEmbedUrl = (url) => {
     return null;
   }
   
-  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`; // 자동 재생 및 음소거 추가 (브라우저 정책)
+  return `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`;
 };
 
-// 애니메이션 Variants 정의
 const backdropVariants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1 },
@@ -52,7 +50,6 @@ const modalVariants = {
 const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
   const embedUrl = getEmbedUrl(videoUrl);
 
-  // 'Escape' 키 눌렀을 때 닫기
   useEffect(() => {
     const handleEsc = (event) => {
       if (event.key === 'Escape') {
@@ -65,7 +62,6 @@ const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
     };
   }, [onClose]);
 
-  // 모달 바깥(백드롭) 클릭 시 닫기
   const handleBackdropClick = (e) => {
     if (e.target === e.currentTarget) {
       onClose();
@@ -75,16 +71,15 @@ const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
   return (
     <AnimatePresence>
       {isOpen && embedUrl && (
-        // 백드롭
-        <motion.div
+        (<motion.div
           className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          onClick={handleBackdropClick} // 백드롭 클릭 이벤트
+          onClick={handleBackdropClick}
           variants={backdropVariants}
           initial="hidden"
           animate="visible"
           exit="exit"
         >
-          {/* 모달 컨텐츠 */}
+          {}
           <motion.div
             className="bg-black rounded-2xl shadow-2xl max-w-4xl w-full relative overflow-hidden"
             variants={modalVariants}
@@ -92,7 +87,7 @@ const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
             animate="visible"
             exit="exit"
           >
-            {/* 닫기 버튼 */}
+            {}
             <button
               onClick={onClose}
               className="absolute top-2 right-2 text-white/70 hover:text-white transition-colors z-10 p-1 bg-black/30 rounded-full"
@@ -101,7 +96,7 @@ const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
               <X className="w-6 h-6" />
             </button>
             
-            {/* 반응형 비디오 컨테이너 */}
+            {}
             <div className="aspect-video">
               <iframe
                 className="w-full h-full"
@@ -113,7 +108,7 @@ const YouTubePlayerModal = ({ videoUrl, isOpen, onClose }) => {
               ></iframe>
             </div>
           </motion.div>
-        </motion.div>
+        </motion.div>)
       )}
     </AnimatePresence>
   );

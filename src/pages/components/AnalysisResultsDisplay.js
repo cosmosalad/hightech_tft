@@ -18,14 +18,11 @@ import {
   trackEngagement
 } from '../utils/analytics';
 
-// 1. 상단 import 섹션에 추가
 import SampleDetailModal from './SampleDetailModal';
-// 📋 추가된 import문
 import { generateSampleName } from '../utils/fileUtils';
 
-// 사이드바의 축소된 너비와 확장된 너비 정의
-const COLLAPSED_WIDTH = 64; // px 단위로 변경
-const EXPANDED_WIDTH = 240; // px 단위로 변경
+const COLLAPSED_WIDTH = 64;
+const EXPANDED_WIDTH = 240;
 
 const AnalysisResultsDisplay = ({
   allAnalysisSessions,
@@ -88,7 +85,6 @@ const AnalysisResultsDisplay = ({
   const [showLogScale, setShowLogScale] = useState(true);
   const [sortByValue, setSortByValue] = useState(false);
   
-  // 새로 추가: 통합 분석 결과 표시 상태
   const [showCompleteAnalysis, setShowCompleteAnalysis] = useState(true);
   
   const [ssEditorState, setSSEditorState] = useState({
@@ -102,25 +98,20 @@ const AnalysisResultsDisplay = ({
   const [canScrollUp, setCanScrollUp] = useState(false);
   const [canScrollDown, setCanScrollDown] = useState(false);
 
-  // 세션 이름 수정 상태
   const [editingSessionId, setEditingSessionId] = useState(null);
   const [newSessionName, setNewSessionName] = useState('');
   const nameInputRef = useRef(null);
 
-  // 사이드바 상태 관리 - 성능 최적화
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isSidebarPinned, setIsSidebarPinned] = useState(false);
   
-  // 디바운싱을 위한 타이머 ref
   const hoverTimerRef = useRef(null);
   const contentWrapperRef = useRef(null);
 
-  // 현재 세션 데이터를 useMemo로 캐싱
   const currentSession = useMemo(() => {
     return allAnalysisSessions.find(session => session.id === currentSessionId);
   }, [allAnalysisSessions, currentSessionId]);
 
-  // 사이드바 hover 디바운싱 처리
   const handleSidebarMouseEnter = useCallback(() => {
     if (isSidebarPinned) return;
     
@@ -130,7 +121,7 @@ const AnalysisResultsDisplay = ({
     
     hoverTimerRef.current = setTimeout(() => {
       setIsSidebarOpen(true);
-    }, 100); // 100ms 지연
+    }, 100);
   }, [isSidebarPinned]);
 
   const handleSidebarMouseLeave = useCallback(() => {
@@ -142,10 +133,9 @@ const AnalysisResultsDisplay = ({
     
     hoverTimerRef.current = setTimeout(() => {
       setIsSidebarOpen(false);
-    }, 150); // 150ms 지연으로 너무 빠른 닫힘 방지
+    }, 150);
   }, [isSidebarPinned]);
 
-  // 컴포넌트 언마운트 시 타이머 정리
   useEffect(() => {
     return () => {
       if (hoverTimerRef.current) {
@@ -154,7 +144,6 @@ const AnalysisResultsDisplay = ({
     };
   }, []);
 
-  // 스크롤 감지
   useEffect(() => {
     if (!currentSession) {
       setShowScrollButtons(false);
@@ -177,7 +166,6 @@ const AnalysisResultsDisplay = ({
     };
   }, [currentSession]);
 
-  // 세션 이름 수정 모드 시작
   const startEditingSessionName = (session) => {
     setEditingSessionId(session.id);
     setNewSessionName(session.name);
@@ -187,7 +175,6 @@ const AnalysisResultsDisplay = ({
     }, 0);
   };
 
-  // 세션 이름 저장
   const saveSessionName = useCallback((sessionId) => {
     const trimmedNewName = newSessionName.trim();
     if (editingSessionId === sessionId && trimmedNewName && trimmedNewName !== allAnalysisSessions.find(s => s.id === sessionId)?.name) {
@@ -198,14 +185,12 @@ const AnalysisResultsDisplay = ({
     setNewSessionName('');
   }, [editingSessionId, newSessionName, allAnalysisSessions, updateSessionName]);
 
-  // 세션 이름 입력 중 Enter 키 처리
   const handleNameInputKeyPress = (e, sessionId) => {
     if (e.key === 'Enter') {
       saveSessionName(sessionId);
     }
   };
 
-  // 입력 필드 외부 클릭 감지 (수정 모드 종료)
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (editingSessionId && nameInputRef.current && !nameInputRef.current.contains(event.target)) {
@@ -222,25 +207,21 @@ const AnalysisResultsDisplay = ({
     };
   }, [editingSessionId, saveSessionName]);
 
-  // 사이드바 너비 계산 - 성능 최적화
   const isExpanded = isSidebarOpen || isSidebarPinned;
   const sidebarWidth = isExpanded ? EXPANDED_WIDTH : COLLAPSED_WIDTH;
 
-  // 사이드바 배경색 및 텍스트 색상 조정
   const sidebarBg = 'bg-gray-800';
   const headerTextColor = 'text-blue-400';
   const defaultTextColor = 'text-gray-200';
   const hoverBgColor = 'hover:bg-gray-700';
   const selectedBgColor = 'bg-blue-600';
 
-  // 2. AnalysisResultsDisplay 컴포넌트 내부에 상태 추가 (기존 useState들과 함께)
   const [sampleDetailModal, setSampleDetailModal] = useState({
     isOpen: false,
     sampleName: null,
     measurementType: null
   });
 
-  // 3. 샘플 상세 모달 열기 함수 추가
   const openSampleDetailModal = (sampleName, measurementType = 'IDVG-Linear') => {
     setSampleDetailModal({
       isOpen: true,
@@ -249,7 +230,6 @@ const AnalysisResultsDisplay = ({
     });
   };
 
-  // 4. 샘플 상세 모달 닫기 함수 추가
   const closeSampleDetailModal = () => {
     setSampleDetailModal({
       isOpen: false,
@@ -296,7 +276,6 @@ const AnalysisResultsDisplay = ({
     });
   };
 
-  // ✅ 수정된 handleSSUpdate 함수
   const handleSSUpdate = async (result) => {
     const { newSS } = result;
     const measurementType = ssEditorState.currentMeasurement;
@@ -306,7 +285,6 @@ const AnalysisResultsDisplay = ({
     if (sampleIndex !== -1) {
       updatedAnalysisResults[measurementType][sampleIndex].parameters.SS = `${newSS.toFixed(1)} mV/decade (범위 조정)`;
   
-      // 🔥 수정: 샘플별 개별 파라미터 사용
       const sampleFile = currentSession.uploadedFiles?.find(f => {
         const fileSampleName = f.alias || generateSampleName(f.name);
         return fileSampleName === sampleName;
@@ -354,7 +332,6 @@ const AnalysisResultsDisplay = ({
     trackFeatureUsage('sort_by_value', 1);
   };
 
-  // 새로 추가: 통합 분석 결과 토글 함수
   const handleCompleteAnalysisToggle = () => {
     setShowCompleteAnalysis(!showCompleteAnalysis);
     trackFeatureUsage('complete_analysis_toggle', 1);
@@ -378,14 +355,14 @@ const AnalysisResultsDisplay = ({
  
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* 사이드바 컨테이너 - 성능 최적화 */}
+      {}
       <div
         className={`fixed top-0 left-0 h-full ${sidebarBg} shadow-lg flex flex-col z-40 transition-all duration-300 ease-in-out`}
         style={{ width: `${sidebarWidth}px` }}
         onMouseEnter={handleSidebarMouseEnter}
         onMouseLeave={handleSidebarMouseLeave}
       >
-        {/* 사이드바 헤더 및 토글 버튼 */}
+        {}
         <div className={`flex items-center ${isExpanded ? 'justify-between px-4 py-4 border-b border-gray-700' : 'justify-center py-4'}`}>
           {isExpanded ? (
             <>
@@ -406,7 +383,7 @@ const AnalysisResultsDisplay = ({
           )}
         </div>
 
-        {/* 세션 목록 및 하단 탐색 버튼 */}
+        {}
         {isExpanded && (
           <div className="flex-grow flex flex-col transition-opacity duration-300 ease-in-out opacity-100 min-h-0">
             <div className="flex-grow overflow-y-auto px-4 pr-2 pretty-scrollbar py-4 min-h-0">
@@ -459,12 +436,12 @@ const AnalysisResultsDisplay = ({
               </div>
             </div>
 
-{/* 사이드바 하단 버튼 - 고정 영역 */}
+{}
 <div className="flex-shrink-0 space-y-2 py-3 border-t border-gray-700 px-4">
-  {/* 세션이 많을 때 컴팩트한 레이아웃 사용 */}
+  {}
   {allAnalysisSessions.length > 8 ? (
     <>
-      {/* 컴팩트 모드: 아이콘만 표시하거나 더 작은 버튼 */}
+      {}
       <button
         onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
         disabled={allAnalysisSessions.length === 0}
@@ -494,7 +471,7 @@ const AnalysisResultsDisplay = ({
     </>
   ) : (
     <>
-      {/* 일반 모드: 전체 텍스트 표시 */}
+      {}
       <button
         onClick={() => onExportAllSessions && onExportAllSessions(allAnalysisSessions)}
         disabled={allAnalysisSessions.length === 0}
@@ -524,24 +501,22 @@ const AnalysisResultsDisplay = ({
           </div>
         )}
       </div>
-
-      {/* 메인 콘텐츠 - 성능 최적화된 레이아웃 */}
+      {}
       <div 
         ref={contentWrapperRef}
         className="flex-1 p-8 transition-all duration-300 ease-in-out will-change-auto"
         style={{ 
           marginLeft: `${sidebarWidth}px`,
-          // GPU 가속을 위한 transform 사용
           transform: 'translateZ(0)'
         }}
       >
         <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-gray-800 mb-8">TFT 통합 분석 결과</h1>
           
-          {/* 버튼 그룹 */}
+          {}
           <div className="flex items-center justify-end mb-8 space-x-4">
             <div className="relative flex items-center space-x-3">
-              {/* 통합 분석 결과 토글 버튼 */}
+              {}
               <button 
                 onClick={handleCompleteAnalysisToggle} 
                 className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
@@ -569,7 +544,7 @@ const AnalysisResultsDisplay = ({
                 }`}></div>
               </button>
 
-              {/* 값 정렬 버튼 */}
+              {}
               <button 
                 onClick={handleSortToggle} 
                 className={`group relative overflow-hidden px-4 py-2.5 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 ${
@@ -599,7 +574,7 @@ const AnalysisResultsDisplay = ({
             </div>
           </div>
 
-          {/* 통합 분석 결과 섹션 - 조건부 렌더링 */}
+          {}
           {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
             <div className={`transition-all duration-500 ease-in-out ${showCompleteAnalysis ? 'max-h-none opacity-100' : 'max-h-0 opacity-0 overflow-hidden'}`}>
               <CompleteAnalysisSection
@@ -613,7 +588,7 @@ const AnalysisResultsDisplay = ({
             </div>
           )}
 
-          {/* 개별 분석 결과 섹션들 */}
+          {}
           {analysisResults && Object.keys(analysisResults).map((type) => {
             const resultArray = analysisResults[type];
             if (resultArray.length === 0) return null;
@@ -633,7 +608,7 @@ const AnalysisResultsDisplay = ({
             );
           })}
 
-          {/* 통합 결과표 섹션 */}
+          {}
           {completeAnalysisResults && Object.keys(completeAnalysisResults).length > 0 && (
             <>
               <div className="text-center mb-8">
@@ -660,7 +635,7 @@ const AnalysisResultsDisplay = ({
             onApplyResult={handleSSUpdate} 
           />
           
-          {/* 6. 메인 컴포넌트 return 문 맨 마지막에 모달 추가 (기존 SSRangeEditor 아래) */}
+          {}
           <SampleDetailModal
             isOpen={sampleDetailModal.isOpen}
             onClose={closeSampleDetailModal}
@@ -670,7 +645,7 @@ const AnalysisResultsDisplay = ({
             completeAnalysisResult={sampleDetailModal.sampleName ? completeAnalysisResults[sampleDetailModal.sampleName] : null}
           />
 
-          {/* 스크롤 버튼들 */}
+          {}
           {showScrollButtons && (
             <div className="fixed right-6 bottom-6 flex flex-col space-y-2 z-50">
               {canScrollUp && (
@@ -704,7 +679,6 @@ const AnalysisResultsDisplay = ({
   );
 };
 
-// CompleteAnalysisSection 컴포넌트
 const CompleteAnalysisSection = ({
   completeAnalysisResults,
   deviceParams,
@@ -714,10 +688,8 @@ const CompleteAnalysisSection = ({
   openSampleDetailModal
 }) => {
 
- // ✅ 수정된 getSampleParams 함수
  const getSampleParams = (sampleName) => {
   if (!uploadedFiles) return deviceParams;
-  // 🔥 수정: generateSampleName 사용으로 매칭 로직 통일
   const sampleFile = uploadedFiles.find(f => {
     const fileSampleName = f.alias || generateSampleName(f.name);
     return fileSampleName === sampleName;
@@ -735,7 +707,7 @@ const CompleteAnalysisSection = ({
 
          return (
            <div key={sampleName} className="bg-white rounded-lg p-6 shadow-md">
-             {/* 5. CompleteAnalysisSection 컴포넌트 수정 (샘플명을 클릭 가능하게) */}
+             {}
              <div className="flex items-center justify-between mb-4">
                <button
                  onClick={() => openSampleDetailModal(sampleName, 'IDVG-Linear')}
@@ -764,7 +736,6 @@ const CompleteAnalysisSection = ({
                  </div>
                </div>
              </div>
-
              <div className="grid md:grid-cols-3 gap-6">
 
                <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
@@ -813,7 +784,6 @@ const CompleteAnalysisSection = ({
                </div>
 
              </div>
-
              {result.warnings && result.warnings.length > 0 && (
                <div className="mt-4 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded">
                  <h5 className="font-semibold text-yellow-800 mb-2">⚠️ 주의사항:</h5>
@@ -834,7 +804,6 @@ const CompleteAnalysisSection = ({
  );
 };
 
-// IndividualAnalysisSection 컴포넌트
 const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQualityIcon, sortByValue, showLogScale, setShowLogScale, formatLinearCurrent, openSampleDetailModal }) => {
   const hasMultipleFiles = resultArray.length > 1;
 
@@ -899,7 +868,6 @@ const IndividualAnalysisSection = ({ type, resultArray, openSSEditor, getSSQuali
   );
 };
 
-// IntegratedResultsTable 컴포넌트
 const IntegratedResultsTable = ({ completeAnalysisResults }) => (
   <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
     <h2 className="text-2xl font-bold text-gray-800 mb-6">🎯 통합 분석 결과표</h2>

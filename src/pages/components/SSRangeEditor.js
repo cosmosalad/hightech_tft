@@ -3,7 +3,6 @@ import { X, Calculator, TrendingUp, AlertTriangle, CheckCircle, Flame } from 'lu
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceArea } from 'recharts';
 import { calculateSS } from '../parameters/ss.js';
 
-// 스크롤바 스타일을 컴포넌트에 직접 추가
 const scrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 12px;
@@ -55,7 +54,6 @@ const SSRangeEditor = ({
   const [dragEndX, setDragEndX] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // 스크롤바 스타일 추가
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.textContent = scrollbarStyles;
@@ -73,7 +71,6 @@ const SSRangeEditor = ({
     };
   }, []);
 
-  // ESC 키로 모달 닫기
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') onClose();
@@ -88,7 +85,6 @@ const SSRangeEditor = ({
     };
   }, [isOpen, onClose]);
 
-  // 초기값 설정 및 미리보기 데이터 생성
   useEffect(() => {
     if (isOpen && chartData && chartData.length > 0) {
       const vgValues = chartData.map(d => d.VG).sort((a, b) => a - b);
@@ -106,7 +102,6 @@ const SSRangeEditor = ({
     }
   }, [isOpen, chartData]);
 
-  // 미리보기 데이터 생성 및 범위 하이라이트
   const generatePreviewData = () => {
     if (!chartData) return;
 
@@ -123,7 +118,6 @@ const SSRangeEditor = ({
     generatePreviewData();
   }, [startVG, endVG, chartData]);
 
-  // SS 계산 실행
   const handleCalculate = () => {
     if (!chartData || isNaN(startVG) || isNaN(endVG) || startVG >= endVG) {
       alert('유효하지 않은 VG 범위입니다. 시작 VG가 종료 VG보다 작아야 합니다.');
@@ -365,9 +359,9 @@ const SSRangeEditor = ({
         zIndex: 9998
       }}
     >
-      {/* 모달 전체 컨테이너: 크기를 90%로 조정하고 스크롤바 스타일링 */}
+      {}
       <div className="bg-white rounded-2xl shadow-2xl max-w-6xl w-[90%] max-h-[90vh] overflow-y-auto transform scale-100 transition-all duration-300 custom-scrollbar">
-        {/* 헤더 */}
+        {}
         <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gradient-to-r from-blue-100 to-purple-100 rounded-t-2xl">
           <div className="flex items-center">
             <Calculator className="w-7 h-7 text-blue-600 mr-3" />
@@ -386,7 +380,7 @@ const SSRangeEditor = ({
         </div>
 
         <div className="p-8">
-          {/* 현재 값 표시 섹션: 더 넓은 패딩과 강조된 스타일 */}
+          {}
           <div className="mb-8 p-6 bg-blue-50 rounded-lg border border-blue-200 shadow-sm flex items-center justify-between">
             <h3 className="font-semibold text-lg text-blue-800">현재 SS 값</h3>
             <div className="text-2xl font-mono text-blue-700 font-bold">
@@ -394,17 +388,17 @@ const SSRangeEditor = ({
             </div>
           </div>
 
-          {/* 레이아웃 변경: 왼쪽 컨트롤 1열, 오른쪽 그래프 2열 (총 3열처럼) */}
-          {/* `lg:grid-cols-3`는 유지하되, 각 컬럼의 `col-span`을 명확히 함 */}
+          {}
+          {}
           <div className="grid lg:grid-cols-3 gap-8">
-            {/* 왼쪽: 범위 설정 및 계산 (1열 차지) */}
+            {}
             <div className="lg:col-span-1">
               <h3 className="text-xl font-semibold text-gray-800 mb-5 flex items-center">
                 <TrendingUp className="w-6 h-6 mr-3 text-purple-600" />
                 선형 구간 선택
               </h3>
 
-              {/* 추천 범위 버튼들 */}
+              {}
               <div className="mb-6 p-4 bg-purple-50 rounded-lg border border-purple-200">
                 <h4 className="text-base font-semibold text-purple-800 mb-3">🎯 추천 범위</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
@@ -441,7 +435,7 @@ const SSRangeEditor = ({
                 </div>
               </div>
 
-              {/* VG 범위 입력 */}
+              {}
               <div className="space-y-5 mb-8">
                 <div className="grid grid-cols-2 gap-5">
                   <div>
@@ -492,7 +486,7 @@ const SSRangeEditor = ({
                   </div>
                 </div>
 
-                {/* 선택 가이드박스: 아이콘 추가 및 스타일 개선 */}
+                {}
                 <div className="text-sm text-gray-700 bg-blue-50 p-4 rounded-lg border border-blue-200 flex items-start space-x-2">
                   <Flame className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
                   <div>
@@ -523,7 +517,7 @@ const SSRangeEditor = ({
                   )}
                 </button>
 
-                {/* 현재 선택된 범위 정보: 깔끔한 배경과 글꼴 */}
+                {}
                 {previewData.length > 0 && (
                   <div className="text-xs text-gray-700 bg-gray-100 p-3 rounded-md border border-gray-200">
                     <strong>선택된 범위:</strong> {isNaN(startVG) ? 'N/A' : startVG.toFixed(1)}V ~ {isNaN(endVG) ? 'N/A' : endVG.toFixed(1)}V<br />
@@ -532,7 +526,7 @@ const SSRangeEditor = ({
                 )}
               </div>
 
-              {/* 계산 결과 섹션 */}
+              {}
               {calculationResult && (
                 <div className="space-y-5">
                   <h4 className="font-semibold text-xl text-gray-800 flex items-center">
@@ -565,7 +559,7 @@ const SSRangeEditor = ({
                     </div>
                   </div>
 
-                  {/* 품질 평가 섹션: 배경색, 테두리, 아이콘 활용 */}
+                  {}
                   {qualityInfo && (
                     <div className={`p-4 rounded-lg ${qualityInfo.bgColor} border ${qualityInfo.borderColor} shadow-sm`}>
                       <div className={`font-bold text-lg ${qualityInfo.color} mb-2 flex items-center`}>
@@ -591,13 +585,12 @@ const SSRangeEditor = ({
               )}
             </div>
 
-            {/* 오른쪽: 미리보기 그래프 (2열) - 가로 폭을 더 넓게 할당 */}
-            <div className="lg:col-span-2"> {/* lg 화면에서 2열을 차지하도록 변경 */}
+            {}
+            <div className="lg:col-span-2"> {}
               <h3 className="text-xl font-semibold text-gray-800 mb-5">데이터 미리보기 (드래그하여 범위 선택)</h3>
 
               {previewData.length > 0 ? (
-                // 그래프 높이 유지 (h-[600px]), 가로 공간 최대한 활용
-                <div className="h-[600px] bg-gray-50 rounded-lg p-4 cursor-crosshair user-select-none shadow-md border border-gray-200">
+                (<div className="h-[600px] bg-gray-50 rounded-lg p-4 cursor-crosshair user-select-none shadow-md border border-gray-200">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                       data={previewData}
@@ -652,7 +645,7 @@ const SSRangeEditor = ({
                         }}
                         connectNulls={false}
                       />
-                      {/* 드래그 중인 영역 표시 */}
+                      {}
                       {isDragging && dragStartX !== null && dragEndX !== null && (
                         <ReferenceArea
                           x1={Math.min(dragStartX, dragEndX)}
@@ -663,7 +656,7 @@ const SSRangeEditor = ({
                           strokeWidth={1}
                         />
                       )}
-                      {/* 최종 선택된 영역 표시 (드래그와 별개, 고정) */}
+                      {}
                        {!isDragging && (
                         <ReferenceArea
                           x1={currentSelectedMinVG}
@@ -676,14 +669,14 @@ const SSRangeEditor = ({
                        )}
                     </LineChart>
                   </ResponsiveContainer>
-                </div>
+                </div>)
               ) : (
                 <div className="h-[600px] bg-gray-50 rounded-lg flex items-center justify-center text-gray-500 border border-gray-200 shadow-md">
                   표시할 데이터가 없습니다.
                 </div>
               )}
 
-              {/* 그래프 아래 정보 박스: 스타일 개선 */}
+              {}
               <div className="mt-6 text-sm text-gray-700 bg-gray-100 p-4 rounded-lg border border-gray-200 shadow-sm">
                 <div className="flex items-center space-x-6 mb-3">
                   <div className="flex items-center">
@@ -708,7 +701,7 @@ const SSRangeEditor = ({
             </div>
           </div>
 
-          {/* 하단 버튼 섹션: 간격, 정렬, 스타일 개선 */}
+          {}
           <div className="flex justify-end space-x-4 mt-10 pt-6 border-t border-gray-200">
             <button
               onClick={onClose}

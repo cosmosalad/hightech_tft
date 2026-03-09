@@ -1,4 +1,3 @@
-// FileRenamerUI.js
 import React, { useState, useCallback, useEffect } from 'react';
 import { 
   Upload, 
@@ -55,7 +54,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [error, setError] = useState(null);
 
-  // 모달이 열릴 때 배경 스크롤 막기
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
@@ -65,7 +63,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     };
   }, [isOpen]);
 
-  // 파일 업로드 처리
   const handleFileUpload = useCallback((uploadedFiles) => {
     const fileArray = Array.from(uploadedFiles);
     const newFiles = fileArray.map((file, index) => createFileInfo(file, files.length + index));
@@ -73,7 +70,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     setError(null);
   }, [files.length]);
 
-  // 드래그 앤 드롭 처리
   const handleDrop = useCallback((e) => {
     e.preventDefault();
     const droppedFiles = e.dataTransfer.files;
@@ -86,7 +82,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     e.preventDefault();
   }, []);
 
-  // 일괄 번호 매기기 적용
   const handleNumbering = () => {
     try {
       const updatedFiles = applyNumbering(files, numberingOptions);
@@ -103,7 +98,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 선택된 파일들 삭제
   const handleDeleteSelected = () => {
     const selectedCount = files.filter(file => file.selected).length;
     
@@ -118,7 +112,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 텍스트/태그 변경 적용
   const handleBulkRename = () => {
     try {
       const updatedFiles = applyBulkRename(files, bulkOptions);
@@ -135,22 +128,18 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }
   };
   
-  // 오른쪽 패널의 '적용' 버튼 통합 핸들러
   const handleApplyChanges = () => {
     if (activeTab === 'numbering') {
       handleNumbering();
-    } else { // 'text' 또는 'tft' 탭
-      handleBulkRename();
+    } else { handleBulkRename();
     }
   };
 
-  // 개별 파일명 편집 시작
   const startEditing = (file) => {
     setEditingFile(file.id);
     setTempName(file.newName);
   };
 
-  // 개별 파일명 편집 완료
   const finishEditing = () => {
     if (editingFile && tempName.trim()) {
       const validation = validateFileName(tempName);
@@ -168,18 +157,15 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 파일 선택 토글
   const handleFileToggle = (fileId) => {
     setFiles(toggleFileSelection(files, fileId));
   };
 
-  // 전체 선택/해제
   const handleSelectAll = () => {
     const allSelected = files.every(file => file.selected);
     setFiles(toggleAllFileSelection(files, !allSelected));
   };
 
-  // TFT 접미사 추가
   const handleTftSuffix = (suffixType) => {
     setBulkOptions(prev => ({
       ...prev,
@@ -187,7 +173,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }));
   };
 
-  // 다운로드 처리
   const handleDownload = async (single = null) => {
     setIsDownloading(true);
     try {
@@ -206,7 +191,6 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
     }
   };
 
-  // 초기화
   const handleReset = () => {
     setFiles([]);
     setBulkOptions({
@@ -230,7 +214,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden">
-        {/* 헤더 */}
+        {}
         <div className="bg-gradient-to-r from-blue-500 to-indigo-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -250,9 +234,9 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
         </div>
 
         <div className="flex h-[calc(90vh-120px)]">
-          {/* 왼쪽: 파일 업로드 및 목록 */}
+          {}
           <div className="flex-1 p-6 overflow-y-auto border-r border-gray-200">
-            {/* 파일 업로드 영역 */}
+            {}
             {files.length === 0 ? (
               <div
                 className="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-blue-400 hover:bg-blue-50/30 transition-all duration-300 transform hover:scale-[1.02] hover:shadow-lg cursor-pointer group"
@@ -282,7 +266,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
               </div>
             ) : (
               <>
-                {/* 파일 목록 헤더 */}
+                {}
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-4">
                     <h3 className="text-lg font-bold text-gray-800">
@@ -338,7 +322,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* 파일 현황 & 다운로드 - 왼쪽 */}
+                {}
                 <div className="mb-4 bg-gradient-to-r from-slate-50 to-gray-100 p-4 rounded-xl border border-gray-200 shadow-sm">
                   <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center">
                     📊 파일 현황
@@ -358,7 +342,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                     </div>
                   </div>
                   
-                  {/* 다운로드 버튼 */}
+                  {}
                   {changedCount > 0 && (
                     <button
                       onClick={() => handleDownload()}
@@ -380,7 +364,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                   )}
                 </div>
 
-                {/* 파일 목록 */}
+                {}
                 <div className="space-y-2 max-h-96 overflow-y-auto">
                   {files.map((file) => (
                     <div
@@ -448,13 +432,13 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
             )}
           </div>
 
-          {/* 오른쪽: 이름 변경 옵션 */}
+          {}
           {files.length > 0 && (
             <div className="w-80 p-4 bg-gray-50 overflow-y-auto flex flex-col">
               <div>
                 <h3 className="text-base font-bold text-gray-800 mb-4 text-center">📝 파일명 변경 도구</h3>
                 
-                {/* 탭 메뉴 */}
+                {}
                 <div className="mb-4">
                   <div className="flex bg-gray-200 rounded-lg p-1">
                     <button
@@ -490,7 +474,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                   </div>
                 </div>
 
-                {/* 번호 매기기 탭 */}
+                {}
                 {activeTab === 'numbering' && (
                   <div className="bg-white p-3 rounded-xl border border-gray-200 mb-4">
                     <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center">
@@ -571,7 +555,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                   </div>
                 )}
 
-                {/* 텍스트 수정 탭 */}
+                {}
                 {activeTab === 'text' && (
                   <div className="bg-white p-3 rounded-xl border border-gray-200 mb-4">
                     <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center">
@@ -648,7 +632,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                   </div>
                 )}
 
-                {/* TFT 태그 탭 */}
+                {}
                 {activeTab === 'tft' && (
                   <div className="bg-white p-3 rounded-xl border border-gray-200 mb-4">
                     <h4 className="text-sm font-bold text-gray-800 mb-3 flex items-center">
@@ -692,7 +676,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
                 )}
               </div>
               
-              {/* 하단 통합 액션 버튼 */}
+              {}
               <div className="mt-auto pt-3">
                   <button
                     onClick={handleApplyChanges}
@@ -706,7 +690,7 @@ const FileRenamerUI = ({ isOpen, onClose }) => {
           )}
         </div>
 
-        {/* 오류 메시지 */}
+        {}
         {error && (
           <div className="p-4 bg-red-50 border-t border-red-200">
             <div className="flex items-center">

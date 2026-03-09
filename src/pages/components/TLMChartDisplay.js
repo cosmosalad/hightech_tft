@@ -23,20 +23,17 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
   const [selectedFileIndex, setSelectedFileIndex] = useState(0);
   const [visibleFiles, setVisibleFiles] = useState({});
 
-  // 탭 구성
   const tabs = [
     { id: 'individual', label: '개별 파일 분석', icon: FileText },
     { id: 'integrated', label: '통합 TLM 분석', icon: TrendingUp },
     { id: 'data', label: '데이터 테이블', icon: Table }
   ];
 
-  // 색상 팔레트
   const colors = [
     '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
     '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9'
   ];
 
-  // 초기 가시성 설정
   React.useEffect(() => {
     if (results?.individualResults) {
       const initialVisibility = {};
@@ -47,18 +44,15 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     }
   }, [results]);
 
-  // 통합 TLM 차트 데이터
   const integratedChartData = useMemo(() => {
     if (!results?.individualResults) return [];
     
-    // 모든 거리값을 수집해서 정렬
     const allDistances = new Set();
     results.individualResults.forEach(file => {
       file.measurements.forEach(m => allDistances.add(m.distance));
     });
     const sortedDistances = Array.from(allDistances).sort((a, b) => a - b);
     
-    // 각 거리별로 데이터 포인트 생성
     return sortedDistances.map(distance => {
       const dataPoint = { distance };
       results.individualResults.forEach((file, index) => {
@@ -71,7 +65,6 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     });
   }, [results, visibleFiles]);
 
-  // 파일 가시성 토글
   const toggleFileVisibility = (index) => {
     setVisibleFiles(prev => ({
       ...prev,
@@ -79,7 +72,6 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     }));
   };
 
-  // 데이터 내보내기
   const exportData = () => {
     const csvData = exportResultsToCSV(results);
     const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
@@ -91,7 +83,6 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     URL.revokeObjectURL(url);
   };
 
-  // 커스텀 툴팁
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -110,7 +101,6 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     return null;
   };
 
-  // I-V 커스텀 툴팁
   const IVTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -125,7 +115,6 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     return null;
   };
 
-  // 개별 파일 분석 렌더링
   const renderIndividualAnalysis = () => {
     if (!results?.individualResults?.length) return null;
 
@@ -133,7 +122,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
 
     return (
       <div className="space-y-6">
-        {/* 파일 선택 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">파일 선택</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -161,8 +150,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
             ))}
           </div>
         </div>
-
-        {/* I-V 그래프들 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             I-V 특성 곡선 - {selectedFile.sampleName}
@@ -206,12 +194,11 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
             ))}
           </div>
         </div>
-
-        {/* 저항 측정 결과 및 TLM 파라미터 테이블 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">저항 측정 결과 및 TLM 파라미터</h3>
           
-          {/* 저항 측정 결과 */}
+          {}
           <div className="mb-6">
             <h4 className="font-medium text-gray-700 mb-3">저항 측정 결과</h4>
             <div className="overflow-x-auto">
@@ -260,7 +247,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
             </div>
           </div>
 
-          {/* TLM 파라미터 */}
+          {}
           {selectedFile.tlmParameters && (
             <div>
               <h4 className="font-medium text-gray-700 mb-3">TLM 파라미터</h4>
@@ -311,11 +298,10 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     );
   };
 
-  // 통합 TLM 분석 렌더링
   const renderIntegratedAnalysis = () => {
     return (
       <div className="space-y-6">
-        {/* 파일 가시성 제어 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">표시할 파일 선택</h3>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -336,8 +322,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
             ))}
           </div>
         </div>
-
-        {/* 통합 TLM 차트 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             TLM 분석 - Total Resistance & Distance
@@ -374,12 +359,11 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
             </ResponsiveContainer>
           </div>
         </div>
-
-        {/* 각 파일별 TLM 파라미터 */}
+        {}
         <div className="bg-white rounded-lg shadow-lg p-6">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">각 파일별 TLM 파라미터</h3>
           
-          {/* 개별 파일 TLM 파라미터 */}
+          {}
           <div className="space-y-6">
             {results.individualResults.map((file, index) => (
               file.tlmParameters && (
@@ -430,10 +414,9 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
     );
   };
 
-  // 데이터 테이블 렌더링
   const renderDataTable = () => (
     <div className="space-y-6">
-      {/* 측정 데이터 테이블 */}
+      {}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">측정 데이터</h3>
         <div className="overflow-x-auto">
@@ -478,7 +461,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
         </div>
       </div>
 
-      {/* TLM 파라미터 테이블 */}
+      {}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h3 className="text-lg font-semibold text-gray-800 mb-4">TLM 파라미터</h3>
         <div className="overflow-x-auto">
@@ -549,7 +532,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
         exit={{ opacity: 0, scale: 0.9 }}
         className="bg-white rounded-2xl shadow-2xl max-w-7xl w-full max-h-[95vh] overflow-hidden"
       >
-        {/* 헤더 */}
+        {}
         <div className="bg-gradient-to-r from-orange-500 to-red-600 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -585,7 +568,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
           </div>
         </div>
 
-        {/* 탭 네비게이션 */}
+        {}
         <div className="bg-white border-b border-gray-200">
           <div className="flex overflow-x-auto">
             {tabs.map((tab) => (
@@ -605,7 +588,7 @@ const TLMChartDisplay = ({ results, onClose, onBack }) => {
           </div>
         </div>
 
-        {/* 탭 내용 */}
+        {}
         <div className="p-6 overflow-y-auto max-h-[calc(95vh-160px)]">
           <AnimatePresence mode="wait">
             <motion.div

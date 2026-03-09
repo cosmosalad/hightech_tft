@@ -1,5 +1,3 @@
-// src/pages/components/TFTUsageGuide.js
-
 import React, { useState } from 'react';
 import { Info, X, CheckCircle, AlertTriangle, FileText, Zap, BarChart3, Activity, TrendingUp, RotateCcw, FileUp, FileDown } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -9,12 +7,10 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
 
   if (!showUsageGuide) return null;
 
-  // 섹션 토글 함수
   const toggleSection = (section) => {
     setActiveSection(activeSection === section ? '' : section);
   };
 
-  // Excel 파일 아이콘 컴포넌트
   const ExcelFileIcon = ({ type, filename, bgColor = 'bg-green-100', textColor = 'text-green-700' }) => (
     <div className={`flex flex-col items-center p-2 ${bgColor} rounded-lg border border-green-200 min-w-0`}>
       <div className={`w-10 h-10 ${bgColor.replace('100', '200')} rounded border border-green-300 flex items-center justify-center relative flex-shrink-0`}>
@@ -27,7 +23,6 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
     </div>
   );
 
-  // 측정 타입별 설명 컴포넌트
   const MeasurementTypeCard = ({ icon, title, bgColor, textColor, description, voltageRange, purpose }) => (
     <div className={`${bgColor} p-4 rounded-xl border-2 border-opacity-30`}
          style={{ borderColor: textColor.replace('text-', '').replace('-800', '') }}>
@@ -60,7 +55,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
       transition={{ duration: 0.3 }}
       className="mt-4 space-y-6"
     >
-      {/* 네비게이션 탭 */}
+      {}
       <div className="flex flex-wrap gap-2 mb-6 bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-xl border border-blue-200">
         {[
           { id: 'overview', label: '🔍 개요', icon: <Info className="w-4 h-4" /> },
@@ -84,8 +79,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </button>
         ))}
       </div>
-
-      {/* 개요 섹션 */}
+      {}
       {activeSection === 'overview' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -130,8 +124,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-      {/* 파일명 규칙 섹션 */}
+      {}
       {activeSection === 'filenames' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -145,7 +138,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               파일명 자동 인식 규칙
             </h3>
 
-            {/* 측정 타입별 파일명 예시 */}
+            {}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               {[
                 {
@@ -208,7 +201,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               ))}
             </div>
 
-            {/* 샘플명 자동 추출 예시 */}
+            {}
             <div className="bg-gradient-to-r from-amber-50 to-yellow-50 p-4 rounded-lg border border-amber-200">
               <h4 className="font-bold text-amber-800 mb-3">🔗 샘플명 자동 그룹화</h4>
               <p className="text-sm text-amber-700 mb-4">
@@ -252,8 +245,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-      {/* 측정 방식 섹션 */}
+      {}
       {activeSection === 'measurements' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -305,7 +297,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               />
             </div>
 
-            {/* 측정 조건 요약 */}
+            {}
             <div className="mt-6 bg-gradient-to-r from-gray-50 to-blue-50 p-4 rounded-lg border">
               <h4 className="font-bold text-gray-800 mb-3">📋 표준 측정 조건 요약</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -330,8 +322,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-      {/* 데이터 형식 섹션 */}
+      {}
       {activeSection === 'dataformat' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -345,7 +336,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               Excel 데이터 형식 요구사항
             </h3>
 
-            {/* 필수 컬럼 */}
+            {}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200 mb-6">
               <h4 className="font-bold text-blue-800 mb-3">📊 필수 데이터 컬럼</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -527,7 +518,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
             </div>
             </div>
 
-            {/* 데이터 품질 가이드 */}
+            {}
             <div className="mt-6 bg-amber-50 p-4 rounded-lg border border-amber-200">
               <h4 className="font-bold text-amber-800 mb-3">🎯 데이터 품질 최적화 팁</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -552,8 +543,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-      {/* 분석 흐름 섹션 */}
+      {}
       {activeSection === 'workflow' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -567,7 +557,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               TFT 통합 분석 워크플로우
             </h3>
 
-            {/* 단계별 분석 흐름 */}
+            {}
             <div className="space-y-4">
               {[
                 {
@@ -671,7 +661,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               ))}
             </div>
 
-            {/* 결과 해석 가이드 */}
+            {}
             <div className="mt-8 bg-gradient-to-r from-indigo-50 to-blue-50 p-6 rounded-xl border-2 border-indigo-200">
               <h4 className="font-bold text-indigo-800 mb-4 text-lg flex items-center">
                 <Info className="w-5 h-5 mr-2" />
@@ -725,7 +715,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               </div>
             </div>
 
-            {/* 문제 해결 가이드 */}
+            {}
             <div className="mt-6 bg-red-50 p-4 rounded-lg border border-red-200">
               <h4 className="font-bold text-red-800 mb-3 flex items-center">
                 <AlertTriangle className="w-5 h-5 mr-2" />
@@ -757,8 +747,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-      {/* 저장/불러오기 섹션 */}
+      {}
       {activeSection === 'saveload' && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -771,7 +760,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
               <RotateCcw className="w-6 h-6 mr-3" />
               분석 데이터 저장 및 불러오기
             </h3>
-            {/* 기능 개요 */}
+            {}
             <div className="bg-gradient-to-r from-indigo-50 to-purple-50 p-4 rounded-lg border border-indigo-200 mb-6">
               <h4 className="font-bold text-indigo-800 mb-3">🎯 핵심 기능</h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -791,7 +780,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                 </div>
               </div>
             </div>
-            {/* 전체 세션 내보내기 가이드 */}
+            {}
             <div className="space-y-6">
               <div className="bg-purple-50 p-5 rounded-lg border-2 border-purple-200">
                 <h4 className="font-bold text-purple-800 mb-4 text-lg flex items-center">
@@ -868,7 +857,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   </div>
                 </div>
               </div>
-              {/* 분석기록 불러오기 가이드 */}
+              {}
               <div className="bg-blue-50 p-5 rounded-lg border-2 border-blue-200">
                 <h4 className="font-bold text-blue-800 mb-4 text-lg flex items-center">
                   <FileUp className="w-6 h-6 mr-3" />
@@ -945,7 +934,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   </div>
                 </div>
               </div>
-              {/* 활용 시나리오 */}
+              {}
               <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-5 rounded-lg border-2 border-green-200">
                 <h4 className="font-bold text-green-800 mb-4 text-lg flex items-center">
                   <TrendingUp className="w-6 h-6 mr-3" />
@@ -998,7 +987,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   </div>
                 </div>
               </div>
-              {/* 주의사항 및 팁 */}
+              {}
               <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                 <h4 className="font-bold text-red-800 mb-3 flex items-center">
                   <AlertTriangle className="w-5 h-5 mr-2" />
@@ -1041,7 +1030,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
                   </div>
                 </div>
               </div>
-              {/* 파일 형식 정보 */}
+              {}
               <div className="bg-gray-50 p-4 rounded-lg border">
                 <h4 className="font-bold text-gray-800 mb-3">📄 저장 파일 형식 정보</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1065,9 +1054,7 @@ const TFTUsageGuide = ({ showUsageGuide, setShowUsageGuide }) => {
           </div>
         </motion.div>
       )}
-
-
-      {/* 하단 요약 정보 */}
+      {}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6 rounded-xl">
         <div className="text-center">
           <h3 className="text-xl font-bold mb-4">🎉 분석 준비 완료!</h3>

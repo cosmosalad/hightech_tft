@@ -20,12 +20,10 @@ const TFTEducationPodcast = ({ onClose }) => {
   const wordTimersRef = useRef([]);
   const lastSubtitleRef = useRef(null);
 
-  // GitHub Raw 링크로 오디오 경로 설정
   const getAudioUrl = (filename) => {
     return `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/audio/${filename}`;
   };
 
-  // GitHub Raw 링크로 자막 경로 설정
   const getSubtitleUrl = (filename) => {
     return `https://raw.githubusercontent.com/cosmosalad/hightech_tft/main/data/audio/${filename}`;
   };
@@ -69,7 +67,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // SRT 자막 파일 파싱 함수
   const parseSRT = (srtText) => {
     const blocks = srtText.trim().split('\n\n');
     return blocks.map(block => {
@@ -93,7 +90,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }).filter(Boolean);
   };
 
-  // 자막 로드 함수
   const loadSubtitles = async (subtitleUrl) => {
     try {
       setSubtitleError(null);
@@ -111,7 +107,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 모든 타이머와 상태 초기화 함수
   const clearAllTimersAndStates = () => {
     wordTimersRef.current.forEach(timer => clearTimeout(timer));
     wordTimersRef.current = [];
@@ -121,7 +116,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     lastSubtitleRef.current = null;
   };
 
-  // 언어별 단어 분할 함수
   const splitTextByLanguage = (text, language) => {
     if (!text) return [];
     
@@ -145,7 +139,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 시간 기반 단어별 순차 표시 함수 (수정된 버전)
   const showWordsSequentially = (text, startTime, endTime, currentTime) => {
     clearAllTimersAndStates();
     if (!text || !isPlaying) {
@@ -153,22 +146,19 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
     const words = splitTextByLanguage(text, currentLanguage);
     const totalDuration = endTime - startTime;
-    // 마지막 1초는 모든 단어가 표시되도록 예약
-    const wordAnimationDuration = totalDuration > 1 ? totalDuration - 1.0 : totalDuration; // 마지막 1초 제외
+    const wordAnimationDuration = totalDuration > 1 ? totalDuration - 1.0 : totalDuration;
     const timePerWord = words.length > 0 ? wordAnimationDuration / words.length : 0;
     const elapsedTime = currentTime - startTime;
     const minInterval = 0.15;
     const maxInterval = 0.6;
     const adjustedTimePerWord = Math.max(minInterval, Math.min(timePerWord, maxInterval));
 
-    // 현재 시간이 마지막 1초 구간에 있거나 애니메이션 시간이 0 이하일 경우 모든 단어 표시
     if (elapsedTime >= wordAnimationDuration || wordAnimationDuration <= 0) {
       const allWords = words.map((word, index) => ({ word, index }));
       setVisibleWords(allWords);
       return;
     }
 
-    // 일반적인 순차 표시 로직
     const wordsToShowImmediately = adjustedTimePerWord > 0 ? Math.floor(elapsedTime / adjustedTimePerWord) : words.length;
     const initialWords = words.slice(0, Math.min(wordsToShowImmediately + 1, words.length)).map((word, index) => ({ word, index }));
     setVisibleWords(initialWords);
@@ -179,7 +169,6 @@ const TFTEducationPodcast = ({ onClose }) => {
       const smoothDelay = 120 + (index * 80);
       showTime = Math.max(showTime, smoothDelay);
       
-      // 마지막 1초 전까지만 단어별 애니메이션
       const timeUntilComplete = (wordAnimationDuration - elapsedTime) * 1000;
       
       if (showTime > 0 && showTime < timeUntilComplete && actualIndex < words.length) {
@@ -198,7 +187,6 @@ const TFTEducationPodcast = ({ onClose }) => {
       }
     });
 
-    // 마지막 1초 전에 모든 단어를 표시하는 타이머
     const timeToShowAll = (wordAnimationDuration - elapsedTime) * 1000;
     if (timeToShowAll > 0) {
       const completeTimer = setTimeout(() => {
@@ -211,7 +199,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 현재 시간에 맞는 자막 찾기
   const updateCurrentSubtitle = (currentTime) => {
     if (subtitles.length === 0 || !isPlaying) {
       return;
@@ -235,7 +222,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   };
 
-  // 오디오 이벤트 핸들러
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -286,14 +272,12 @@ const TFTEducationPodcast = ({ onClose }) => {
     };
   }, [currentLanguage, subtitles, isPlaying]);
 
-  // 볼륨 조절
   useEffect(() => {
     if (audioRef.current) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
 
-  // AI 말하는 애니메이션 효과
   useEffect(() => {
     if (isPlaying) {
       setAiSpeaking(true);
@@ -302,7 +286,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   }, [isPlaying]);
 
-  // 언어 변경 시 완전 초기화 및 자막 로드
   useEffect(() => {
     setAudioError(null);
     setSubtitleError(null);
@@ -324,7 +307,6 @@ const TFTEducationPodcast = ({ onClose }) => {
     }
   }, [currentLanguage]);
 
-  // 재생/일시정지 함수
   const handlePlayPause = () => {
     const audio = audioRef.current;
     if (!audio || audioError) return;
@@ -427,7 +409,7 @@ const TFTEducationPodcast = ({ onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-2">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl h-[90vh] overflow-hidden flex flex-col">
-        {/* 헤더 - 높이 줄임 */}
+        {}
         <div className={`bg-gradient-to-r ${currentLang.color} text-white p-3 flex-shrink-0 transition-all duration-500 ease-in-out`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center">
@@ -447,9 +429,9 @@ const TFTEducationPodcast = ({ onClose }) => {
         </div>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* 왼쪽 패널: 언어 선택 + AI 시각화 */}
+          {}
           <div className="w-1/3 p-3 border-r bg-gray-50 overflow-hidden">
-            {/* 언어 선택 - 컴팩트하게 */}
+            {}
             <div className="mb-4">
               <h3 className="text-sm font-semibold text-gray-800 mb-2 flex items-center">
                 <Globe className="w-4 h-4 mr-1" />
@@ -478,13 +460,13 @@ const TFTEducationPodcast = ({ onClose }) => {
               </div>
             </div>
 
-            {/* AI 파형 시각화 - 크기 줄임 */}
+            {}
             <div className="text-center">
               <div className="relative mb-4">
                 <div className={`absolute inset-0 bg-gradient-to-r ${currentLang.color} rounded-2xl blur-xl opacity-20 scale-110 transition-all duration-500 ease-in-out`}></div>
                 
                 <div className={`relative bg-gradient-to-br ${currentLang.color} rounded-2xl p-4 shadow-lg border border-white/20 transition-all duration-500 ease-in-out`}>
-                  {/* 상단 상태 표시 */}
+                  {}
                   <div className="flex items-center justify-center mb-3">
                     <div className="flex items-center bg-white/20 backdrop-blur-sm rounded-full px-3 py-1">
                       <div className={`w-2 h-2 rounded-full mr-2 ${audioError ? 'bg-red-400' : aiSpeaking ? 'bg-green-400' : 'bg-gray-300'}`}>
@@ -500,9 +482,9 @@ const TFTEducationPodcast = ({ onClose }) => {
                     </div>
                   </div>
 
-                  {/* 중앙 파형 시각화 - 높이 줄임 */}
+                  {}
                   <div className="relative h-20 mb-3 overflow-hidden">
-                    {/* 파형 라인들 */}
+                    {}
                     {Array.from({ length: 7 }, (_, i) => (
                       <div
                         key={i}
@@ -522,7 +504,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                       />
                     ))}
 
-                    {/* 역방향 파형 라인들 */}
+                    {}
                     {Array.from({ length: 7 }, (_, i) => (
                       <div
                         key={`reverse-${i}`}
@@ -542,7 +524,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                       />
                     ))}
 
-                    {/* 원형 파동 효과 */}
+                    {}
                     {aiSpeaking && Array.from({ length: 3 }, (_, i) => (
                       <div
                         key={`ripple-${i}`}
@@ -557,7 +539,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                       />
                     ))}
 
-                    {/* 주파수 스펙트럼 효과 */}
+                    {}
                     {aiSpeaking && (
                       <div className="absolute bottom-0 left-0 right-0 flex items-end justify-center space-x-1 h-6">
                         {Array.from({ length: 15 }, (_, i) => (
@@ -575,7 +557,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                     )}
                   </div>
 
-                  {/* 하단 정보 */}
+                  {}
                   <div className="text-center">
                     <h4 className="text-sm font-bold text-white mb-1">{currentLang.aiName}</h4>
                     <p className="text-white/90 text-xs">
@@ -588,7 +570,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               </div>
             </div>
 
-            {/* 학습 팁 - 간소화 */}
+            {}
             <div className="p-2 bg-gray-100 rounded-lg border border-gray-200 overflow-hidden">
               <h4 className="font-semibold text-gray-800 mb-1 text-xs flex items-center">
                 💡 학습 팁
@@ -601,11 +583,11 @@ const TFTEducationPodcast = ({ onClose }) => {
             </div>
           </div>
 
-          {/* 오른쪽 패널: 자막 + 플레이어 */}
+          {}
           <div className="flex-1 flex flex-col p-3 min-w-0 overflow-hidden">
-            {/* 자막 표시 영역 - 높이 최적화 */}
+            {}
             <div className="bg-gray-900 rounded-xl p-4 flex-1 flex items-center justify-center mb-3 min-h-0 relative">
-              {/* 로딩 오버레이 */}
+              {}
               {isLoading && !audioError && (
                 <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm rounded-xl flex items-center justify-center z-10 animate-[fadeIn_0.3s_ease-out] transition-all duration-300">
                   <div className="text-center">
@@ -655,7 +637,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               </div>
             </div>
 
-            {/* 오디오 에러 표시 */}
+            {}
             {audioError && (
               <div className="bg-red-50 border border-red-200 rounded-lg p-2 mb-3">
                 <div className="flex items-center">
@@ -673,7 +655,7 @@ const TFTEducationPodcast = ({ onClose }) => {
               </div>
             )}
 
-            {/* 오디오 플레이어 - 높이 줄임 */}
+            {}
             <div className={`bg-gradient-to-r ${currentLang.color} rounded-xl p-3 text-white shadow-lg transition-all duration-500 ease-in-out ${audioError ? 'opacity-50' : ''} flex-shrink-0`}>
               <audio
                 ref={audioRef}
@@ -682,7 +664,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                 crossOrigin="anonymous"
               />
               
-              {/* 진행 바 */}
+              {}
               <div className="mb-3">
                 <div
                   className={`w-full h-2 bg-white/20 rounded-full overflow-hidden relative ${audioError ? 'cursor-not-allowed' : 'cursor-pointer'}`}
@@ -703,7 +685,7 @@ const TFTEducationPodcast = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* 컨트롤 버튼 */}
+              {}
               <div className="flex items-center justify-center space-x-3">
                 <button
                   onClick={handleRestart}
@@ -744,10 +726,10 @@ const TFTEducationPodcast = ({ onClose }) => {
                 </div>
               </div>
 
-              {/* 로딩/상태 표시 - 제거됨 (자막창 오버레이로 이동) */}
+              {}
             </div>
 
-            {/* GitHub 정보 - 간소화 */}
+            {}
             <div className="p-2 bg-blue-50 rounded-lg border border-blue-200 mt-3 flex-shrink-0 min-h-[3rem]">
               <div className="flex items-center justify-between h-full">
                 <div className="min-w-0 flex-1">
@@ -768,7 +750,6 @@ const TFTEducationPodcast = ({ onClose }) => {
           </div>
         </div>
       </div>
-
       <style jsx>{`
         .slider {
           position: relative;

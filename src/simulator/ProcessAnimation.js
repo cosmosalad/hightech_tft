@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Play, Pause, RotateCcw, Settings, Download, BarChart3, Zap, Thermometer, Gauge, X, ZoomIn } from 'lucide-react';
 
-// [개선 1] CrossSectionView를 독립된 컴포넌트로 분리하여 렌더링 안정성 확보
-// 이제 부모 컴포넌트가 리렌더링 되어도 CrossSectionView 자체는 새로 만들어지지 않아 클릭 이벤트가 안정적으로 동작합니다.
 const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, layerThickness }) => {
   const scale = 1.4;
   
@@ -145,7 +143,6 @@ const CrossSectionView = ({ isExpanded, onToggle, recipes, selectedEquipments, l
   );
 };
 
-// [개선 2] EnhancedEquipmentAnimation을 독립된 컴포넌트로 분리
 const EnhancedEquipmentAnimation = ({ currentEquipment, layerThickness, currentStep, speed, animationPhase, showParticles, showEnergyWaves, showPlasmaEffects, currentRecipe }) => {
   if (!currentEquipment) return null;
     
@@ -360,7 +357,6 @@ const ParameterMonitor = ({ currentRecipe, currentEquipment }) => (
 );
 
 
-// 메인 컴포넌트
 const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
@@ -467,7 +463,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           </button>
         </div>
       </div>
-
       {showSettings && (
         <>
           <div className="fixed inset-0 bg-black/30 z-20" onClick={() => setShowSettings(false)} />
@@ -500,7 +495,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           </div>
         </>
       )}
-
       <div className="flex justify-center mb-6 space-x-3 bg-white p-4 rounded-lg shadow">
         {selectedEquipments.map((equipment, index) => (
           <div key={index} className={`relative px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-500 ${
@@ -520,7 +514,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           </div>
         ))}
       </div>
-
       <div className="relative mx-auto w-full h-[400px] bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 rounded-2xl border-2 border-gray-300 overflow-hidden shadow-2xl">
         <div className="absolute inset-0 opacity-5">
           <div className="w-full h-full" style={{
@@ -549,7 +542,7 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           </div>
         )}
         
-        {/* [개선 3] 독립된 컴포넌트를 호출하고 필요한 모든 상태와 핸들러를 props로 전달 */}
+        {}
         <EnhancedEquipmentAnimation 
           currentEquipment={currentEquipment}
           layerThickness={layerThickness}
@@ -569,7 +562,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           layerThickness={layerThickness}
         />
       </div>
-
       <div className="mt-6 space-y-4">
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -606,7 +598,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           ))}
         </div>
       </div>
-
       <div className="flex justify-between items-center mt-8 p-4 bg-white rounded-xl shadow border">
         <div className="flex items-center space-x-4">
           <div className="text-center">
@@ -642,7 +633,6 @@ const ProcessAnimation = ({ selectedEquipments, recipes, onStartOver }) => {
           </button>
         </div>
       </div>
-
       <style jsx>{`
         @keyframes furnaceGlow { 0%, 100% { filter: brightness(1) hue-rotate(0deg); } 50% { filter: brightness(1.3) hue-rotate(10deg); } }
         @keyframes heatWave { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0.8; } 100% { transform: translate(-50%, -50%) scale(2); opacity: 0; } }
